@@ -1,0 +1,208 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using DSharpPlus;
+using DSharpPlus.CommandsNext;
+using DSharpPlus.SlashCommands;
+using DSharpPlus.Entities;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using MADS.Extensions;
+using MADS.JsonModel;
+using MADS.Modules;
+using DSharpPlus.EventArgs;
+using ModularAssistentForDiscordServer.Utility;
+
+namespace MADS
+{
+    internal class ModularDiscordBot
+    {
+        internal DiscordClient DiscordClient;
+        internal LoggingProvider Logging;
+        internal CommandsNextExtension CommandsNextExtension;
+        internal SlashCommandsExtension SlashCommandsExtension;
+        internal List<IMadsModul> madsModules;
+        internal Dictionary<string, List<ulong>> ModulesAktivGuilds;
+        internal Dictionary<ulong, GuildSettings> GuildSettings = new();
+        internal ServiceProvider Services;
+        internal DateTime startTime;
+        internal ConfigJson config;
+
+        DataProvider DataProvider;
+        
+        
+        public ModularDiscordBot()
+        {
+            DataProvider = new DataProvider();
+            madsModules = new List<IMadsModul>();
+            ModulesAktivGuilds = new Dictionary<string, List<ulong>>();
+            startTime = DateTime.Now;
+            Logging = new LoggingProvider(this);
+        }
+
+        public async Task RunAsync()
+        {
+            if(Innit()) return;
+
+            RegisterModul(typeof(ModerationModul));
+            
+            config = DataProvider.GetConfig();
+
+            GuildSettings = config.GuildSettings;
+
+            DiscordClient = new DiscordClient(new DiscordConfiguration
+            {
+                Token = config.Token,
+                TokenType = TokenType.Bot,
+                AutoReconnect = true,
+                MinimumLogLevel = config.LogLevel,
+                Intents = GetRequiredIntents()
+            });
+
+            Services = new ServiceCollection()
+                .AddSingleton(new MadsServiceProvider(this, ModulesAktivGuilds))
+                .BuildServiceProvider();
+
+            RegisterCommandExtensions();
+
+            DiscordClient.Ready += OnClientReady;
+            DiscordClient.Zombied += OnZombied;
+
+            //connect client
+            await DiscordClient.ConnectAsync();
+            //keep alive
+            await Task.Delay(-1);
+        }
+        
+        public static bool Innit()
+        {
+            string configPath = DataProvider.GetPath("config.json");
+            
+            if (File.Exists(configPath)) { return false; }
+            
+            var tmp = File.Create(configPath);
+            tmp.Close();
+
+            ConfigJson newConfig = new()
+            {
+                Token = "<Your Token here>",
+                Prefix = "!",
+                LogLevel = LogLevel.Debug,
+                DiscordEmbed = new DiscordEmbedBuilder()
+                {
+                    Color = new(new(0, 255, 194)),
+                    Footer = new()
+                    {
+                        Text = "Mads"
+                    }
+                },
+                GuildSettings = new Dictionary<ulong, GuildSettings>()
+            };
+            
+            newConfig.GuildSettings[0] = new()
+            {
+                AktivModules = new(),
+                AuditChannel = 0,
+                AuditLogs = false,
+                DiscordEmbed = new DiscordEmbedBuilder()
+                {
+                    Color = new(new(0, 255, 194)),
+                    Footer = new()
+                    {
+                        Text = "Mads"
+                    }
+                },
+                LogLevel = LogLevel.Debug,
+                Prefix = "!"
+            };
+            
+            JsonProvider.parseJson(configPath, newConfig);
+
+            return true;
+        }
+
+        private void RegisterCommandExtensions()
+        {
+            CommandsNextConfiguration comandsConfig = new()
+            {
+                CaseSensitive = false,
+                DmHelp = true,
+                StringPrefixes = new string[] { config.Prefix },
+                EnableDms = true,
+                EnableMentionPrefix = true,
+                PrefixResolver = GetPrefixPositionAsync,
+                Services = Services
+            };
+            CommandsNextExtension = DiscordClient.UseCommandsNext(comandsConfig);
+            CommandsNextExtension.RegisterCommands<BaseCommands>();
+
+            SlashCommandsConfiguration slashConfig = new()
+            {
+                Services = Services
+            };
+            SlashCommandsExtension = DiscordClient.UseSlashCommands(slashConfig);
+        }
+
+        private async Task OnZombied(DiscordClient sender, ZombiedEventArgs e)
+        {
+            await DiscordClient.ReconnectAsync(true);
+        }
+
+        private async Task OnClientReady(DiscordClient sender, ReadyEventArgs e)
+        {
+            DiscordActivity act = new(config.Prefix + "help", ActivityType.Watching);
+            await DiscordClient.UpdateStatusAsync(act, UserStatus.Online);
+        }
+
+        public void RegisterModul(Type modul)
+        {
+            var newModul = (IMadsModul) Activator.CreateInstance(modul, this);
+            madsModules.Add(newModul);
+        }
+
+        public static async Task<DiscordMessage> AnswerWithDelete(CommandContext ctx, DiscordEmbed message, int secondsToDelete = 20)
+        {
+            DiscordMessage response = await ctx.Channel.SendMessageAsync(message);
+            
+            if (!ctx.Channel.IsPrivate)
+            {
+                await Task.Delay(secondsToDelete * 1000);
+                await response.DeleteAsync();
+                await ctx.Message.DeleteAsync();
+            }
+            
+            return response;
+        }
+
+        public DiscordIntents GetRequiredIntents()
+        {
+            DiscordIntents requiredIntents = 0;
+
+            foreach (IMadsModul modul in madsModules)
+            {
+                requiredIntents |= modul.RequiredIntents;
+            }
+
+            return requiredIntents;
+        }
+
+        public Task<int> GetPrefixPositionAsync(DiscordMessage msg)
+        {
+            ulong? guildID = msg.Channel.GuildId;
+            
+            if (guildID is null) { guildID = 0; }
+            
+            if (!GuildSettings.TryGetValue((ulong)guildID, out GuildSettings guildSettings))
+            {
+                guildSettings = GuildSettings[0];
+            }
+
+            if (guildSettings.Prefix == null)
+                return Task.FromResult(-1);
+            
+            return Task.FromResult(msg.GetStringPrefixLength(guildSettings.Prefix));
+        }
+    }
+}

@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <StartupObject>MADS.MainProgram</StartupObject>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DSharpPlus" Version="4.3.0-nightly-01139" />
+    <PackageReference Include="DSharpPlus.CommandsNext" Version="4.3.0-nightly-01139" />
+    <PackageReference Include="DSharpPlus.Interactivity" Version="4.3.0-nightly-01139" />
+    <PackageReference Include="DSharpPlus.SlashCommands" Version="4.3.0-nightly-01139" />
+    <PackageReference Include="DSharpPlus.VoiceNext" Version="4.3.0-nightly-01139" />
+  </ItemGroup>
+
+</Project>
