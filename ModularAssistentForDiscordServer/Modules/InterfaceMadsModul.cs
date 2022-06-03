@@ -9,35 +9,38 @@ namespace MADS.Modules
     internal interface IMadsModul
     {
         ModularDiscordBot ModularDiscordClient { get; set; }
-        List<ulong> GuildsEnabled { get; set; }
         string ModulName { get; set; }
         string ModulDescription { get; set; }
         string[] Commands { get; set; }
         Dictionary<string, string> CommandDescriptions { get; set; }
-        Type CommandClass { get; set; }
-        Type SlashCommandClass { get; set; }
+        Type? CommandClass { get; set; }
+        Type? SlashCommandClass { get; set; }
         DiscordIntents RequiredIntents { get; set; }
 
         
 
         public void Enable(ulong guildId)
         {
-            GuildsEnabled.Add(guildId);
-            RequiredIntents = 0;
-
-            if (CommandClass is not null && typeof(BaseCommandModule).IsAssignableFrom(CommandClass))
+            if (!ModularDiscordClient.ModulesAktivGuilds.TryGetValue(ModulName, out _))
             {
-                ModularDiscordClient.CommandsNextExtension.RegisterCommands(CommandClass);
+                List<ulong> newList = new()
+                {
+                    guildId
+                };
+                ModularDiscordClient.ModulesAktivGuilds[ModulName] = newList;
+            }
+            else
+            {
+                ModularDiscordClient.ModulesAktivGuilds[ModulName].Add(guildId);
             }
 
             if (SlashCommandClass is not null && typeof(ApplicationCommandModule).IsAssignableFrom(SlashCommandClass))
             {
                 ModularDiscordClient.SlashCommandsExtension.RegisterCommands(SlashCommandClass, guildId);
             }
-
         }
     }
-
+    
     internal class MadsServiceProvider
     {
         public ModularDiscordBot modularDiscordBot;

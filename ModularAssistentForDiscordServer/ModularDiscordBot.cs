@@ -23,7 +23,7 @@ namespace MADS
         internal LoggingProvider Logging;
         internal CommandsNextExtension CommandsNextExtension;
         internal SlashCommandsExtension SlashCommandsExtension;
-        internal List<IMadsModul> madsModules;
+        internal Dictionary<string, IMadsModul> madsModules;
         internal Dictionary<string, List<ulong>> ModulesAktivGuilds;
         internal Dictionary<ulong, GuildSettings> GuildSettings = new();
         internal ServiceProvider Services;
@@ -36,7 +36,7 @@ namespace MADS
         public ModularDiscordBot()
         {
             DataProvider = new DataProvider();
-            madsModules = new List<IMadsModul>();
+            madsModules = new Dictionary<string, IMadsModul>();
             ModulesAktivGuilds = new Dictionary<string, List<ulong>>();
             startTime = DateTime.Now;
             Logging = new LoggingProvider(this);
@@ -67,6 +67,8 @@ namespace MADS
 
             RegisterCommandExtensions();
 
+            EnableGuildConfigs();
+
             DiscordClient.Ready += OnClientReady;
             DiscordClient.Zombied += OnZombied;
 
@@ -75,7 +77,21 @@ namespace MADS
             //keep alive
             await Task.Delay(-1);
         }
-        
+
+        private void EnableGuildConfigs()
+        {
+            config.GuildSettings.ToList().ForEach(x =>
+            {
+                x.Value.AktivModules.ForEach(y =>
+                {
+                    if (madsModules.TryGetValue(y, out IMadsModul madsModul))
+                    {
+                        madsModul.Enable(x.Key);
+                    }
+                }); 
+            });
+        }
+
         public static bool Innit()
         {
             string configPath = DataProvider.GetPath("config.json");
@@ -100,26 +116,15 @@ namespace MADS
                 },
                 GuildSettings = new Dictionary<ulong, GuildSettings>()
             };
-            
-            newConfig.GuildSettings[0] = new()
-            {
-                AktivModules = new(),
-                AuditChannel = 0,
-                AuditLogs = false,
-                DiscordEmbed = new DiscordEmbedBuilder()
-                {
-                    Color = new(new(0, 255, 194)),
-                    Footer = new()
-                    {
-                        Text = "Mads"
-                    }
-                },
-                LogLevel = LogLevel.Debug,
-                Prefix = "!"
-            };
-            
-            JsonProvider.parseJson(configPath, newConfig);
 
+            newConfig.GuildSettings[0] = new();
+            JsonProvider.parseJson(configPath, newConfig);
+            
+            Console.WriteLine("Please insert your token in the config file and Restart");
+            Console.WriteLine("Filepath: " + configPath);
+            Console.WriteLine("Press key to continue");
+            Console.Read();
+            
             return true;
         }
 
@@ -137,6 +142,7 @@ namespace MADS
             };
             CommandsNextExtension = DiscordClient.UseCommandsNext(comandsConfig);
             CommandsNextExtension.RegisterCommands<BaseCommands>();
+            
 
             SlashCommandsConfiguration slashConfig = new()
             {
@@ -159,7 +165,7 @@ namespace MADS
         public void RegisterModul(Type modul)
         {
             var newModul = (IMadsModul) Activator.CreateInstance(modul, this);
-            madsModules.Add(newModul);
+            madsModules[newModul.ModulName] = newModul;
         }
 
         public static async Task<DiscordMessage> AnswerWithDelete(CommandContext ctx, DiscordEmbed message, int secondsToDelete = 20)
@@ -180,10 +186,10 @@ namespace MADS
         {
             DiscordIntents requiredIntents = 0;
 
-            foreach (IMadsModul modul in madsModules)
+            madsModules.ToList().ForEach(x =>
             {
-                requiredIntents |= modul.RequiredIntents;
-            }
+                requiredIntents |= x.Value.RequiredIntents;
+            });
 
             return requiredIntents;
         }

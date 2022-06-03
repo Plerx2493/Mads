@@ -7,6 +7,23 @@ namespace MADS.JsonModel
 {
     internal struct GuildSettings
     {
+        public GuildSettings()
+        {
+            Prefix = "!";
+            LogLevel = LogLevel.Information;
+            DiscordEmbed = new DiscordEmbedBuilder()
+            {
+                Color = new(new(0, 255, 194)),
+                Footer = new()
+                {
+                    Text = "Mads"
+                }
+            };
+            AktivModules = new();
+            AuditChannel = 0;
+            AuditLogs = false;
+        }
+
         [JsonProperty("prefix")]
         public string Prefix { get; set; }
 
