@@ -1,4 +1,5 @@
 ﻿using MADS.JsonModel;
+using Newtonsoft.Json;
 
 namespace MADS.Extensions
 {
@@ -12,6 +13,11 @@ namespace MADS.Extensions
         {
             return JsonProvider.readFile<ConfigJson>(GetPath("config.json"));
         }
+
+        public static JsonModel GetJson<JsonModel>(string path)
+        {
+            return JsonProvider.readFile<JsonModel>(GetPath(path));
+        } 
 
         public static string GetPath(params string[] path)
         {

@@ -17,21 +17,21 @@ namespace MADS.Modules
         Type? SlashCommandClass { get; set; }
         DiscordIntents RequiredIntents { get; set; }
 
-        
+        public Task ModulMainTask();
 
         public void Enable(ulong guildId)
         {
-            if (!ModularDiscordClient.ModulesAktivGuilds.TryGetValue(ModulName, out _))
+            if (ModularDiscordClient.ModulesAktivGuilds.TryGetValue(ModulName, out _))
+            {
+                ModularDiscordClient.ModulesAktivGuilds[ModulName].Add(guildId);
+            }
+            else
             {
                 List<ulong> newList = new()
                 {
                     guildId
                 };
                 ModularDiscordClient.ModulesAktivGuilds[ModulName] = newList;
-            }
-            else
-            {
-                ModularDiscordClient.ModulesAktivGuilds[ModulName].Add(guildId);
             }
 
             if (SlashCommandClass is not null && typeof(ApplicationCommandModule).IsAssignableFrom(SlashCommandClass))

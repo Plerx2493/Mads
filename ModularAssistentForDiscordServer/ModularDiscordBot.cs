@@ -30,12 +30,11 @@ namespace MADS
         internal DateTime startTime;
         internal ConfigJson config;
 
-        DataProvider DataProvider;
+        
         
         
         public ModularDiscordBot()
         {
-            DataProvider = new DataProvider();
             madsModules = new Dictionary<string, IMadsModul>();
             ModulesAktivGuilds = new Dictionary<string, List<ulong>>();
             startTime = DateTime.Now;
