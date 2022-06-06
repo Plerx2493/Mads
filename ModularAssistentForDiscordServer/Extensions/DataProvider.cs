@@ -1,14 +1,9 @@
 ﻿using MADS.JsonModel;
-using Newtonsoft.Json;
 
 namespace MADS.Extensions
 {
-    internal class DataProvider
+    internal static class DataProvider
     {
-        public DataProvider()
-        {
-        }
-
         public static ConfigJson GetConfig()
         {
             return JsonProvider.readFile<ConfigJson>(GetPath("config.json"));
@@ -28,7 +23,6 @@ namespace MADS.Extensions
             JsonProvider.parseJson(GetPath("config.json"), configJson);
         }
          
-
         public static string GetPath(params string[] path)
         {
             string[] parameter = new string[path.Length+1];
@@ -42,8 +36,6 @@ namespace MADS.Extensions
 
             return Path.GetFullPath(Path.Combine(path));
         }
-
-        
     }
 }
 
