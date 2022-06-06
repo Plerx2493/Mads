@@ -13,7 +13,7 @@ namespace ModularAssistentForDiscordServer.Utility
     {
         public MadsServiceProvider CommandService { get; set; }
 
-        [Command("ping"), Aliases("status"), Description("Get the ping of the websocket")]
+        [Command("ping"), Aliases("status"), Description("Get the ping of the websocket"), Cooldown(1, 30, CooldownBucketType.Channel)]
         public async Task Ping(CommandContext ctx) 
         {
             var diff = DateTime.Now - CommandService.modularDiscordBot.startTime;
@@ -28,6 +28,23 @@ namespace ModularAssistentForDiscordServer.Utility
 
             var response = await ModularDiscordBot.AnswerWithDelete(ctx, discordEmbedBuilder.Build(), 20);
             await CommandService.modularDiscordBot.Logging.LogCommandExecution(ctx, response);
+        }
+
+        [Command("about"), Aliases("info"), Description("Displays a little information about this bot"), Cooldown(1, 30, CooldownBucketType.Channel)]
+        public async Task About(CommandContext ctx)
+        {
+            var discordEmbedBuilder = CommandService.modularDiscordBot.config.DiscordEmbed;
+
+            discordEmbedBuilder
+                .WithTitle("About me")
+                .WithDescription("A modular desinged discord bot for moderation and stuff")
+                .WithAuthor(ctx.Client.CurrentUser.Username, ctx.Client.CurrentUser.AvatarUrl, ctx.Client.CurrentUser.AvatarUrl)
+                .AddField("Owner:", "[Plerx](https://github.com/Plerx2493/)")
+                .AddField("Source:", "[Github](https://github.com/Plerx2493/Mads)")
+                .AddField("DSharpPlus Version:", ctx.Client.VersionString)
+                .AddField("Guilds", ctx.Client.Guilds.Count.ToString());
+
+            await ctx.RespondAsync(discordEmbedBuilder.Build());
         }
     }
 }
