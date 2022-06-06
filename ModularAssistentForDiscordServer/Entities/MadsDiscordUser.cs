@@ -9,20 +9,20 @@ namespace ModularAssistentForDiscordServer.Entities
     internal class MadsDiscordUser
     {
         private ulong ID;
-        private Dictionary<ulong,int> NumberOfWarnings;
-        private int NumberOfBans;
-        private int NumberOfMutes;
-        private int NumberOfKicks;
+        private Dictionary<ulong, int> NumberOfWarnings;
+        private Dictionary<ulong, int> NumberOfBans;
+        private Dictionary<ulong, int> NumberOfMutes;
+        private Dictionary<ulong, int> NumberOfKicks;
         private Dictionary<ulong, string> ModComments;
 
         public MadsDiscordUser(ulong id)
         {
             ID = id;
-            NumberOfWarnings = new();
-            NumberOfBans = 0;
-            NumberOfMutes = 0;
-            NumberOfKicks = 0;
-            ModComments = new Dictionary<ulong, string>();
+            NumberOfWarnings =  new();
+            NumberOfBans     =  new();
+            NumberOfMutes    =  new();
+            NumberOfKicks    =  new();
+            ModComments      =  new();
         }
 
         public ulong GetID()
@@ -39,24 +39,40 @@ namespace ModularAssistentForDiscordServer.Entities
             return 0;
         }
 
-        public int GetNumberOfBans()
+        public int GetNumberOfBans(ulong id)
         {
-            return NumberOfBans;
+            if (NumberOfBans.ContainsKey(id)) 
+            {
+                return NumberOfBans[id];
+            }
+            return 0;
         }
 
-        public int GetNumberOfMutes()
+        public int GetNumberOfMutes(ulong id)
         {
-            return NumberOfMutes;
+            if (NumberOfMutes.ContainsKey(id))
+            {
+                return NumberOfMutes[id];
+            }
+            return 0;
         }
 
-        public int GetNumberOfKicks()
+        public int GetNumberOfKicks(ulong id)
         {
-            return NumberOfKicks;
+            if (NumberOfKicks.ContainsKey(id))
+            {
+                return NumberOfKicks[id];
+            }
+            return 0;
         }
 
-        public Dictionary<ulong, string> GetModComments()
+        public string GetModComments(ulong id)
         {
-            return ModComments;
+            if (ModComments.ContainsKey(id))
+            {
+                return ModComments[id];
+            }
+            return "";
         }
 
         public void AddModComment(ulong id, string comment)
@@ -99,19 +115,40 @@ namespace ModularAssistentForDiscordServer.Entities
             }
         }
 
-        public void AddBans(int number)
+        public void AddBans(ulong id, int number)
         {
-            NumberOfBans += number;
+            if (NumberOfBans.ContainsKey(id))
+            {
+                NumberOfBans[id] += number;
+            }
+            else
+            {
+                NumberOfBans.Add(id, number);
+            }
         }
 
-        public void AddMutes(int number)
+        public void AddMutes(ulong id, int number)
         {
-            NumberOfMutes += number;
+            if (NumberOfMutes.ContainsKey(id))
+            {
+                NumberOfMutes[id] += number;
+            }
+            else
+            {
+                NumberOfMutes.Add(id, number);
+            }
         }
 
-        public void AddKicks(int number)
+        public void AddKicks(ulong id, int number)
         {
-            NumberOfKicks += number;
+            if (NumberOfKicks.ContainsKey(id))
+            {
+                NumberOfKicks[id] += number;
+            }
+            else
+            {
+                NumberOfKicks.Add(id, number);
+            }
         }
         
         public void RemoveWarnings(ulong id, int number)
@@ -122,7 +159,5 @@ namespace ModularAssistentForDiscordServer.Entities
                 if (NumberOfWarnings[id] == 0) NumberOfWarnings.Remove(id);
             }
         }
-
-        
     }
 }
