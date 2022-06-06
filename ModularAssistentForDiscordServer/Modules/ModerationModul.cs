@@ -48,16 +48,14 @@ namespace MADS.Modules
             SlashCommandClass = typeof(ModerationSlashCommands);
             RequiredIntents = 0;
             ModularDiscordClient = bot;
+        }
 
+        public void RegisterCNext()
+        {
             if (CommandClass is not null && typeof(BaseCommandModule).IsAssignableFrom(CommandClass))
             {
                 ModularDiscordClient.CommandsNextExtension.RegisterCommands(CommandClass);
             }
-        }
-
-        public Task ModulMainTask()
-        {
-            throw new NotImplementedException();
         }
     }
     

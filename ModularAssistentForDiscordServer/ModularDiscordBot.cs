@@ -132,21 +132,23 @@ namespace MADS
             CommandsNextConfiguration comandsConfig = new()
             {
                 CaseSensitive = false,
-                DmHelp = true,
-                StringPrefixes = new string[] { config.Prefix },
+                DmHelp = false,
                 EnableDms = true,
                 EnableMentionPrefix = true,
                 PrefixResolver = GetPrefixPositionAsync,
                 Services = Services
             };
+
             CommandsNextExtension = DiscordClient.UseCommandsNext(comandsConfig);
             CommandsNextExtension.RegisterCommands<BaseCommands>();
-            
+
+            madsModules.ToList().ForEach(x => x.Value.RegisterCNext());
 
             SlashCommandsConfiguration slashConfig = new()
             {
                 Services = Services
             };
+
             SlashCommandsExtension = DiscordClient.UseSlashCommands(slashConfig);
         }
 
@@ -183,7 +185,10 @@ namespace MADS
 
         public DiscordIntents GetRequiredIntents()
         {
-            DiscordIntents requiredIntents = 0;
+            DiscordIntents requiredIntents = 
+                DiscordIntents.GuildMessages
+                | DiscordIntents.DirectMessages
+                | DiscordIntents.Guilds;
 
             madsModules.ToList().ForEach(x =>
             {
@@ -195,18 +200,23 @@ namespace MADS
 
         public Task<int> GetPrefixPositionAsync(DiscordMessage msg)
         {
-            ulong? guildID = msg.Channel.GuildId;
-            
-            if (guildID is null) { guildID = 0; }
-            
-            if (!GuildSettings.TryGetValue((ulong)guildID, out GuildSettings guildSettings))
+            GuildSettings guildSettings;
+            var allGuildSettings = GuildSettings;
+
+            if (msg.Channel.Guild is not null)
             {
-                guildSettings = GuildSettings[0];
+                if (!allGuildSettings.TryGetValue(msg.Channel.Guild.Id, out guildSettings))
+                {
+                    guildSettings = allGuildSettings[0];
+                }
+            }
+            else
+            {
+                guildSettings = allGuildSettings[0];
             }
 
-            if (guildSettings.Prefix == null)
-                return Task.FromResult(-1);
-            
+            if (guildSettings.Prefix == null) guildSettings.Prefix = allGuildSettings[0].Prefix;
+
             return Task.FromResult(msg.GetStringPrefixLength(guildSettings.Prefix));
         }
     }

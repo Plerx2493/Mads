@@ -17,7 +17,17 @@ namespace MADS.Extensions
         public static JsonModel GetJson<JsonModel>(string path)
         {
             return JsonProvider.readFile<JsonModel>(GetPath(path));
-        } 
+        }
+
+        public static void SetConfig(Dictionary<ulong, GuildSettings> guildSettings)
+        {
+            ConfigJson configJson = GetConfig();
+
+            configJson.GuildSettings = guildSettings;
+            
+            JsonProvider.parseJson(GetPath("config.json"), configJson);
+        }
+         
 
         public static string GetPath(params string[] path)
         {

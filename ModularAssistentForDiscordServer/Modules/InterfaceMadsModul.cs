@@ -17,7 +17,7 @@ namespace MADS.Modules
         Type? SlashCommandClass { get; set; }
         DiscordIntents RequiredIntents { get; set; }
 
-        public Task ModulMainTask();
+        public void RegisterCNext();
 
         public void Enable(ulong guildId)
         {
