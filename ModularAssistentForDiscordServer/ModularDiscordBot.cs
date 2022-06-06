@@ -30,9 +30,7 @@ namespace MADS
         internal DateTime startTime;
         internal ConfigJson config;
 
-        
-        
-        
+
         public ModularDiscordBot()
         {
             madsModules = new Dictionary<string, IMadsModul>();
