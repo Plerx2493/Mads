@@ -41,9 +41,9 @@ namespace ModularAssistentForDiscordServer.Utility
                 .WithDescription("A modular desinged discord bot for moderation and stuff")
                 .WithAuthor(ctx.Client.CurrentUser.Username, ctx.Client.CurrentUser.AvatarUrl, ctx.Client.CurrentUser.AvatarUrl)
                 .AddField("Owner:", "[Plerx](https://github.com/Plerx2493/)")
-                .AddField("Source:", "[Github](https://github.com/Plerx2493/Mads)")
+                .AddField("Source:", "[Github](https://github.com/Plerx2493/Mads)", true)
                 .AddField("DSharpPlus Version:", ctx.Client.VersionString)
-                .AddField("Guilds", ctx.Client.Guilds.Count.ToString());
+                .AddField("Guilds", ctx.Client.Guilds.Count.ToString(), true);
 
             await ctx.RespondAsync(discordEmbedBuilder.Build());
         }

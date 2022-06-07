@@ -39,6 +39,12 @@ namespace MADS.Modules
                 ModularDiscordClient.SlashCommandsExtension.RegisterCommands(SlashCommandClass, guildId);
             }
         }
+        
+        public void Disable(ulong guildId)
+        {
+            ModularDiscordClient.ModulesAktivGuilds[ModulName].RemoveAll(x => x == guildId);
+            ModularDiscordClient.DiscordClient.BulkOverwriteGuildApplicationCommandsAsync(); //TODO: 
+        }
     }
     
     internal class MadsServiceProvider
