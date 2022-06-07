@@ -88,5 +88,26 @@ namespace ModularAssistentForDiscordServer.Utility
              
             await ctx.RespondAsync("New prefix is: " + $"`{CommandService.modularDiscordBot.GuildSettings[ctx.Guild.Id].Prefix}`");
         }
+
+        [Command("test"), RequireOwner()]
+        public async Task Test(CommandContext ctx)
+        {
+            await CommandService.modularDiscordBot.DiscordClient.BulkOverwriteGuildApplicationCommandsAsync(ctx.Guild.Id, new List<DiscordApplicationCommand>());
+            await ctx.RespondAsync("Done");
+        }
+
+        [Command("enable"), Description("Enable given module"),RequirePermissions(Permissions.Administrator), RequireGuild()]
+        public async Task EnableModule(CommandContext ctx, [Description("Name of new module")] string moduleName)
+        {
+            if (!CommandService.modularDiscordBot.madsModules.TryGetValue(moduleName, out IMadsModul module))
+            {
+                await ctx.RespondAsync("Module not found");
+                return;
+            }
+            
+            CommandService.modularDiscordBot.madsModules[moduleName].Enable(ctx.Guild.Id);
+            await ctx.RespondAsync("Module is now enabled");
+            return;
+        }
     }
 }

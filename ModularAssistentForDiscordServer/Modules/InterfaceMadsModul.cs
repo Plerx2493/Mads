@@ -43,7 +43,17 @@ namespace MADS.Modules
         public void Disable(ulong guildId)
         {
             ModularDiscordClient.ModulesAktivGuilds[ModulName].RemoveAll(x => x == guildId);
-            ModularDiscordClient.DiscordClient.BulkOverwriteGuildApplicationCommandsAsync(); //TODO: 
+
+            var aktivCommandsList = ModularDiscordClient.SlashCommandsExtension.RegisteredCommands;
+            var aktivCommandsDict = aktivCommandsList.ToDictionary(x => x.Key, x => x.Value);
+
+            List<DiscordApplicationCommand> CommandList = new();
+            if (aktivCommandsDict.TryGetValue(guildId, out IReadOnlyList<DiscordApplicationCommand> ReadonlyCommands))
+            {
+                CommandList = ReadonlyCommands.ToList();
+                CommandList.RemoveAll(x => Commands.Contains(x.Name));    
+            }
+            ModularDiscordClient.DiscordClient.BulkOverwriteGuildApplicationCommandsAsync(guildId, CommandList);
         }
     }
     
