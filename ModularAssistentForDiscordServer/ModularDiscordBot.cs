@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
+using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.Entities;
 using Microsoft.Extensions.DependencyInjection;
@@ -41,10 +42,10 @@ namespace MADS
 
         public async Task RunAsync()
         {
-            if(Innit()) return;
+            if (Innit()) return;
 
             RegisterModul(typeof(ModerationModul));
-            
+
             config = DataProvider.GetConfig();
 
             GuildSettings = config.GuildSettings;
@@ -69,6 +70,7 @@ namespace MADS
             DiscordClient.Ready += OnClientReady;
             DiscordClient.Zombied += OnZombied;
 
+
             //connect client
             await DiscordClient.ConnectAsync();
             //keep alive
@@ -85,16 +87,16 @@ namespace MADS
                     {
                         madsModul.Enable(x.Key);
                     }
-                }); 
+                });
             });
         }
 
         public static bool Innit()
         {
             string configPath = DataProvider.GetPath("config.json");
-            
+
             if (File.Exists(configPath)) { return false; }
-            
+
             var tmp = File.Create(configPath);
             tmp.Close();
 
@@ -116,12 +118,12 @@ namespace MADS
 
             newConfig.GuildSettings[0] = new();
             JsonProvider.parseJson(configPath, newConfig);
-            
+
             Console.WriteLine("Please insert your token in the config file and Restart");
             Console.WriteLine("Filepath: " + configPath);
             Console.WriteLine("Press key to continue");
             Console.Read();
-            
+
             return true;
         }
 
@@ -148,6 +150,19 @@ namespace MADS
             };
 
             SlashCommandsExtension = DiscordClient.UseSlashCommands(slashConfig);
+
+            CommandsNextExtension.CommandErrored += OnCommandErrored;
+        }
+
+        private async Task OnCommandErrored(CommandsNextExtension sender, CommandErrorEventArgs e)
+        {
+            var typeOfException = e.Exception.GetType();
+            if (typeOfException == typeof(ChecksFailedException))
+            {
+                return;
+            }
+
+            await e.Context.Message.RespondAsync($"OOPS your command just errored... \n {e.Exception}");
         }
 
         private async Task OnZombied(DiscordClient sender, ZombiedEventArgs e)
@@ -163,27 +178,27 @@ namespace MADS
 
         public void RegisterModul(Type modul)
         {
-            var newModul = (IMadsModul) Activator.CreateInstance(modul, this);
+            var newModul = (IMadsModul)Activator.CreateInstance(modul, this);
             madsModules[newModul.ModulName] = newModul;
         }
 
         public static async Task<DiscordMessage> AnswerWithDelete(CommandContext ctx, DiscordEmbed message, int secondsToDelete = 20)
         {
             DiscordMessage response = await ctx.Channel.SendMessageAsync(message);
-            
+
             if (!ctx.Channel.IsPrivate)
             {
                 await Task.Delay(secondsToDelete * 1000);
                 await response.DeleteAsync();
                 await ctx.Message.DeleteAsync();
             }
-            
+
             return response;
         }
 
         public DiscordIntents GetRequiredIntents()
         {
-            DiscordIntents requiredIntents = 
+            DiscordIntents requiredIntents =
                 DiscordIntents.GuildMessages
                 | DiscordIntents.DirectMessages
                 | DiscordIntents.Guilds;

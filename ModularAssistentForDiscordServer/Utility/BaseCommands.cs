@@ -92,7 +92,7 @@ namespace ModularAssistentForDiscordServer.Utility
         [Command("test"), RequireOwner()]
         public async Task Test(CommandContext ctx)
         {
-            await CommandService.modularDiscordBot.DiscordClient.BulkOverwriteGuildApplicationCommandsAsync(ctx.Guild.Id, new List<DiscordApplicationCommand>());
+            await CommandService.modularDiscordBot.DiscordClient.BulkOverwriteGlobalApplicationCommandsAsync(new List<DiscordApplicationCommand>());
             await ctx.RespondAsync("Done");
         }
 
@@ -107,6 +107,20 @@ namespace ModularAssistentForDiscordServer.Utility
             
             CommandService.modularDiscordBot.madsModules[moduleName].Enable(ctx.Guild.Id);
             await ctx.RespondAsync("Module is now enabled");
+            return;
+        }
+
+        [Command("disable"), Description("Disable given module"), RequirePermissions(Permissions.Administrator), RequireGuild()]
+        public async Task DisableModule(CommandContext ctx, [Description("Name of module")] string moduleName)
+        {
+            if (!CommandService.modularDiscordBot.madsModules.TryGetValue(moduleName, out IMadsModul module))
+            {
+                await ctx.RespondAsync("Module not found");
+                return;
+            }
+
+            CommandService.modularDiscordBot.madsModules[moduleName].Disable(ctx.Guild.Id);
+            await ctx.RespondAsync("Module is now disabled");
             return;
         }
     }
