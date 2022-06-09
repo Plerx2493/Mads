@@ -29,20 +29,20 @@ namespace MADS.Modules
         {
             ModulName = "Moderation";
             ModulDescription = "Moderation commands";
-            Commands = new string[] { "kick", "ban", "mute", "unmute", "purge", "warn", "unwarn", "warnlist", "warnlevel", "warnlevelset", "warnlevelreset" };
+            Commands = new string[] { "kick", "ban", "mute", "unmute", "purge", "warn", "unwarn", "warnlist", "warnlevel", "warnlevelset", "warnlevelreset", "moderation test", "test" };
             CommandDescriptions = new Dictionary<string, string>
             {
                 { "kick", "Kicks a user from the server" },
                 { "ban", "Bans a user from the server" },
                 { "mute", "Mutes a user" },
                 { "unmute", "Unmutes a user" },
-                { "purge", "Deletes a number of messages" },                    //TODO
-                { "warn", "Warns a user" },                                     //TODO
-                { "unwarn", "Unwarns a user" },                                 //TODO
-                { "warnlist", "Shows the warns of a user" },                    //TODO
-                { "warnlevel", "Shows the warn level of a user" },              //TODO
-                { "warnlevelset", "Sets the warn level of a user" },            //TODO
-                { "warnlevelreset", "Resets the warn level of a user" }         //TODO
+                { "purge", "Deletes a number of messages" },                    //TODO: Implement command
+                { "warn", "Warns a user" },                                     //TODO: Implement command
+                { "unwarn", "Unwarns a user" },                                 //TODO: Implement command
+                { "warnlist", "Shows the warns of a user" },                    //TODO: Implement command
+                { "warnlevel", "Shows the warn level of a user" },              //TODO: Implement command
+                { "warnlevelset", "Sets the warn level of a user" },            //TODO: Implement command
+                { "warnlevelreset", "Resets the warn level of a user" }         //TODO: Implement command
             };
             CommandClass = typeof(ModerationCommands);
             SlashCommandClass = typeof(ModerationSlashCommands);
@@ -208,10 +208,25 @@ namespace MADS.Modules
         }
     }
 
-    [SlashCommandGroup("Moderation", "")]
+    [SlashCommandGroup("Moderation", "Commands to moderate a guild")]
     [GuildOnly]
     internal class ModerationSlashCommands : ApplicationCommandModule
     {
-        
+        [SlashCommand("test","test smth")]
+        public async Task TestCommand(InteractionContext ctx)
+        {
+            var member = await ctx.Guild.GetMemberAsync(ctx.User.Id + 12313);
+
+            var DiscordEmbed = new DiscordEmbedBuilder
+            {
+                Title = "Test",
+                Description = $"Test executed",
+                Color = DiscordColor.Blue,
+                Timestamp = DateTime.Now,
+            };
+
+
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(DiscordEmbed));
+        }
     }
 }

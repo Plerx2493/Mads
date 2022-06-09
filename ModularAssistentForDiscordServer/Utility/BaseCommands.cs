@@ -99,7 +99,7 @@ namespace ModularAssistentForDiscordServer.Utility
         [Command("enable"), Description("Enable given module"),RequirePermissions(Permissions.Administrator), RequireGuild()]
         public async Task EnableModule(CommandContext ctx, [Description("Name of new module")] string moduleName)
         {
-            if (!CommandService.modularDiscordBot.madsModules.TryGetValue(moduleName, out IMadsModul module))
+            if (!CommandService.modularDiscordBot.madsModules.TryGetValue(moduleName, out _))
             {
                 await ctx.RespondAsync("Module not found");
                 return;
@@ -113,7 +113,7 @@ namespace ModularAssistentForDiscordServer.Utility
         [Command("disable"), Description("Disable given module"), RequirePermissions(Permissions.Administrator), RequireGuild()]
         public async Task DisableModule(CommandContext ctx, [Description("Name of module")] string moduleName)
         {
-            if (!CommandService.modularDiscordBot.madsModules.TryGetValue(moduleName, out IMadsModul module))
+            if (!CommandService.modularDiscordBot.madsModules.TryGetValue(moduleName, out _))
             {
                 await ctx.RespondAsync("Module not found");
                 return;

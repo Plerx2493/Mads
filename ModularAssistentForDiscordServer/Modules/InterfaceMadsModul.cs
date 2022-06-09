@@ -19,7 +19,22 @@ namespace MADS.Modules
 
         public void RegisterCNext();
 
-        public void Enable(ulong guildId)
+        public void Enable(ulong guildId, bool updateSlashies = true)
+        {
+            if(ModularDiscordClient.GuildSettings.TryGetValue(guildId, out _))
+            {
+                ModularDiscordClient.GuildSettings[guildId].AktivModules.Add(ModulName);
+            }
+            else
+            {
+                ModularDiscordClient.GuildSettings.Add(guildId, new());
+                ModularDiscordClient.GuildSettings[guildId].AktivModules.Add(ModulName);
+            }
+
+            RegisterCommands(guildId, updateSlashies);
+        }
+
+        public void RegisterCommands(ulong guildId, bool updateSlashies = true)
         {
             if (ModularDiscordClient.ModulesAktivGuilds.TryGetValue(ModulName, out _))
             {
@@ -36,11 +51,13 @@ namespace MADS.Modules
 
             if (SlashCommandClass is not null && typeof(ApplicationCommandModule).IsAssignableFrom(SlashCommandClass))
             {
+                Console.WriteLine("Slashies registered");
                 ModularDiscordClient.SlashCommandsExtension.RegisterCommands(SlashCommandClass, guildId);
+                if (updateSlashies) ModularDiscordClient.SlashCommandsExtension.RefreshCommands();
             }
         }
         
-        public void Disable(ulong guildId)
+        public void Disable(ulong guildId, bool updateSlashies = true)
         {
             ModularDiscordClient.ModulesAktivGuilds[ModulName].RemoveAll(x => x == guildId);
 
@@ -54,6 +71,7 @@ namespace MADS.Modules
                 CommandList.RemoveAll(x => Commands.Contains(x.Name));    
             }
             ModularDiscordClient.DiscordClient.BulkOverwriteGuildApplicationCommandsAsync(guildId, CommandList);
+            if (updateSlashies) ModularDiscordClient.SlashCommandsExtension.RefreshCommands();
         }
     }
     

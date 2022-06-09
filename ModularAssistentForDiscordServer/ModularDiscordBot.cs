@@ -15,6 +15,7 @@ using MADS.JsonModel;
 using MADS.Modules;
 using DSharpPlus.EventArgs;
 using ModularAssistentForDiscordServer.Utility;
+using DSharpPlus.SlashCommands.EventArgs;
 
 namespace MADS
 {
@@ -26,7 +27,19 @@ namespace MADS
         internal SlashCommandsExtension SlashCommandsExtension;
         internal Dictionary<string, IMadsModul> madsModules;
         internal Dictionary<string, List<ulong>> ModulesAktivGuilds;
-        internal Dictionary<ulong, GuildSettings> GuildSettings = new();
+        private Dictionary<ulong, GuildSettings> _Guildsettings;
+        internal Dictionary<ulong, GuildSettings> GuildSettings
+        {
+            get
+            {
+                return _Guildsettings;
+            }
+            set
+            {
+                _Guildsettings = value;
+                DataProvider.SetConfig(value);
+            }
+        }
         internal ServiceProvider Services;
         internal DateTime startTime;
         internal ConfigJson config;
@@ -49,7 +62,7 @@ namespace MADS
             config = DataProvider.GetConfig();
 
             GuildSettings = config.GuildSettings;
-
+            
             DiscordClient = new DiscordClient(new DiscordConfiguration
             {
                 Token = config.Token,
@@ -85,10 +98,13 @@ namespace MADS
                 {
                     if (madsModules.TryGetValue(y, out IMadsModul madsModul))
                     {
-                        madsModul.Enable(x.Key);
+                        Console.WriteLine("Enabled modul: " + x.Key + ":" + madsModul.ModulName);
+                        madsModul.RegisterCommands(x.Key, false);
                     }
                 });
             });
+
+            Console.WriteLine("EnableGuildConfigs() finished");
         }
 
         public static bool Innit()
@@ -151,13 +167,34 @@ namespace MADS
 
             SlashCommandsExtension = DiscordClient.UseSlashCommands(slashConfig);
 
-            CommandsNextExtension.CommandErrored += OnCommandErrored;
+            CommandsNextExtension.CommandErrored += OnCNextErrored;
+            SlashCommandsExtension.SlashCommandErrored += OnSlashCommandErrored;
         }
 
-        private async Task OnCommandErrored(CommandsNextExtension sender, CommandErrorEventArgs e)
+        private async Task OnSlashCommandErrored(SlashCommandsExtension sender, SlashCommandErrorEventArgs e)
         {
             var typeOfException = e.Exception.GetType();
-            if (typeOfException == typeof(ChecksFailedException))
+            if (typeOfException == typeof(SlashExecutionChecksFailedException) || typeOfException == typeof(ArgumentException))
+            {
+                return;
+            }
+
+            var DiscordEmbed = new DiscordEmbedBuilder
+            {
+                Title = "Error",
+                Description = $"The command execution failed",
+                Color = DiscordColor.Red,
+                Timestamp = DateTime.Now,
+            };
+            DiscordEmbed.AddField("Exception:", e.Exception.Message + "\n" + e.Exception.StackTrace);
+
+            await e.Context.Interaction.CreateResponseAsync( InteractionResponseType.ChannelMessageWithSource ,new DiscordInteractionResponseBuilder().AddEmbed(DiscordEmbed));
+        }
+
+        private async Task OnCNextErrored(CommandsNextExtension sender, CommandErrorEventArgs e)
+        {
+            var typeOfException = e.Exception.GetType();
+            if (typeOfException == typeof(ChecksFailedException) || typeOfException == typeof(ArgumentException))
             {
                 return;
             }
