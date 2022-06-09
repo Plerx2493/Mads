@@ -13,8 +13,10 @@ namespace MADS.Modules
         string ModulDescription { get; set; }
         string[] Commands { get; set; }
         Dictionary<string, string> CommandDescriptions { get; set; }
+#pragma warning disable CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
         Type? CommandClass { get; set; }
         Type? SlashCommandClass { get; set; }
+#pragma warning restore CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
         DiscordIntents RequiredIntents { get; set; }
 
         public void RegisterCNext();
