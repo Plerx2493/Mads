@@ -25,8 +25,14 @@ namespace MADS
         internal LoggingProvider Logging;
         internal CommandsNextExtension CommandsNextExtension;
         internal SlashCommandsExtension SlashCommandsExtension;
+        
+        //ModuleName -> Module instance
         internal Dictionary<string, IMadsModul> madsModules;
+
+        //ModuleName -> Guild Ids which have enabled the modul
         internal Dictionary<string, List<ulong>> ModulesAktivGuilds;
+
+        //GuildId -> Guildsettings for certain guild
         private Dictionary<ulong, GuildSettings> _Guildsettings;
         internal Dictionary<ulong, GuildSettings> GuildSettings
         {
@@ -47,10 +53,10 @@ namespace MADS
 
         public ModularDiscordBot()
         {
-            madsModules = new Dictionary<string, IMadsModul>();
-            ModulesAktivGuilds = new Dictionary<string, List<ulong>>();
+            madsModules = new();
+            ModulesAktivGuilds = new();
             startTime = DateTime.Now;
-            Logging = new LoggingProvider(this);
+            Logging = new(this);
         }
 
         public async Task RunAsync()
@@ -62,15 +68,16 @@ namespace MADS
             config = DataProvider.GetConfig();
 
             GuildSettings = config.GuildSettings;
-            
-            DiscordClient = new DiscordClient(new DiscordConfiguration
+            var discordConfig = new DiscordConfiguration
             {
                 Token = config.Token,
                 TokenType = TokenType.Bot,
                 AutoReconnect = true,
                 MinimumLogLevel = config.LogLevel,
                 Intents = GetRequiredIntents()
-            });
+            };
+
+            DiscordClient = new(discordConfig);
 
             Services = new ServiceCollection()
                 .AddSingleton(new MadsServiceProvider(this, ModulesAktivGuilds))
