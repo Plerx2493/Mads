@@ -61,7 +61,7 @@ namespace MADS
 
         public async Task RunAsync()
         {
-            if (Innit()) return;
+            if (VaildateConfig()) return;
 
             RegisterModul(typeof(ModerationModul));
 
@@ -114,12 +114,14 @@ namespace MADS
             Console.WriteLine("EnableGuildConfigs() finished");
         }
 
-        public static bool Innit()
+        public static bool VaildateConfig()
         {
             string configPath = DataProvider.GetPath("config.json");
 
-            if (File.Exists(configPath)) { return false; }
-
+            if (!File.Exists(configPath)) { return false; }
+            if (DataProvider.GetConfig().Token is null){ return false; }
+            
+            
             var tmp = File.Create(configPath);
             tmp.Close();
 
