@@ -123,5 +123,30 @@ namespace ModularAssistentForDiscordServer.Utility
             await ctx.RespondAsync("Module is now disabled");
             return;
         }
+
+        [Command("modules"), Description("List all modules"), RequirePermissions(Permissions.Administrator), RequireGuild()]
+        public async Task ListModules(CommandContext ctx)
+        {
+            var modules = CommandService.modularDiscordBot.madsModules.Keys.ToList();
+            var response = "";
+            foreach (var module in modules)
+            {
+                response += module + "\n";
+            }
+            await ctx.RespondAsync(response);
+        }
+
+        [Command("exit"), Description("Exit the bot"), RequirePermissions(Permissions.Administrator), RequireGuild]
+        public async Task Exit(CommandContext ctx)
+        {
+            await ctx.RespondAsync("Leaving server...");
+            await ctx.Guild.LeaveAsync();
+        }
+
+        [Command("leave"), Description("Leave given server"), RequireGuild, Hidden]
+        public async Task LeaveGuildOwner(CommandContext ctx)
+        {
+            await ctx.Guild.LeaveAsync();
+        }
     }
 }
