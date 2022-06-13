@@ -25,7 +25,7 @@ namespace MADS
         internal LoggingProvider Logging;
         internal CommandsNextExtension CommandsNextExtension;
         internal SlashCommandsExtension SlashCommandsExtension;
-        
+
         //ModuleName -> Module instance
         internal Dictionary<string, IMadsModul> madsModules;
 
@@ -61,7 +61,11 @@ namespace MADS
 
         public async Task RunAsync()
         {
-            if (VaildateConfig()) return;
+            if (!VaildateConfig())
+            {
+                CreateConfig();
+                return;         
+            }
 
             RegisterModul(typeof(ModerationModul));
 
@@ -114,16 +118,31 @@ namespace MADS
             Console.WriteLine("EnableGuildConfigs() finished");
         }
 
-        public static bool VaildateConfig()
+        internal static bool VaildateConfig()
         {
             string configPath = DataProvider.GetPath("config.json");
 
             if (!File.Exists(configPath)) { return false; }
-            if (DataProvider.GetConfig().Token is null){ return false; }
+            ConfigJson config = DataProvider.GetConfig();
+            if (config.Token is null || config.Token is "" || config.Token is "<Your Token here>") { return false; }
+            if (config.Prefix is null || config.Prefix is "") { config.Prefix = "!"; }
+            if (config.DiscordEmbed is null) { config.DiscordEmbed = new DiscordEmbedBuilder(); }
+            if (config.GuildSettings is null)
+            {
+                config.GuildSettings = new Dictionary<ulong, GuildSettings>
+                {
+                    [0] = new()
+                };
+            }
+            return true;
+        }
+        
+        internal static void CreateConfig() 
+        {
+            string configPath = DataProvider.GetPath("config.json");
             
-            
-            var tmp = File.Create(configPath);
-            tmp.Close();
+            FileStream fileStream = File.Create(configPath);
+            fileStream.Close();
 
             ConfigJson newConfig = new()
             {
@@ -144,12 +163,10 @@ namespace MADS
             newConfig.GuildSettings[0] = new();
             JsonProvider.parseJson(configPath, newConfig);
 
-            Console.WriteLine("Please insert your token in the config file and Restart");
+            Console.WriteLine("Please insert your token in the config file and restart");
             Console.WriteLine("Filepath: " + configPath);
             Console.WriteLine("Press key to continue");
             Console.Read();
-
-            return true;
         }
 
         private void RegisterCommandExtensions()
@@ -197,7 +214,7 @@ namespace MADS
             };
             DiscordEmbed.AddField("Exception:", e.Exception.Message + "\n" + e.Exception.StackTrace);
 
-            await e.Context.Interaction.CreateResponseAsync( InteractionResponseType.ChannelMessageWithSource ,new DiscordInteractionResponseBuilder().AddEmbed(DiscordEmbed));
+            await e.Context.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(DiscordEmbed));
         }
 
         private async Task OnCNextErrored(CommandsNextExtension sender, CommandErrorEventArgs e)
