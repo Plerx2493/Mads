@@ -14,7 +14,7 @@ using MADS.Extensions;
 using MADS.JsonModel;
 using MADS.Modules;
 using DSharpPlus.EventArgs;
-using ModularAssistentForDiscordServer.Utility;
+using MADS.Utility;
 using DSharpPlus.SlashCommands.EventArgs;
 
 namespace MADS
@@ -68,6 +68,7 @@ namespace MADS
             }
 
             RegisterModul(typeof(ModerationModul));
+            RegisterModul(typeof(DevModule));
 
             config = DataProvider.GetConfig();
 

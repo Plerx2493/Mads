@@ -7,8 +7,9 @@ using MADS.Extensions;
 using MADS.JsonModel;
 using MADS.Modules;
 using Microsoft.Extensions.Logging;
+using System.Text.Encodings.Web;
 
-namespace ModularAssistentForDiscordServer.Utility
+namespace MADS.Utility
 {
     internal class BaseCommands : BaseCommandModule
     {
@@ -25,7 +26,7 @@ namespace ModularAssistentForDiscordServer.Utility
                 .WithTitle("Status")
                 .WithTimestamp(DateTime.Now)
                 .AddField("Uptime", date)
-                .AddField("Ping", $"{ctx.Client.Ping} ms");
+                .AddField("Websocket ping", $"{ctx.Client.Ping} ms");
 
             var response = await ModularDiscordBot.AnswerWithDelete(ctx, discordEmbedBuilder.Build(), 20);
             await CommandService.modularDiscordBot.Logging.LogCommandExecution(ctx, response);
@@ -35,6 +36,9 @@ namespace ModularAssistentForDiscordServer.Utility
         public async Task About(CommandContext ctx)
         {
             var discordEmbedBuilder = CommandService.modularDiscordBot.config.DiscordEmbed;
+            string inviteUri = ctx.Client.CurrentApplication.GenerateOAuthUri(null, Permissions.Administrator, OAuthScope.Bot, OAuthScope.ApplicationsCommands);
+            
+            string addMe = $"[Click here!]({inviteUri.Replace(" ", "%20")})";
 
             discordEmbedBuilder
                 .WithTitle("About me")
@@ -42,8 +46,9 @@ namespace ModularAssistentForDiscordServer.Utility
                 .WithAuthor(ctx.Client.CurrentUser.Username, ctx.Client.CurrentUser.AvatarUrl, ctx.Client.CurrentUser.AvatarUrl)
                 .AddField("Owner:", "[Plerx](https://github.com/Plerx2493/)")
                 .AddField("Source:", "[Github](https://github.com/Plerx2493/Mads)", true)
-                .AddField("DSharpPlus Version:", ctx.Client.VersionString)
-                .AddField("Guilds", ctx.Client.Guilds.Count.ToString(), true);
+                .AddField("D#+ Version:", ctx.Client.VersionString)
+                .AddField("Guilds", ctx.Client.Guilds.Count.ToString(), true)
+                .AddField("Add me", addMe);
 
             await ctx.RespondAsync(discordEmbedBuilder.Build());
         }

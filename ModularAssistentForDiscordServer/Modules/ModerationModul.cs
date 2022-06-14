@@ -24,6 +24,7 @@ namespace MADS.Modules
         public Type CommandClass { get; set; }
         public Type SlashCommandClass { get; set; }
         public DiscordIntents RequiredIntents { get; set; }
+        public bool IsHidden { get; init; }
 
         public ModerationModul(ModularDiscordBot bot)
         {
@@ -48,14 +49,7 @@ namespace MADS.Modules
             SlashCommandClass = typeof(ModerationSlashCommands);
             RequiredIntents = 0;
             ModularDiscordClient = bot;
-        }
-
-        public void RegisterCNext()
-        {
-            if (CommandClass is not null && typeof(BaseCommandModule).IsAssignableFrom(CommandClass))
-            {
-                ModularDiscordClient.CommandsNextExtension.RegisterCommands(CommandClass);
-            }
+            IsHidden = false;
         }
     }
     

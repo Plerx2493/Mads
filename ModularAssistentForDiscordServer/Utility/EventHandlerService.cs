@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ModularAssistentForDiscordServer.Utility
+namespace MADS.Utility
 {
     internal class EventHandlerService
     {

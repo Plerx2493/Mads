@@ -17,9 +17,8 @@ namespace MADS.Modules
         Type? CommandClass { get; set; }
         Type? SlashCommandClass { get; set; }
 #pragma warning restore CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
-        DiscordIntents RequiredIntents { get; set; }
-
-        public void RegisterCNext();
+        DiscordIntents RequiredIntents { get; }
+        bool IsHidden { get; init; }
 
         public void Enable(ulong guildId, bool updateSlashies = true)
         {
@@ -58,7 +57,15 @@ namespace MADS.Modules
                 if (updateSlashies) ModularDiscordClient.SlashCommandsExtension.RefreshCommands();
             }
         }
-        
+
+        public void RegisterCNext()
+        {
+            if (CommandClass is not null && typeof(BaseCommandModule).IsAssignableFrom(CommandClass))
+            {
+                ModularDiscordClient.CommandsNextExtension.RegisterCommands(CommandClass);
+            }
+        }
+
         public void Disable(ulong guildId, bool updateSlashies = true)
         {
             ModularDiscordClient.ModulesAktivGuilds[ModulName].RemoveAll(x => x == guildId);
