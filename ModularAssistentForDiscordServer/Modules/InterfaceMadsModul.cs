@@ -3,6 +3,7 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.Entities;
 using DSharpPlus.CommandsNext.Attributes;
+using MADS.Extensions;
 
 namespace MADS.Modules
 {
@@ -56,6 +57,8 @@ namespace MADS.Modules
                 ModularDiscordClient.SlashCommandsExtension.RegisterCommands(SlashCommandClass, guildId);
                 if (updateSlashies) ModularDiscordClient.SlashCommandsExtension.RefreshCommands();
             }
+
+            DataProvider.SetConfig(ModularDiscordClient.GuildSettings);
         }
 
         public void RegisterCNext()
@@ -81,6 +84,8 @@ namespace MADS.Modules
             }
             ModularDiscordClient.DiscordClient.BulkOverwriteGuildApplicationCommandsAsync(guildId, CommandList);
             if (updateSlashies) ModularDiscordClient.SlashCommandsExtension.RefreshCommands();
+
+            DataProvider.SetConfig(ModularDiscordClient.GuildSettings);
         }
     }
     

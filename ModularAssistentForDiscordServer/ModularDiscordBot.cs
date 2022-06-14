@@ -43,7 +43,6 @@ namespace MADS
             set
             {
                 _Guildsettings = value;
-                DataProvider.SetConfig(value);
             }
         }
         internal ServiceProvider Services;

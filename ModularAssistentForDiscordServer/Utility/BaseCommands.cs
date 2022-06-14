@@ -141,6 +141,24 @@ namespace MADS.Utility
             await ctx.RespondAsync(response);
         }
 
+        [Command("modulesactiv"), Description("Get activ modules"), RequirePermissions(Permissions.Administrator), RequireGuild()]
+        public async Task ListActiveModules(CommandContext ctx)
+        {
+            var response = "";
+            var tmp = CommandService.modulesActivGuilds;
+
+            tmp.ToList().ForEach(x =>
+            {
+                if (x.Value.Contains(ctx.Guild.Id))
+                {
+                    response += x.Key + "\n";
+                }
+            });
+
+            if (response == "") await ctx.RespondAsync("No modules active");
+            else await ctx.RespondAsync("Activ Modules: \n" + response);
+        }
+
         [Command("exit"), Description("Exit the bot"), RequirePermissions(Permissions.Administrator), RequireGuild]
         public async Task Exit(CommandContext ctx)
         {
