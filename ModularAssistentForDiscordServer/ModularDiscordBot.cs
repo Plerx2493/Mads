@@ -19,22 +19,22 @@ using DSharpPlus.SlashCommands.EventArgs;
 
 namespace MADS
 {
-    internal class ModularDiscordBot
+    public class ModularDiscordBot
     {
-        internal DiscordClient DiscordClient;
-        internal LoggingProvider Logging;
-        internal CommandsNextExtension CommandsNextExtension;
-        internal SlashCommandsExtension SlashCommandsExtension;
+        public DiscordClient DiscordClient;
+        public LoggingProvider Logging;
+        public CommandsNextExtension CommandsNextExtension;
+        public SlashCommandsExtension SlashCommandsExtension;
 
         //ModuleName -> Module instance
-        internal Dictionary<string, IMadsModul> madsModules;
+        public Dictionary<string, IMadsModul> madsModules;
 
         //ModuleName -> Guild Ids which have enabled the modul
-        internal Dictionary<string, List<ulong>> ModulesAktivGuilds;
+        public Dictionary<string, List<ulong>> ModulesAktivGuilds;
 
         //GuildId -> Guildsettings for certain guild
-        private Dictionary<ulong, GuildSettings> _Guildsettings;
-        internal Dictionary<ulong, GuildSettings> GuildSettings
+        public Dictionary<ulong, GuildSettings> _Guildsettings;
+        public Dictionary<ulong, GuildSettings> GuildSettings
         {
             get
             {

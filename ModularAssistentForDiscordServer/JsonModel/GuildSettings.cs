@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace MADS.JsonModel
 {
-    internal struct GuildSettings
+    public struct GuildSettings
     {
         public GuildSettings()
         {

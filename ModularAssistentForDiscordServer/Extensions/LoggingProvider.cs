@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace MADS.Extensions
 {
-    internal class LoggingProvider
+    public class LoggingProvider
     {
         //Utilities
         private readonly string dirPath = DataProvider.GetPath("Logs");

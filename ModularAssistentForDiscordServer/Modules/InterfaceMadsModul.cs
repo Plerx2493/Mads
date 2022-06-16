@@ -7,7 +7,7 @@ using MADS.Extensions;
 
 namespace MADS.Modules
 {
-    internal interface IMadsModul
+    public interface IMadsModul
     {
         ModularDiscordBot ModularDiscordClient { get; set; }
         string ModulName { get; set; }

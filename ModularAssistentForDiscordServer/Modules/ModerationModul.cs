@@ -55,7 +55,7 @@ namespace MADS.Modules
     
     internal class ModerationCommands : BaseCommandModule
     {
-        public ModularDiscordBot ModularDiscordClient { get; set; }
+        public MadsServiceProvider CommandService{ get; set; }
 
         [GuildIsEnabled("Moderation"), Command("kick"), Description("Kicks a user from the server"), RequireBotPermissions(Permissions.KickMembers)]
         public async Task Kick(CommandContext ctx, DiscordUser user, [RemainingText] string reason = null)
