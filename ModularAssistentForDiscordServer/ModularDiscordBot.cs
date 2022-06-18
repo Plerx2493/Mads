@@ -109,7 +109,7 @@ namespace MADS
                 {
                     if (madsModules.TryGetValue(y, out IMadsModul madsModul))
                     {
-                        Console.WriteLine("Enabled modul: " + x.Key + ":" + madsModul.ModulName);
+                        Console.WriteLine("Enabled modul:" + x.Key + ":" + madsModul.ModulName);
                         madsModul.RegisterCommands(x.Key, false);
                     }
                 });

@@ -44,7 +44,7 @@ namespace MADS.Utility
                 .WithTitle("About me")
                 .WithDescription("A modular desinged discord bot for moderation and stuff")
                 .WithAuthor(ctx.Client.CurrentUser.Username, ctx.Client.CurrentUser.AvatarUrl, ctx.Client.CurrentUser.AvatarUrl)
-                .AddField("Owner:", "[Plerx](https://github.com/Plerx2493/)")
+                .AddField("Owner:", "[Plerx#0175](https://github.com/Plerx2493/)")
                 .AddField("Source:", "[Github](https://github.com/Plerx2493/Mads)", true)
                 .AddField("D#+ Version:", ctx.Client.VersionString)
                 .AddField("Guilds", ctx.Client.Guilds.Count.ToString(), true)
@@ -53,7 +53,7 @@ namespace MADS.Utility
             await ctx.RespondAsync(discordEmbedBuilder.Build());
         }
 
-        [Command("prefix"), Description("Get the bot prefix for this server")]
+        [Command("prefix"), Description("Get the bot prefix for this server"), Cooldown(1, 30, CooldownBucketType.Channel)]
         public async Task GetPrefix(CommandContext ctx)
         {
             GuildSettings guildSettings;
@@ -166,7 +166,7 @@ namespace MADS.Utility
             await ctx.Guild.LeaveAsync();
         }
 
-        [Command("leave"), Description("Leave given server"), RequireGuild, Hidden]
+        [Command("leave"), Description("Leave given server"), RequireGuild, Hidden, RequireOwner]
         public async Task LeaveGuildOwner(CommandContext ctx)
         {
             await ctx.Guild.LeaveAsync();

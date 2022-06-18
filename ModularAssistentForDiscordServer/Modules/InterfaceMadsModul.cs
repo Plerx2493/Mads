@@ -90,9 +90,12 @@ namespace MADS.Modules
 
             if (SlashCommandClass is not null && typeof(ApplicationCommandModule).IsAssignableFrom(SlashCommandClass))
             {
-                Console.WriteLine("Slashies registered");
                 ModularDiscordClient.SlashCommandsExtension.RegisterCommands(SlashCommandClass, guildId);
-                if (updateSlashies) ModularDiscordClient.SlashCommandsExtension.RefreshCommands();
+                if (updateSlashies)
+                {
+                    ModularDiscordClient.SlashCommandsExtension.RefreshCommands();
+                    Console.WriteLine("Slashies registered");
+                }
             }
 
             DataProvider.SetConfig(ModularDiscordClient.GuildSettings);
