@@ -103,7 +103,7 @@ namespace MADS.Modules
 
                 Script<object> script = CSharpScript.Create(cs_code, scriptoptions, typeof(TestVariables));
                 script.Compile();
-                ScriptState<object> result = await script.RunAsync(global_variabls).ConfigureAwait(false);
+                ScriptState<object> result = await script.RunAsync(global_variabls);
                 if (result != null && result.ReturnValue != null && !string.IsNullOrWhiteSpace(result.ReturnValue.ToString()))
                     await message.ModifyAsync(new DiscordEmbedBuilder 
                     { 
