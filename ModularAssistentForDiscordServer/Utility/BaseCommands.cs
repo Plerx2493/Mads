@@ -35,7 +35,7 @@ namespace MADS.Utility
         [Command("about"), Aliases("info"), Description("Displays a little information about this bot"), Cooldown(1, 30, CooldownBucketType.Channel)]
         public async Task About(CommandContext ctx)
         {
-            var discordEmbedBuilder = CommandService.modularDiscordBot.config.DiscordEmbed;
+            var discordEmbedBuilder = CommandService.modularDiscordBot.config.GuildSettings[0].GetDiscordEmbed();
             string inviteUri = ctx.Client.CurrentApplication.GenerateOAuthUri(null, Permissions.Administrator, OAuthScope.Bot, OAuthScope.ApplicationsCommands);
             
             string addMe = $"[Click here!]({inviteUri.Replace(" ", "%20")})";

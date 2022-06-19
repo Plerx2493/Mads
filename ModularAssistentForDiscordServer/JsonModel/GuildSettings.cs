@@ -24,6 +24,11 @@ namespace MADS.JsonModel
             AuditLogs = false;
         }
 
+        public DiscordEmbedBuilder GetDiscordEmbed()
+        {
+            return new(DiscordEmbed);
+        }
+
         [JsonProperty("prefix")]
         public string Prefix { get; set; }
 
