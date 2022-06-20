@@ -98,7 +98,7 @@ namespace MADS.Modules
                 TestVariables global_variabls = new(context.Message, context.Client, context, CommandService.modularDiscordBot);
                 
                 ScriptOptions scriptoptions = ScriptOptions.Default;
-                scriptoptions = scriptoptions.WithImports("System", "System.Collections.Generic", "System.Linq", "System.Text", "System.Threading.Tasks", "DSharpPlus", "DSharpPlus.Entities", "DSharpPlus.CommandsNext");
+                scriptoptions = scriptoptions.WithImports("System", "System.Collections.Generic", "System.Linq", "System.Text", "System.Threading.Tasks", "DSharpPlus", "DSharpPlus.Entities", "DSharpPlus.CommandsNext", "ModularAssistentForDiscordServer");
                 scriptoptions = scriptoptions.WithReferences(AppDomain.CurrentDomain.GetAssemblies().Where(assembly => !assembly.IsDynamic && !string.IsNullOrWhiteSpace(assembly.Location)));
 
                 Script<object> script = CSharpScript.Create(cs_code, scriptoptions, typeof(TestVariables));

@@ -220,12 +220,12 @@ namespace MADS
         private async Task OnCNextErrored(CommandsNextExtension sender, CommandErrorEventArgs e)
         {
             var typeOfException = e.Exception.GetType();
-            if (typeOfException == typeof(ChecksFailedException) || typeOfException == typeof(ArgumentException))
+            if (typeOfException == typeof(ChecksFailedException) || typeOfException == typeof(ArgumentException) || typeOfException == typeof(CommandNotFoundException))
             {
                 return;
             }
 
-            await e.Context.Message.RespondAsync($"OOPS your command just errored... \n {e.Exception}");
+            await e.Context.Message.RespondAsync($"OOPS your command just errored... \n {e.Exception.Message}");
         }
 
         private async Task OnZombied(DiscordClient sender, ZombiedEventArgs e)

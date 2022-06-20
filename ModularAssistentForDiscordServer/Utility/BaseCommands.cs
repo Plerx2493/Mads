@@ -44,11 +44,11 @@ namespace MADS.Utility
                 .WithTitle("About me")
                 .WithDescription("A modular desinged discord bot for moderation and stuff")
                 .WithAuthor(ctx.Client.CurrentUser.Username, ctx.Client.CurrentUser.AvatarUrl, ctx.Client.CurrentUser.AvatarUrl)
-                .AddField("Owner:", "[Plerx#0175](https://github.com/Plerx2493/)")
+                .AddField("Owner:", "[Plerx#0175](https://github.com/Plerx2493/)", true)
                 .AddField("Source:", "[Github](https://github.com/Plerx2493/Mads)", true)
                 .AddField("D#+ Version:", ctx.Client.VersionString)
                 .AddField("Guilds", ctx.Client.Guilds.Count.ToString(), true)
-                .AddField("Add me", addMe);
+                .AddField("Add me", addMe, true);
 
             await ctx.RespondAsync(discordEmbedBuilder.Build());
         }
