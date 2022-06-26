@@ -7,6 +7,7 @@ using MADS.Extensions;
 using MADS.JsonModel;
 using MADS.Modules;
 using Microsoft.Extensions.Logging;
+using System.Net;
 using System.Text.Encodings.Web;
 
 namespace MADS.Utility
@@ -29,7 +30,7 @@ namespace MADS.Utility
                 .AddField("Websocket ping", $"{ctx.Client.Ping} ms");
 
             var response = await ModularDiscordBot.AnswerWithDelete(ctx, discordEmbedBuilder.Build(), 20);
-            await CommandService.modularDiscordBot.Logging.LogCommandExecution(ctx, response);
+            CommandService.modularDiscordBot.Logging.LogCommandExecutionAsync(ctx, response);
         }
 
         [Command("about"), Aliases("info"), Description("Displays a little information about this bot"), Cooldown(1, 30, CooldownBucketType.Channel)]
@@ -38,7 +39,11 @@ namespace MADS.Utility
             var discordEmbedBuilder = CommandService.modularDiscordBot.config.GuildSettings[0].GetDiscordEmbed();
             string inviteUri = ctx.Client.CurrentApplication.GenerateOAuthUri(null, Permissions.Administrator, OAuthScope.Bot, OAuthScope.ApplicationsCommands);
             
-            string addMe = $"[Click here!]({inviteUri.Replace(" ", "%20")})";
+            string addMe = $"[Click here!]({WebUtility.UrlEncode(inviteUri)})";
+            
+            var diff = DateTime.Now - CommandService.modularDiscordBot.startTime;
+            string date = string.Format("{0} days {1} hours {2} minutes", diff.Days, diff.Hours, diff.Minutes);
+            string tmp = Formatter.Timestamp(CommandService.modularDiscordBot.startTime);
 
             discordEmbedBuilder
                 .WithTitle("About me")
@@ -48,9 +53,13 @@ namespace MADS.Utility
                 .AddField("Source:", "[Github](https://github.com/Plerx2493/Mads)", true)
                 .AddField("D#+ Version:", ctx.Client.VersionString)
                 .AddField("Guilds", ctx.Client.Guilds.Count.ToString(), true)
-                .AddField("Add me", addMe, true);
+                .AddField("Uptime", "Online since " + tmp, true)
+                .AddField("Ping", $"{ctx.Client.Ping} ms", true)
+                .AddField("Add me", addMe);
+            
 
-            await ctx.RespondAsync(discordEmbedBuilder.Build());
+            var response = await ctx.RespondAsync(discordEmbedBuilder.Build());
+            CommandService.modularDiscordBot.Logging.LogCommandExecutionAsync(ctx, response);
         }
 
         [Command("prefix"), Description("Get the bot prefix for this server"), Cooldown(1, 30, CooldownBucketType.Channel)]
@@ -97,7 +106,7 @@ namespace MADS.Utility
         [Command("test"), RequireOwner()]
         public async Task Test(CommandContext ctx)
         {
-            await CommandService.modularDiscordBot.DiscordClient.BulkOverwriteGlobalApplicationCommandsAsync(new List<DiscordApplicationCommand>());
+            await CommandService.modularDiscordBot.Logging.LogToOwner("test", "test command", LogLevel.Debug);
             await ctx.RespondAsync("Done");
         }
 
@@ -160,14 +169,14 @@ namespace MADS.Utility
         }
 
         [Command("exit"), Description("Exit the bot"), RequirePermissions(Permissions.Administrator), RequireGuild]
-        public async Task Exit(CommandContext ctx)
+        public static async Task ExitGuild(CommandContext ctx)
         {
             await ctx.RespondAsync("Leaving server...");
             await ctx.Guild.LeaveAsync();
         }
 
         [Command("leave"), Description("Leave given server"), RequireGuild, Hidden, RequireOwner]
-        public async Task LeaveGuildOwner(CommandContext ctx)
+        public static async Task LeaveGuildOwner(CommandContext ctx)
         {
             await ctx.Guild.LeaveAsync();
         }

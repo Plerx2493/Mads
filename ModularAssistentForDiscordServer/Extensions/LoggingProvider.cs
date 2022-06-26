@@ -1,5 +1,6 @@
 ﻿using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
+using DSharpPlus.Exceptions;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -16,22 +17,52 @@ namespace MADS.Extensions
         private readonly DateTime startDate;
         private readonly string logPath;
         private readonly ModularDiscordBot modularDiscordBot;
-        internal List<ulong> AdminChannel;
-
-       
+        private readonly List<DiscordDmChannel> OwnerChannel = new();
 
         internal LoggingProvider(ModularDiscordBot dBot)
         {
             startDate = DateTime.Now;
-
-
-
             modularDiscordBot = dBot;
             Directory.CreateDirectory(dirPath);
 
             logPath = DataProvider.GetPath("Logs", $"{startDate.Day}-{startDate.Month}-{startDate.Year}_{startDate.Hour}-{startDate.Minute}-{startDate.Second}.log");
             File.AppendAllTextAsync(logPath, "========== LOG START ==========\n\n", System.Text.Encoding.UTF8);
+
         }
+
+        public async void Setup()
+        {
+            var application = modularDiscordBot.DiscordClient.CurrentApplication;
+            var owners = application.Owners;
+            var guilds = modularDiscordBot.DiscordClient.Guilds.Values;
+
+            foreach (DiscordUser owner in owners)
+            {
+                DiscordMember member = null;
+
+                foreach (DiscordGuild guild in guilds)
+                {
+                    try
+                    {
+                        member = await guild.GetMemberAsync(owner.Id);
+                    }
+                    catch (DiscordException)
+                    {
+                        continue;
+                    }
+                    break;
+                }
+
+                if (member is not null)
+                {
+                    var channel = await member.CreateDmChannelAsync();
+                    OwnerChannel.Add(channel);
+                }
+            }
+
+            Console.WriteLine(OwnerChannel.Count);
+        }
+        
 
         public Task LogEvent(string message, string sender, LogLevel lvl)
         {
@@ -40,7 +71,7 @@ namespace MADS.Extensions
             return Task.CompletedTask;
         }
 
-        public Task LogCommandExecution(CommandContext ctx, DiscordMessage response)
+        public async Task LogCommandExecutionAsync(CommandContext ctx, DiscordMessage response)
         {
             var triggerTime = ctx.Message.Timestamp.DateTime;
             var executionTime = response.Timestamp.DateTime;
@@ -58,30 +89,28 @@ namespace MADS.Extensions
             tmp = tmp.Remove(tmp.Length - 2);
 
             var logEntry = $"[{DateTime.Now:dd'.'MM'.'yyyy'-'HH':'mm':'ss}] [INFO] [{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [{Commandname}] [{tmp}] {Timespan} milliseconds to execute";
-            File.AppendAllTextAsync(logPath, logEntry + "\n", System.Text.Encoding.UTF8);
-
-            return Task.CompletedTask;
+            await File.AppendAllTextAsync(logPath, logEntry + "\n", System.Text.Encoding.UTF8);
         }
-
-        public Task LogToAdmin(string message, string sender, LogLevel logLevel)
+        
+        public async Task LogToOwner(string message, string sender, LogLevel logLevel)
         {
-            var logEntry = $"[{logLevel}] [{sender}] {message}";
-
-            modularDiscordBot.DiscordClient.GetChannelAsync(AdminChannel[0]).Result.SendMessageAsync(logEntry);
-
-            var DiscordEmbed = new DiscordEmbedBuilder
+            var discordEmbed = new DiscordEmbedBuilder
             {
-                Title = "Log",
-                Description = logEntry,
-                Color = DiscordColor.Red,
+                Title = logLevel.ToString(),
+                Description = message,
+                Color = new(new(0, 255, 194)),
                 Timestamp = DateTime.Now,
                 Footer = new DiscordEmbedBuilder.EmbedFooter
                 {
-                    Text = "Logged by Mads"
+                    Text = "Send by " + sender
                 }
             };
 
-            return Task.CompletedTask;
+            foreach (DiscordDmChannel channel in OwnerChannel)
+            {
+                await channel.SendMessageAsync(discordEmbed);
+            }
         }
+        
     }
 }

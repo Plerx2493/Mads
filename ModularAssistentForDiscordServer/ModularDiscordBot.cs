@@ -33,18 +33,7 @@ namespace MADS
         public Dictionary<string, List<ulong>> ModulesAktivGuilds;
 
         //GuildId -> Guildsettings for certain guild
-        public Dictionary<ulong, GuildSettings> _Guildsettings;
-        public Dictionary<ulong, GuildSettings> GuildSettings
-        {
-            get
-            {
-                return _Guildsettings;
-            }
-            set
-            {
-                _Guildsettings = value;
-            }
-        }
+        public Dictionary<ulong, GuildSettings> GuildSettings;
         internal ServiceProvider Services;
         internal DateTime startTime;
         internal ConfigJson config;
@@ -93,12 +82,18 @@ namespace MADS
 
             DiscordClient.Ready += OnClientReady;
             DiscordClient.Zombied += OnZombied;
+            DiscordClient.GuildDownloadCompleted += OnGuildDownloadCompleted;
 
 
             //connect client
             await DiscordClient.ConnectAsync();
             //keep alive
             await Task.Delay(-1);
+        }
+
+        private async Task OnGuildDownloadCompleted(DiscordClient sender, GuildDownloadCompletedEventArgs e)
+        {
+            Logging.Setup();
         }
 
         private void EnableGuildConfigs()
