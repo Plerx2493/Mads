@@ -37,13 +37,14 @@ namespace MADS.Utility
         public async Task About(CommandContext ctx)
         {
             var discordEmbedBuilder = CommandService.modularDiscordBot.config.GuildSettings[0].GetDiscordEmbed();
+            var discordMessageBuilder = new DiscordMessageBuilder();
             string inviteUri = ctx.Client.CurrentApplication.GenerateOAuthUri(null, Permissions.Administrator, OAuthScope.Bot, OAuthScope.ApplicationsCommands);
             
             string addMe = $"[Click here!]({WebUtility.UrlEncode(inviteUri)})";
             
             var diff = DateTime.Now - CommandService.modularDiscordBot.startTime;
             string date = string.Format("{0} days {1} hours {2} minutes", diff.Days, diff.Hours, diff.Minutes);
-            string tmp = Formatter.Timestamp(CommandService.modularDiscordBot.startTime);
+            
 
             discordEmbedBuilder
                 .WithTitle("About me")
@@ -53,12 +54,14 @@ namespace MADS.Utility
                 .AddField("Source:", "[Github](https://github.com/Plerx2493/Mads)", true)
                 .AddField("D#+ Version:", ctx.Client.VersionString)
                 .AddField("Guilds", ctx.Client.Guilds.Count.ToString(), true)
-                .AddField("Uptime", "Online since " + tmp, true)
+                .AddField("Uptime", "Online since " + date, true)
                 .AddField("Ping", $"{ctx.Client.Ping} ms", true)
                 .AddField("Add me", addMe);
-            
 
-            var response = await ctx.RespondAsync(discordEmbedBuilder.Build());
+            discordMessageBuilder.AddEmbed(discordEmbedBuilder.Build());
+            discordMessageBuilder.AddComponents(new DiscordButtonComponent(ButtonStyle.Success, "feedback-button", "Feedback"));
+
+            var response = await ctx.RespondAsync(discordMessageBuilder);
             CommandService.modularDiscordBot.Logging.LogCommandExecutionAsync(ctx, response);
         }
 
@@ -99,7 +102,9 @@ namespace MADS.Utility
             }
 
             DataProvider.SetConfig(CommandService.modularDiscordBot.GuildSettings);
-             
+
+            ctx.Guild.CurrentMember.ModifyAsync(x => x.Nickname = ctx.Guild.CurrentMember.Username + $" [{prefix}]");
+
             await ctx.RespondAsync("New prefix is: " + $"`{CommandService.modularDiscordBot.GuildSettings[ctx.Guild.Id].Prefix}`");
         }
 

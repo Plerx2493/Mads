@@ -1,4 +1,5 @@
-﻿using DSharpPlus.CommandsNext;
+﻿using DSharpPlus;
+using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 using Microsoft.Extensions.Logging;
@@ -32,6 +33,12 @@ namespace MADS.Extensions
 
         public async void Setup()
         {
+            PopulateOwnerChannel();
+            SetupFeedback();
+        }
+
+        private async void PopulateOwnerChannel()
+        {
             var application = modularDiscordBot.DiscordClient.CurrentApplication;
             var owners = application.Owners;
             var guilds = modularDiscordBot.DiscordClient.Guilds.Values;
@@ -60,9 +67,69 @@ namespace MADS.Extensions
                 }
             }
 
-            Console.WriteLine(OwnerChannel.Count);
+            Console.WriteLine($"Found {OwnerChannel.Count} dm Channel for {owners.Count()} application owner");
         }
-        
+
+        private void SetupFeedback()
+        {
+
+            //Button response with modal
+            modularDiscordBot.DiscordClient.ComponentInteractionCreated += async (sender, e) =>
+            {
+
+                if (e.Id != "feedback-button") return;
+
+                var modal = new DiscordInteractionResponseBuilder();
+                var messageEmbed = new DiscordEmbedBuilder();
+
+                modal
+                .WithTitle("Feedback")
+                .WithCustomId("feedback-modal")
+                .AddComponents(new TextInputComponent(label: "Please enter your feedback:", customId: "feedback-text", required: true, style: DSharpPlus.TextInputStyle.Paragraph));
+
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.Modal, modal);
+
+
+            };
+
+            //Modal processing
+            modularDiscordBot.DiscordClient.ModalSubmitted += async (sender, e) =>
+            {
+                DiscordInteractionResponseBuilder responseBuilder = new();
+                DiscordEmbedBuilder embedBuilder = new();
+
+                embedBuilder
+                .WithTitle("Thank you for submitting your feedback")
+                .WithColor(DiscordColor.Green);
+
+                responseBuilder
+                .AddEmbed(embedBuilder)
+                .AsEphemeral(true);
+
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, responseBuilder);
+
+                var discordEmbed = new DiscordEmbedBuilder
+                {
+                    Title = "Feedback",
+                    Description = e.Values["feedback-text"],
+                    Color = new(new(0, 255, 194)),
+                    Timestamp = DateTime.Now,
+                    Footer = new DiscordEmbedBuilder.EmbedFooter
+                    {
+                        Text = "Send by "
+                        + e.Interaction.User.Username
+                        + " from guild "
+                        + e.Interaction.Guild.Name
+                    }
+                };
+
+                foreach (DiscordDmChannel channel in OwnerChannel)
+                {
+                    await channel.SendMessageAsync(discordEmbed);
+                }
+            };
+        }
+
 
         public Task LogEvent(string message, string sender, LogLevel lvl)
         {
@@ -91,7 +158,7 @@ namespace MADS.Extensions
             var logEntry = $"[{DateTime.Now:dd'.'MM'.'yyyy'-'HH':'mm':'ss}] [INFO] [{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [{Commandname}] [{tmp}] {Timespan} milliseconds to execute";
             await File.AppendAllTextAsync(logPath, logEntry + "\n", System.Text.Encoding.UTF8);
         }
-        
+
         public async Task LogToOwner(string message, string sender, LogLevel logLevel)
         {
             var discordEmbed = new DiscordEmbedBuilder
@@ -111,6 +178,6 @@ namespace MADS.Extensions
                 await channel.SendMessageAsync(discordEmbed);
             }
         }
-        
+
     }
 }

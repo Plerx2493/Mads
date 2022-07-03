@@ -22,7 +22,12 @@ namespace MADS.Extensions
             
             JsonProvider.parseJson(GetPath("config.json"), configJson);
         }
-         
+
+        public static void SetConfig(ConfigJson configJson)
+        {
+            JsonProvider.parseJson(GetPath("config.json"), configJson);
+        }
+
         public static string GetPath(params string[] path)
         {
             string[] parameter = new string[path.Length+1];

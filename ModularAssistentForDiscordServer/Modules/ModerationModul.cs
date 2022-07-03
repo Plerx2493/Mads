@@ -38,7 +38,7 @@ namespace MADS.Modules
                 { "mute", "Mutes a user" },
                 { "unmute", "Unmutes a user" },
                 { "purge", "Deletes a number of messages" },                    //TODO: Implement command
-                { "warn", "Warns a user" },                                     //TODO: Implement command
+                { "warn", "Warns a user" },                                     //TODO: Implement warning system
                 { "unwarn", "Unwarns a user" },                                 //TODO: Implement command
                 { "warnlist", "Shows the warns of a user" },                    //TODO: Implement command
                 { "warnlevel", "Shows the warn level of a user" },              //TODO: Implement command
@@ -58,7 +58,7 @@ namespace MADS.Modules
         public MadsServiceProvider CommandService{ get; set; }
 
         [GuildIsEnabled("Moderation"), Command("kick"), Description("Kicks a user from the server"), RequireBotPermissions(Permissions.KickMembers)]
-        public async Task Kick(CommandContext ctx, DiscordUser user, [RemainingText] string reason = null)
+        public async Task Kick(CommandContext ctx, DiscordMember user, [RemainingText] string reason = null)
         {
             //check if user has permission to kick member
             if (!ctx.Member.PermissionsIn(ctx.Channel).HasPermission(Permissions.KickMembers))
@@ -67,26 +67,16 @@ namespace MADS.Modules
                 return;
             }
 
-            //Get member who should be kicked
-            var userToKick = await ctx.Guild.GetMemberAsync(user.Id);
-
-            //Check if user is valid
-            if (userToKick is null)
-            {
-                await ctx.RespondAsync($"{user.Username} is not a valid user or is not on this guild");
-                return;
-            }
-
             //Check if user has a higher or equal hierarchy than the user who is trying to kick
-            if (ctx.Member.Hierarchy <= userToKick.Hierarchy)
+            if (ctx.Member.Hierarchy <= user.Hierarchy)
             {
                 await ctx.RespondAsync("You cannot kick a user with a higher or equal hierarchy than you");
                 return;
             }
             
             //excecute kick
-            await userToKick.BanAsync(reason: reason);
-            await ctx.RespondAsync($"{userToKick.DisplayName} has been kicked from the server");
+            await user.RemoveAsync(reason: reason);
+            await ctx.RespondAsync($"{user.DisplayName} has been kicked from the server");
         }
 
         [Command("ban"), Description("Bans a user from the server"), GuildIsEnabled("Moderation"), RequireBotPermissions(Permissions.BanMembers)]
@@ -99,26 +89,16 @@ namespace MADS.Modules
                 return;
             }
 
-            //Get member who should be banned
-            var userToBan = await ctx.Guild.GetMemberAsync(user.Id);
-
-            //Check if user is valid
-            if (userToBan is null)
-            {
-                await ctx.RespondAsync($"{user.Username} is not a valid user or is not on this guild");
-                return;
-            }
-
             //Check if user has a higher or equal hierarchy than the user who is trying to ban
-            if (ctx.Member.Hierarchy <= userToBan.Hierarchy)
+            if (ctx.Member.Hierarchy <= user.Hierarchy)
             {
                 await ctx.RespondAsync("You cannot ban a user with a higher or equal hierarchy than you");
                 return;
             }
 
             //excecute ban
-            await userToBan.BanAsync(reason: reason);
-            await ctx.RespondAsync($"{userToBan.DisplayName} has been kicked from the server");
+            await user.BanAsync(reason: reason);
+            await ctx.RespondAsync($"{user.DisplayName} has been kicked from the server");
         }
 
         [Command("mute"), Description("Mutes a user in a server"), GuildIsEnabled("Moderation"), RequireBotPermissions(Permissions.ModerateMembers)]
@@ -130,15 +110,7 @@ namespace MADS.Modules
                 return;
             }
 
-            var userToMute = await ctx.Guild.GetMemberAsync(user.Id);
-
-            if (userToMute is null)
-            {
-                await ctx.RespondAsync($"{user.Username} is not a valid user or is not on this guild");
-                return;
-            }
-
-            if (ctx.Member.Hierarchy <= userToMute.Hierarchy)
+            if (ctx.Member.Hierarchy <= user.Hierarchy)
             {
                 await ctx.RespondAsync("You cannot mute a user with a higher or equal hierarchy than you");
                 return;
@@ -157,15 +129,7 @@ namespace MADS.Modules
                 return;
             }
 
-            var userToUnmute = await ctx.Guild.GetMemberAsync(user.Id);
-
-            if (userToUnmute is null)
-            {
-                await ctx.RespondAsync($"{user.Username} is not a valid user or is not on this guild");
-                return;
-            }
-
-            if (ctx.Member.Hierarchy <= userToUnmute.Hierarchy)
+            if (ctx.Member.Hierarchy <= user.Hierarchy)
             {
                 await ctx.RespondAsync("You cannot unmute a user with a higher or equal hierarchy than you");
                 return;
@@ -184,15 +148,7 @@ namespace MADS.Modules
                 return;
             }
 
-            var userToWarn = await ctx.Guild.GetMemberAsync(user.Id);
-
-            if (userToWarn is null)
-            {
-                await ctx.RespondAsync($"{user.Username} is not a valid user or is not on this guild");
-                return;
-            }
-
-            if (ctx.Member.Hierarchy <= userToWarn.Hierarchy)
+            if (ctx.Member.Hierarchy <= user.Hierarchy)
             {
                 await ctx.RespondAsync("You cannot warn a user with a higher or equal hierarchy than you");
                 return;

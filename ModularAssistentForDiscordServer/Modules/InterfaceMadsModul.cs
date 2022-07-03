@@ -197,8 +197,8 @@ namespace MADS.Modules
             DiscordEmbedBuilder discordEmbedBuilder = new();
             discordEmbedBuilder
                 .WithAuthor(ctx.Member.Nickname, ctx.Member.AvatarUrl, ctx.Member.AvatarUrl)
-                .WithColor(new(88, 101, 242))
-                .WithFooter("MADS ")
+                .WithColor(new(0, 155, 194))
+                .WithFooter("Mads")
                 .WithTimestamp(DateTime.Now)
                 .WithTitle(title)
                 .WithDescription(message);

@@ -141,9 +141,9 @@ namespace MADS.Modules
         public DiscordMember Member { get; set; }
         public CommandContext Context { get; set; }
 
-        public DiscordClient Client;
+        public DiscordClient Client { get; set; }
 
-        public ModularDiscordBot MDB;
+        public ModularDiscordBot MDB { get; set; }
 
         public TestVariables(DiscordMessage msg, DiscordClient client, CommandContext ctx, ModularDiscordBot mdb)
         {
