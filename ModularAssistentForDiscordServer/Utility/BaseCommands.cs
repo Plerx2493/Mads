@@ -39,9 +39,8 @@ namespace MADS.Utility
             var discordEmbedBuilder = CommandService.modularDiscordBot.config.GuildSettings[0].GetDiscordEmbed();
             var discordMessageBuilder = new DiscordMessageBuilder();
             string inviteUri = ctx.Client.CurrentApplication.GenerateOAuthUri(null, Permissions.Administrator, OAuthScope.Bot, OAuthScope.ApplicationsCommands);
-            
-            string addMe = $"[Click here!]({WebUtility.UrlEncode(inviteUri)})";
-            
+            string addMe = $"[Click here!]({inviteUri.Replace(" ", "%20")})";
+
             var diff = DateTime.Now - CommandService.modularDiscordBot.startTime;
             string date = string.Format("{0} days {1} hours {2} minutes", diff.Days, diff.Hours, diff.Minutes);
             
@@ -54,7 +53,7 @@ namespace MADS.Utility
                 .AddField("Source:", "[Github](https://github.com/Plerx2493/Mads)", true)
                 .AddField("D#+ Version:", ctx.Client.VersionString)
                 .AddField("Guilds", ctx.Client.Guilds.Count.ToString(), true)
-                .AddField("Uptime", "Online since " + date, true)
+                .AddField("Uptime", date, true)
                 .AddField("Ping", $"{ctx.Client.Ping} ms", true)
                 .AddField("Add me", addMe);
 
