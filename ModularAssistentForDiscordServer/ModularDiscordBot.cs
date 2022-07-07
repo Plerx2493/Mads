@@ -119,21 +119,12 @@ namespace MADS
         internal static bool VaildateConfig()
         {
             string configPath = DataProvider.GetPath("config.json");
-            var standardEmbed = new DiscordEmbedBuilder()
-            {
-                Color = new(new(0, 255, 194)),
-                Footer = new()
-                {
-                    Text = "Mads"
-                }
-            };
 
 
             if (!File.Exists(configPath)) { return false; }
             ConfigJson config = DataProvider.GetConfig();
             if (config.Token is null || config.Token is "" || config.Token is "<Your Token here>") { return false; }
             if (config.Prefix is null || config.Prefix is "") { config.Prefix = "!"; }
-            if (config.DiscordEmbed is null) { config.DiscordEmbed = standardEmbed; }
             if (config.GuildSettings is null)
             {
                 config.GuildSettings = new Dictionary<ulong, GuildSettings>

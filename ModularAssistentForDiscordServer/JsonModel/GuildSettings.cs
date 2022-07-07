@@ -11,14 +11,6 @@ namespace MADS.JsonModel
         {
             Prefix = "!";
             LogLevel = LogLevel.Information;
-            DiscordEmbed = new DiscordEmbedBuilder()
-            {
-                Color = new(new(0, 255, 194)),
-                Footer = new()
-                {
-                    Text = "Mads"
-                }
-            };
             AktivModules = new();
             AuditChannel = 0;
             AuditLogs = false;
@@ -26,7 +18,15 @@ namespace MADS.JsonModel
 
         public DiscordEmbedBuilder GetDiscordEmbed()
         {
-            return new(DiscordEmbed);
+            var standardEmbed = new DiscordEmbedBuilder()
+            {
+                Color = new(new(0, 255, 194)),
+                Footer = new()
+                {
+                    Text = "Mads"
+                }
+            };
+            return standardEmbed;
         }
 
         [JsonProperty("prefix")]
@@ -34,9 +34,6 @@ namespace MADS.JsonModel
 
         [JsonProperty("logLevel")]
         public LogLevel LogLevel { get; set; }
-
-        [JsonProperty("standardEmbed")]
-        public DiscordEmbedBuilder DiscordEmbed { get; set; }
 
         [JsonProperty("aktivModules")]
         public List<string> AktivModules { get; set; }

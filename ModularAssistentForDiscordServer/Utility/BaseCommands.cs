@@ -22,7 +22,7 @@ namespace MADS.Utility
             var diff = DateTime.Now - CommandService.modularDiscordBot.startTime;
             var date = string.Format("{0} days {1} hours {2} minutes", diff.Days, diff.Hours, diff.Minutes);
 
-            DiscordEmbedBuilder discordEmbedBuilder = CommandService.modularDiscordBot.GuildSettings[0].DiscordEmbed;
+            DiscordEmbedBuilder discordEmbedBuilder = CommandService.modularDiscordBot.GuildSettings[0].GetDiscordEmbed();
             discordEmbedBuilder
                 .WithTitle("Status")
                 .WithTimestamp(DateTime.Now)
