@@ -37,7 +37,7 @@ namespace MADS.Modules
                 { "ban", "Bans a user from the server" },
                 { "mute", "Mutes a user" },
                 { "unmute", "Unmutes a user" },
-                { "purge", "Deletes a number of messages" },                    //TODO: Implement command
+                { "purge", "Deletes a number of messages" },
                 { "warn", "Warns a user" },                                     //TODO: Implement warning system
                 { "unwarn", "Unwarns a user" },                                 //TODO: Implement command
                 { "warnlist", "Shows the warns of a user" },                    //TODO: Implement command
@@ -155,6 +155,31 @@ namespace MADS.Modules
             }
 
             await ctx.RespondAsync($"{user.Username} has been warned");
+        }
+
+        [Command("purge"), Description("Purges messages"), GuildIsEnabled("Moderation"), RequirePermissions(Permissions.ManageMessages)]
+        public async Task Purge(CommandContext ctx, int amount = 100)
+        {
+            if (amount > 100)
+            {
+                await ctx.RespondAsync("You cannot purge more than 100 messages at once");
+                return;
+            }
+
+            var messagesApi = await ctx.Channel.GetMessagesAsync(amount);
+            List<DiscordMessage> messages = new();
+            messages.AddRange(messagesApi);
+
+            messages.RemoveAll(x => (DateTime.UtcNow - x.Timestamp).TotalDays > 13.9);
+
+            await ctx.Channel.DeleteMessagesAsync(messages);
+
+            var response = await ctx.Channel.SendMessageAsync($"{messages.Count} messages deleted {DiscordEmoji.FromName(CommandService.modularDiscordBot.DiscordClient, ":white_check_mark:")}");
+
+            await Task.Delay(10000);
+
+            await response.DeleteAsync();
+
         }
     }
 

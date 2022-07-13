@@ -240,7 +240,7 @@ namespace MADS
 
         public void RegisterModul(Type modul)
         {
-            var newModul = (IMadsModul)Activator.CreateInstance(modul, this);
+            IMadsModul newModul = (IMadsModul)Activator.CreateInstance(modul, this);
             madsModules[newModul.ModulName] = newModul;
         }
 
