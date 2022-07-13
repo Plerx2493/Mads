@@ -75,10 +75,8 @@ namespace MADS.Modules
         [Command("eval"), Description("Evaluate the result of c# code")]
         public async Task Eval(CommandContext context, [RemainingText] string code)
         {
-
-
             var message = context.Message;
-
+            
             var code_start = code.IndexOf("```") + 3;
             code_start = code.IndexOf('\n', code_start) + 1;
             var code_end = code.LastIndexOf("```");

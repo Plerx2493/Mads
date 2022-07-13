@@ -120,7 +120,6 @@ namespace MADS
         {
             string configPath = DataProvider.GetPath("config.json");
 
-
             if (!File.Exists(configPath)) { return false; }
             ConfigJson config = DataProvider.GetConfig();
             if (config.Token is null || config.Token is "" || config.Token is "<Your Token here>") { return false; }
