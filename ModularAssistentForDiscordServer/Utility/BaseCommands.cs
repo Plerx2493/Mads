@@ -6,6 +6,7 @@ using MADS;
 using MADS.Extensions;
 using MADS.JsonModel;
 using MADS.Modules;
+using MADS.Entities;
 using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Text.Encodings.Web;
@@ -108,10 +109,15 @@ namespace MADS.Utility
         }
 
         [Command("test"), RequireOwner()]
-        public async Task Test(CommandContext ctx)
+        public async Task Test(CommandContext ctx, DiscordUser user)
         {
-            await CommandService.modularDiscordBot.Logging.LogToOwner("test", "test command", LogLevel.Debug);
-            await ctx.RespondAsync("Done");
+            var msg = new DiscordMessageBuilder();
+            var button = ActionDiscordButton.Build(ActionDiscordButtonEnum.BanUser, new DiscordButtonComponent(ButtonStyle.Danger, "", "ban"), user.Id);
+
+            msg.Content = "test";
+            msg.AddComponents(button);
+
+            await ctx.RespondAsync(msg);
         }
 
         [Command("enable"), Description("Enable given module"),RequirePermissions(Permissions.Administrator), RequireGuild()]

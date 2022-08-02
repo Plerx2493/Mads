@@ -39,11 +39,11 @@ namespace MADS.Modules
                 { "unmute", "Unmutes a user" },
                 { "purge", "Deletes a number of messages" },
                 { "warn", "Warns a user" },                                     //TODO: Implement warning system
-                { "unwarn", "Unwarns a user" },                                 //TODO: Implement command
-                { "warnlist", "Shows the warns of a user" },                    //TODO: Implement command
-                { "warnlevel", "Shows the warn level of a user" },              //TODO: Implement command
-                { "warnlevelset", "Sets the warn level of a user" },            //TODO: Implement command
-                { "warnlevelreset", "Resets the warn level of a user" }         //TODO: Implement command
+                { "unwarn", "Unwarns a user" },                                 //TODO: Implement warning system
+                { "warnlist", "Shows the warns of a user" },                    //TODO: Implement warning system
+                { "warnlevel", "Shows the warn level of a user" },              //TODO: Implement warning system
+                { "warnlevelset", "Sets the warn level of a user" },            //TODO: Implement warning system
+                { "warnlevelreset", "Resets the warn level of a user" }         //TODO: Implement warning system
             };
             CommandClass = typeof(ModerationCommands);
             SlashCommandClass = typeof(ModerationSlashCommands);
@@ -157,7 +157,7 @@ namespace MADS.Modules
             await ctx.RespondAsync($"{user.Username} has been warned");
         }
 
-        [Command("purge"), Description("Purges messages"), GuildIsEnabled("Moderation"), RequirePermissions(Permissions.ManageMessages)]
+        [Command("purge"), Description("Purges messages"), GuildIsEnabled("Moderation"), RequireBotPermissions(Permissions.ManageMessages)]
         public async Task Purge(CommandContext ctx, int amount = 100)
         {
             if (amount > 100)
@@ -202,6 +202,12 @@ namespace MADS.Modules
 
 
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(DiscordEmbed));
+        }
+
+        [SlashCommand("freeze", "Freezes a conversation in a moderation channel")]
+        public async Task FreezeCommand(InteractionContext ctx, [Option("number_of_messages", "Number of messages which should be freezed")] long messages, [Option("channel", "Channel where the messages should be freezed")] DiscordChannel discordChannel = null)
+        {
+
         }
     }
 }

@@ -95,6 +95,7 @@ namespace MADS.Extensions
             //Modal processing
             modularDiscordBot.DiscordClient.ModalSubmitted += async (sender, e) =>
             {
+
                 DiscordInteractionResponseBuilder responseBuilder = new();
                 DiscordEmbedBuilder embedBuilder = new();
 
@@ -108,6 +109,9 @@ namespace MADS.Extensions
 
                 await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, responseBuilder);
 
+                var guildName = "Dms";
+                if (e.Interaction.Guild is not null) { guildName = e.Interaction.Guild.Name; }
+
                 var discordEmbed = new DiscordEmbedBuilder
                 {
                     Title = "Feedback",
@@ -119,7 +123,7 @@ namespace MADS.Extensions
                         Text = "Send by "
                         + e.Interaction.User.Username
                         + " from guild "
-                        + e.Interaction.Guild.Name
+                        + guildName 
                     }
                 };
 

@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using MADS.Extensions;
 using MADS.JsonModel;
 using MADS.Modules;
+using MADS.Entities;
 using DSharpPlus.EventArgs;
 using MADS.Utility;
 using DSharpPlus.SlashCommands.EventArgs;
@@ -67,7 +68,7 @@ namespace MADS
                 TokenType = TokenType.Bot,
                 AutoReconnect = true,
                 MinimumLogLevel = config.LogLevel,
-                Intents = GetRequiredIntents()
+                Intents = DiscordIntents.All //GetRequiredIntents()
             };
 
             DiscordClient = new(discordConfig);
@@ -193,6 +194,8 @@ namespace MADS
 
             CommandsNextExtension.CommandErrored += OnCNextErrored;
             SlashCommandsExtension.SlashCommandErrored += OnSlashCommandErrored;
+
+            ActionDiscordButton.EnableButtonListener(DiscordClient);
         }
 
         private async Task OnSlashCommandErrored(SlashCommandsExtension sender, SlashCommandErrorEventArgs e)
