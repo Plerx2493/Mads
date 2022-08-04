@@ -86,7 +86,7 @@ namespace MADS.Utility
             await ctx.RespondAsync("Current prefix is: `" + guildSettings.Prefix + "`");
         }
 
-        [Command("setprefix"), Description("Set the bot prefix for this server"), RequirePermissions(Permissions.Administrator), RequireGuild()]
+        [Command("setprefix"), Description("Set the bot prefix for this server"), RequirePermissions(Permissions.Administrator), RequireGuild]
         public async Task SetPrefix(CommandContext ctx, [Description("The new prefix")] string prefix)
         {
             var allGuildSettings = CommandService.modularDiscordBot.GuildSettings;
@@ -108,19 +108,19 @@ namespace MADS.Utility
             await ctx.RespondAsync("New prefix is: " + $"`{CommandService.modularDiscordBot.GuildSettings[ctx.Guild.Id].Prefix}`");
         }
 
-        [Command("test"), RequireOwner()]
-        public async Task Test(CommandContext ctx, DiscordUser user)
+        [Command("test"), RequireOwner]
+        public static async Task Test(CommandContext ctx, DiscordChannel ch1, DiscordChannel ch2)
         {
             var msg = new DiscordMessageBuilder();
-            var button = ActionDiscordButton.Build(ActionDiscordButtonEnum.BanUser, new DiscordButtonComponent(ButtonStyle.Danger, "", "ban"), user.Id);
+            var button = ActionDiscordButton.Build(ActionDiscordButtonEnum.MoveVoiceChannel, new DiscordButtonComponent(ButtonStyle.Danger, "", "ID"), ch1.Id, ch2.Id);
 
-            msg.Content = "test";
             msg.AddComponents(button);
-
-            await ctx.RespondAsync(msg);
+            msg.Content = "Hüpf";
+            
+            await ctx.Channel.SendMessageAsync(msg);
         }
 
-        [Command("enable"), Description("Enable given module"),RequirePermissions(Permissions.Administrator), RequireGuild()]
+        [Command("enable"), Description("Enable given module"),RequirePermissions(Permissions.Administrator), RequireGuild]
         public async Task EnableModule(CommandContext ctx, [Description("Name of new module")] string moduleName)
         {
             if (!CommandService.modularDiscordBot.madsModules.TryGetValue(moduleName, out _))
@@ -134,7 +134,7 @@ namespace MADS.Utility
             return;
         }
 
-        [Command("disable"), Description("Disable given module"), RequirePermissions(Permissions.Administrator), RequireGuild()]
+        [Command("disable"), Description("Disable given module"), RequirePermissions(Permissions.Administrator), RequireGuild]
         public async Task DisableModule(CommandContext ctx, [Description("Name of module")] string moduleName)
         {
             if (!CommandService.modularDiscordBot.madsModules.TryGetValue(moduleName, out _))
@@ -148,7 +148,7 @@ namespace MADS.Utility
             return;
         }
 
-        [Command("modules"), Description("List all modules"), RequirePermissions(Permissions.Administrator), RequireGuild()]
+        [Command("modules"), Description("List all modules"), RequirePermissions(Permissions.Administrator), RequireGuild]
         public async Task ListModules(CommandContext ctx)
         {
             var modules = CommandService.modularDiscordBot.madsModules.Keys.ToList();
@@ -160,7 +160,7 @@ namespace MADS.Utility
             await ctx.RespondAsync(response);
         }
 
-        [Command("modulesactiv"), Description("Get activ modules"), RequirePermissions(Permissions.Administrator), RequireGuild()]
+        [Command("modulesactiv"), Description("Get activ modules"), RequirePermissions(Permissions.Administrator), RequireGuild]
         public async Task ListActiveModules(CommandContext ctx)
         {
             var response = "";

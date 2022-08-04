@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Exceptions;
+using DSharpPlus.CommandsNext.Executors;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.Entities;
 using Microsoft.Extensions.DependencyInjection;
@@ -177,7 +178,8 @@ namespace MADS
                 EnableDms = true,
                 EnableMentionPrefix = true,
                 PrefixResolver = GetPrefixPositionAsync,
-                Services = Services
+                Services = Services,
+                CommandExecutor = new ParallelQueuedCommandExecutor()
             };
 
             CommandsNextExtension = DiscordClient.UseCommandsNext(comandsConfig);
