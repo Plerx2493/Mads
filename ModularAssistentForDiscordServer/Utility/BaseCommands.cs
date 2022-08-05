@@ -109,10 +109,10 @@ namespace MADS.Utility
         }
 
         [Command("test"), RequireOwner]
-        public static async Task Test(CommandContext ctx, DiscordChannel ch1, DiscordChannel ch2)
+        public async Task Test(CommandContext ctx, DiscordChannel ch1, DiscordChannel ch2)
         {
             var msg = new DiscordMessageBuilder();
-            var button = ActionDiscordButton.Build(ActionDiscordButtonEnum.MoveVoiceChannel, new DiscordButtonComponent(ButtonStyle.Danger, "", "ID"), ch1.Id, ch2.Id);
+            var button = ActionDiscordButton.Build(ActionDiscordButtonEnum.MoveVoiceChannel, new DiscordButtonComponent(ButtonStyle.Success, "", "Spring!"), ch1.Id, ch2.Id);
 
             msg.AddComponents(button);
             msg.Content = "Hüpf";

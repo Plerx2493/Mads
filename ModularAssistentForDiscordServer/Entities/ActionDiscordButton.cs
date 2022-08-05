@@ -77,12 +77,12 @@ namespace MADS.Entities
 
         public static void EnableButtonListener(DiscordClient client)
         {
-            client.ComponentInteractionCreated += async (s, e) =>
+            client.ComponentInteractionCreated += (s, e) =>
             {
                 var substring = e.Id.Split(':');
                 if (!int.TryParse(substring[0], out int actionCode))
                 {
-                    return;
+                    return null;
                 }
 
                 switch (actionCode)
@@ -116,6 +116,7 @@ namespace MADS.Entities
                         throw new NotImplementedException("Action code not implemented");
                         break;
                 }
+                return null;
             };
         }
 
