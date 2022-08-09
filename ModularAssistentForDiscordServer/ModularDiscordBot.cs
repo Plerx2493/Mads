@@ -69,7 +69,7 @@ namespace MADS
                 TokenType = TokenType.Bot,
                 AutoReconnect = true,
                 MinimumLogLevel = config.LogLevel,
-                Intents = DiscordIntents.All //GetRequiredIntents()
+                Intents = GetRequiredIntents()
             };
 
             DiscordClient = new(discordConfig);

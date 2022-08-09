@@ -63,7 +63,6 @@ namespace MADS.Entities
 
                 default:
                     throw new NotImplementedException("Action code not implemented");
-                    break;
             }
 
             if (customId is null) throw new Exception();
@@ -114,7 +113,6 @@ namespace MADS.Entities
 
                     default:
                         throw new NotImplementedException("Action code not implemented");
-                        break;
                 }
                 return null;
             };

@@ -129,6 +129,14 @@ namespace MADS.Utility
                 return;
             }
             
+            var isEnabled = CommandService.modularDiscordBot.GuildSettings[ctx.Guild.Id].AktivModules.Contains(moduleName);
+            if (isEnabled)
+            {
+                await ctx.RespondAsync("Module already active");
+                return;
+            }
+
+
             CommandService.modularDiscordBot.madsModules[moduleName].Enable(ctx.Guild.Id);
             await ctx.RespondAsync("Module is now enabled");
             return;
@@ -142,6 +150,13 @@ namespace MADS.Utility
                 await ctx.RespondAsync("Module not found");
                 return;
             }
+            
+            var isEnabled = CommandService.modularDiscordBot.GuildSettings[ctx.Guild.Id].AktivModules.Contains(moduleName);
+            if (!isEnabled)
+            {
+                await ctx.RespondAsync("Module was not active");
+                return;
+            }
 
             CommandService.modularDiscordBot.madsModules[moduleName].Disable(ctx.Guild.Id);
             await ctx.RespondAsync("Module is now disabled");
@@ -152,7 +167,7 @@ namespace MADS.Utility
         public async Task ListModules(CommandContext ctx)
         {
             var modules = CommandService.modularDiscordBot.madsModules.Keys.ToList();
-            var response = "";
+            var response = "Available modules:\n";
             foreach (var module in modules)
             {
                 response += module + "\n";
@@ -160,7 +175,7 @@ namespace MADS.Utility
             await ctx.RespondAsync(response);
         }
 
-        [Command("modulesactiv"), Description("Get activ modules"), RequirePermissions(Permissions.Administrator), RequireGuild]
+        [Command("modulesactive"), Description("Get activ modules"), RequirePermissions(Permissions.Administrator), RequireGuild]
         public async Task ListActiveModules(CommandContext ctx)
         {
             var response = "";

@@ -46,7 +46,7 @@ namespace MADS.Modules
                 { "warnlevelreset", "Resets the warn level of a user" }         //TODO: Implement warning system
             };
             CommandClass = typeof(ModerationCommands);
-            SlashCommandClass = typeof(ModerationSlashCommands);
+            SlashCommandClass = null; //typeof(ModerationSlashCommands);
             RequiredIntents = 0;
             ModularDiscordClient = bot;
             IsHidden = false;
@@ -158,28 +158,50 @@ namespace MADS.Modules
         }
 
         [Command("purge"), Description("Purges messages"), GuildIsEnabled("Moderation"), RequireBotPermissions(Permissions.ManageMessages)]
-        public async Task Purge(CommandContext ctx, int amount = 100)
+        public async Task Purge(CommandContext ctx, int amount = 99)
         {
-            if (amount > 100)
+            if (amount + 1  > 100)
             {
-                await ctx.RespondAsync("You cannot purge more than 100 messages at once");
+                await ctx.RespondAsync("You cannot purge more than 99 messages at once");
                 return;
             }
 
-            var messagesApi = await ctx.Channel.GetMessagesAsync(amount);
+            var messagesApi = await ctx.Channel.GetMessagesAsync(amount + 1);
             List<DiscordMessage> messages = new();
             messages.AddRange(messagesApi);
 
-            messages.RemoveAll(x => (DateTime.UtcNow - x.Timestamp).TotalDays > 13.9);
+            messages.RemoveAll(x => (DateTime.UtcNow - x.Timestamp).TotalDays > 13.999_999_999_999_99);
 
             await ctx.Channel.DeleteMessagesAsync(messages);
 
-            var response = await ctx.Channel.SendMessageAsync($"{messages.Count} messages deleted {DiscordEmoji.FromName(CommandService.modularDiscordBot.DiscordClient, ":white_check_mark:")}");
+            var response = await ctx.Channel.SendMessageAsync($"{messages.Count} messages deleted {DiscordEmoji.FromName(CommandService.modularDiscordBot.DiscordClient, ":Bussi:")}");
 
             await Task.Delay(10000);
 
             await response.DeleteAsync();
 
+        }
+
+        [Command("scan"), Description("Scan the entire guild if there are silent raids"), RequirePermissions(Permissions.Administrator) /*Cooldown(1, 28_800, CooldownBucketType.Guild)*/]
+        public async Task Scan(CommandContext ctx)
+        {
+            var members = await ctx.Guild.GetAllMembersAsync();
+
+
+            var groupByLastNamesQuery =
+                from member in members
+                group member by member.CreationTimestamp into newGroup
+                orderby newGroup.Key
+                select newGroup;
+
+            foreach (var memberGroup in groupByLastNamesQuery)
+            {
+                Console.WriteLine("Gruppe: " + memberGroup.Key);
+                foreach (var item in memberGroup)
+                {
+                    Console.WriteLine(item.Username);
+                }
+            }
         }
     }
 
@@ -200,14 +222,14 @@ namespace MADS.Modules
                 Timestamp = DateTime.Now,
             };
 
-
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(DiscordEmbed));
         }
-
+        /*
         [SlashCommand("freeze", "Freezes a conversation in a moderation channel")]
         public async Task FreezeCommand(InteractionContext ctx, [Option("number_of_messages", "Number of messages which should be freezed")] long messages, [Option("channel", "Channel where the messages should be freezed")] DiscordChannel discordChannel = null)
         {
 
         }
+        */
     }
 }
