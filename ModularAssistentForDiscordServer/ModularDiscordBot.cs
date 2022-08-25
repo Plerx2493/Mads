@@ -87,8 +87,10 @@ namespace MADS
             DiscordClient.GuildDownloadCompleted += OnGuildDownloadCompleted;
 
 
+            DiscordActivity act = new(config.Prefix + "help", ActivityType.Watching);
+
             //connect client
-            await DiscordClient.ConnectAsync();
+            await DiscordClient.ConnectAsync(act, UserStatus.Online);
             //keep alive
             await Task.Delay(-1);
         }
@@ -114,6 +116,8 @@ namespace MADS
                     }
                 });
             });
+
+            SlashCommandsExtension.RefreshCommands();
 
             Console.WriteLine("Guild configs loaded");
         }
@@ -238,8 +242,7 @@ namespace MADS
 
         private async Task OnClientReady(DiscordClient sender, ReadyEventArgs e)
         {
-            DiscordActivity act = new(config.Prefix + "help", ActivityType.Watching);
-            await DiscordClient.UpdateStatusAsync(act, UserStatus.Online);
+            
         }
 
         public void RegisterModul(Type modul)

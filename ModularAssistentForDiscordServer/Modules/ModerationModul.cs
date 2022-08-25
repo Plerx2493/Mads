@@ -46,7 +46,7 @@ namespace MADS.Modules
                 { "warnlevelreset", "Resets the warn level of a user" }         //TODO: Implement warning system
             };
             CommandClass = typeof(ModerationCommands);
-            SlashCommandClass = null; //typeof(ModerationSlashCommands);
+            SlashCommandClass = typeof(ModerationSlashCommands);
             RequiredIntents = 0;
             ModularDiscordClient = bot;
             IsHidden = false;
@@ -170,7 +170,7 @@ namespace MADS.Modules
             List<DiscordMessage> messages = new();
             messages.AddRange(messagesApi);
 
-            messages.RemoveAll(x => (DateTime.UtcNow - x.Timestamp).TotalDays > 13.999_999_999_999_99);
+            messages.RemoveAll(x => (DateTime.UtcNow - x.Timestamp).TotalDays > 14);
 
             await ctx.Channel.DeleteMessagesAsync(messages);
 
@@ -190,7 +190,7 @@ namespace MADS.Modules
 
             var groupByLastNamesQuery =
                 from member in members
-                group member by member.CreationTimestamp into newGroup
+                group member by member.JoinedAt into newGroup
                 orderby newGroup.Key
                 select newGroup;
 
