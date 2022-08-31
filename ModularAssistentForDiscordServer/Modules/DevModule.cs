@@ -1,16 +1,8 @@
 ﻿using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
-using DSharpPlus.Interactivity;
-using Microsoft.CodeAnalysis;
-using MADS;
-using MADS.Modules;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using DSharpPlus.Entities;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 
@@ -41,15 +33,13 @@ namespace MADS.Modules
             SlashCommandClass = null;
             RequiredIntents = 0;
             IsHidden = true;
-            
         }
     }
-
 
     [RequireOwner, Hidden]
     internal class DevCommands : BaseCommandModule
     {
-        public MadsServiceProvider CommandService{ get; set; }
+        public MadsServiceProvider CommandService { get; set; }
 
         [Command("guild")]
         public async Task GetGuild(CommandContext ctx, ulong id)
@@ -76,7 +66,7 @@ namespace MADS.Modules
         public async Task Eval(CommandContext context, [RemainingText] string code)
         {
             var message = context.Message;
-            
+
             var code_start = code.IndexOf("```") + 3;
             code_start = code.IndexOf('\n', code_start) + 1;
             var code_end = code.LastIndexOf("```");
@@ -94,7 +84,7 @@ namespace MADS.Modules
             try
             {
                 TestVariables global_variabls = new(context.Message, context.Client, context, CommandService.modularDiscordBot);
-                
+
                 ScriptOptions scriptoptions = ScriptOptions.Default;
                 scriptoptions = scriptoptions.WithImports("System", "System.Collections.Generic", "System.Linq", "System.Text", "System.Threading.Tasks", "DSharpPlus", "DSharpPlus.Entities", "DSharpPlus.CommandsNext", "ModularAssistentForDiscordServer");
                 scriptoptions = scriptoptions.WithReferences(AppDomain.CurrentDomain.GetAssemblies().Where(assembly => !assembly.IsDynamic && !string.IsNullOrWhiteSpace(assembly.Location)));
@@ -103,33 +93,32 @@ namespace MADS.Modules
                 script.Compile();
                 ScriptState<object> result = await script.RunAsync(global_variabls);
                 if (result != null && result.ReturnValue != null && !string.IsNullOrWhiteSpace(result.ReturnValue.ToString()))
-                    await message.ModifyAsync(new DiscordEmbedBuilder 
-                    { 
+                    await message.ModifyAsync(new DiscordEmbedBuilder
+                    {
                         Title = "✅ Evaluation Result",
                         Description = result.ReturnValue.ToString(),
-                        Color = new DiscordColor("#089FDF") 
+                        Color = new DiscordColor("#089FDF")
                     }.Build());
                 else
-                    await message.ModifyAsync(new DiscordEmbedBuilder 
-                    { 
+                    await message.ModifyAsync(new DiscordEmbedBuilder
+                    {
                         Title = "✅ Evaluation Successful",
                         Description = "No result was returned.",
-                        Color = new DiscordColor("#089FDF") 
+                        Color = new DiscordColor("#089FDF")
                     }.Build());
-                
             }
             catch (Exception ex)
             {
-                await message.ModifyAsync(embed: new DiscordEmbedBuilder 
-                { 
+                await message.ModifyAsync(embed: new DiscordEmbedBuilder
+                {
                     Title = "⚠️ Evaluation Failure",
                     Description = string.Concat("**", ex.GetType().ToString(), "**: ", ex.Message),
-                    Color = new DiscordColor("#FF0000") 
+                    Color = new DiscordColor("#FF0000")
                 }.Build());
             }
         }
     }
-    
+
     public class TestVariables
     {
         public DiscordMessage Message { get; set; }
@@ -155,6 +144,5 @@ namespace MADS.Modules
                 Member = Guild.GetMemberAsync(User.Id).ConfigureAwait(false).GetAwaiter().GetResult();
             Context = ctx;
         }
-
     }
 }

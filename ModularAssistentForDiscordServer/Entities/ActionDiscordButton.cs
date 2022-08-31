@@ -1,10 +1,5 @@
-﻿using DSharpPlus.Entities;
-using DSharpPlus;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using DSharpPlus;
+using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 
 namespace MADS.Entities
@@ -110,7 +105,6 @@ namespace MADS.Entities
                         MoveVoiceChannelUser(e, substring);
                         break;
 
-
                     default:
                         throw new NotImplementedException("Action code not implemented");
                 }
@@ -137,7 +131,7 @@ namespace MADS.Entities
             var neededPermissions = Permissions.BanMembers;
 
             if (!PermissionMethods.HasPermission(memberPermissions, neededPermissions)) { return; }
-            
+
             ulong userID = ulong.Parse(substring[1]);
             await e.Guild.BanMemberAsync(userID);
             e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource);

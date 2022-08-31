@@ -1,8 +1,4 @@
-﻿using MADS.Extensions;
-using MADS.JsonModel;
-using System;
-
-namespace MADS
+﻿namespace MADS
 {
     internal class MainProgram
     {

@@ -1,23 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using DSharpPlus;
+﻿using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.CommandsNext.Executors;
-using DSharpPlus.SlashCommands;
 using DSharpPlus.Entities;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using DSharpPlus.EventArgs;
+using DSharpPlus.SlashCommands;
+using DSharpPlus.SlashCommands.EventArgs;
+using MADS.Entities;
 using MADS.Extensions;
 using MADS.JsonModel;
 using MADS.Modules;
-using MADS.Entities;
-using DSharpPlus.EventArgs;
 using MADS.Utility;
-using DSharpPlus.SlashCommands.EventArgs;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace MADS
 {
@@ -36,10 +31,10 @@ namespace MADS
 
         //GuildId -> Guildsettings for certain guild
         public Dictionary<ulong, GuildSettings> GuildSettings;
+
         internal ServiceProvider Services;
         internal DateTime startTime;
         internal ConfigJson config;
-
 
         public ModularDiscordBot()
         {
@@ -54,7 +49,7 @@ namespace MADS
             if (!VaildateConfig())
             {
                 CreateConfig();
-                return;         
+                return;
             }
 
             RegisterModul(typeof(ModerationModul));
@@ -85,7 +80,6 @@ namespace MADS
             DiscordClient.Ready += OnClientReady;
             DiscordClient.Zombied += OnZombied;
             DiscordClient.GuildDownloadCompleted += OnGuildDownloadCompleted;
-
 
             DiscordActivity act = new(config.Prefix + "help", ActivityType.Watching);
 
@@ -127,24 +121,37 @@ namespace MADS
             string configPath = DataProvider.GetPath("config.json");
 
             if (!File.Exists(configPath)) { return false; }
-            ConfigJson config = DataProvider.GetConfig();
-            if (config.Token is null || config.Token is "" || config.Token is "<Your Token here>") { return false; }
-            if (config.Prefix is null || config.Prefix is "") { config.Prefix = "!"; }
-            if (config.GuildSettings is null)
+
+            ConfigJson lConfig = DataProvider.GetConfig();
+
+            if (lConfig.Token is null or "" or "<Your Token here>") { return false; }
+            if (lConfig.Prefix is null or "") { lConfig.Prefix = "!"; }
+
+            lConfig.GuildSettings ??= new Dictionary<ulong, GuildSettings>
             {
-                config.GuildSettings = new Dictionary<ulong, GuildSettings>
-                {
-                    [0] = new()
-                };
+                [0] = new()
+            };
+
+            var GuildSettings = lConfig.GuildSettings;
+            var newGuildSettings = new Dictionary<ulong, GuildSettings>();
+
+            foreach (var guild in GuildSettings)
+            {
+                var settings = guild.Value;
+                settings.AktivModules = guild.Value.AktivModules.Distinct().ToList();
+                newGuildSettings[guild.Key] = settings;
             }
-            DataProvider.SetConfig(config);
+
+            lConfig.GuildSettings = newGuildSettings;
+            DataProvider.SetConfig(lConfig);
+
             return true;
         }
-        
-        internal static void CreateConfig() 
+
+        internal static void CreateConfig()
         {
             string configPath = DataProvider.GetPath("config.json");
-            
+
             FileStream fileStream = File.Create(configPath);
             fileStream.Close();
 
@@ -242,7 +249,6 @@ namespace MADS
 
         private async Task OnClientReady(DiscordClient sender, ReadyEventArgs e)
         {
-            
         }
 
         public void RegisterModul(Type modul)

@@ -2,14 +2,10 @@
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
-using MADS;
+using MADS.Entities;
 using MADS.Extensions;
 using MADS.JsonModel;
 using MADS.Modules;
-using MADS.Entities;
-using Microsoft.Extensions.Logging;
-using System.Net;
-using System.Text.Encodings.Web;
 
 namespace MADS.Utility
 {
@@ -44,7 +40,6 @@ namespace MADS.Utility
 
             var diff = DateTime.Now - CommandService.modularDiscordBot.startTime;
             string date = string.Format("{0} days {1} hours {2} minutes", diff.Days, diff.Hours, diff.Minutes);
-            
 
             discordEmbedBuilder
                 .WithTitle("About me")
@@ -93,7 +88,7 @@ namespace MADS.Utility
 
             if (!allGuildSettings.TryGetValue(ctx.Guild.Id, out GuildSettings guildSettings))
             {
-                CommandService.modularDiscordBot.GuildSettings.Add(ctx.Guild.Id, new GuildSettings() { Prefix = prefix});
+                CommandService.modularDiscordBot.GuildSettings.Add(ctx.Guild.Id, new GuildSettings() { Prefix = prefix });
             }
             else
             {
@@ -116,11 +111,11 @@ namespace MADS.Utility
 
             msg.AddComponents(button);
             msg.Content = "Hüpf";
-            
+
             await ctx.Channel.SendMessageAsync(msg);
         }
 
-        [Command("enable"), Description("Enable given module"),RequirePermissions(Permissions.Administrator), RequireGuild]
+        [Command("enable"), Description("Enable given module"), RequirePermissions(Permissions.Administrator), RequireGuild]
         public async Task EnableModule(CommandContext ctx, [Description("Name of new module")] string moduleName)
         {
             if (!CommandService.modularDiscordBot.madsModules.TryGetValue(moduleName, out _))
@@ -128,14 +123,13 @@ namespace MADS.Utility
                 await ctx.RespondAsync("Module not found");
                 return;
             }
-            
+
             var isEnabled = CommandService.modularDiscordBot.GuildSettings[ctx.Guild.Id].AktivModules.Contains(moduleName);
             if (isEnabled)
             {
                 await ctx.RespondAsync("Module already active");
                 return;
             }
-
 
             CommandService.modularDiscordBot.madsModules[moduleName].Enable(ctx.Guild.Id);
             await ctx.RespondAsync("Module is now enabled");
@@ -150,7 +144,7 @@ namespace MADS.Utility
                 await ctx.RespondAsync("Module not found");
                 return;
             }
-            
+
             var isEnabled = CommandService.modularDiscordBot.GuildSettings[ctx.Guild.Id].AktivModules.Contains(moduleName);
             if (!isEnabled)
             {

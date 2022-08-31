@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ModularAssistentForDiscordServer.Entities
+﻿namespace ModularAssistentForDiscordServer.Entities
 {
     internal class MadsDiscordUser
     {
@@ -18,11 +12,11 @@ namespace ModularAssistentForDiscordServer.Entities
         public MadsDiscordUser(ulong id)
         {
             ID = id;
-            NumberOfWarnings =  new();
-            NumberOfBans     =  new();
-            NumberOfMutes    =  new();
-            NumberOfKicks    =  new();
-            ModComments      =  new();
+            NumberOfWarnings = new();
+            NumberOfBans = new();
+            NumberOfMutes = new();
+            NumberOfKicks = new();
+            ModComments = new();
         }
 
         public ulong GetID()
@@ -41,7 +35,7 @@ namespace ModularAssistentForDiscordServer.Entities
 
         public int GetNumberOfBans(ulong id)
         {
-            if (NumberOfBans.ContainsKey(id)) 
+            if (NumberOfBans.ContainsKey(id))
             {
                 return NumberOfBans[id];
             }
@@ -98,6 +92,7 @@ namespace ModularAssistentForDiscordServer.Entities
                 ModComments.Add(id, comment);
             }
         }
+
         public void RemoveModComment(ulong id)
         {
             ModComments.Remove(id);
@@ -150,7 +145,7 @@ namespace ModularAssistentForDiscordServer.Entities
                 NumberOfKicks.Add(id, number);
             }
         }
-        
+
         public void RemoveWarnings(ulong id, int number)
         {
             if (NumberOfWarnings.ContainsKey(id))

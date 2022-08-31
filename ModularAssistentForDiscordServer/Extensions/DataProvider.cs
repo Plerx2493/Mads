@@ -19,7 +19,7 @@ namespace MADS.Extensions
             ConfigJson configJson = GetConfig();
 
             configJson.GuildSettings = guildSettings;
-            
+
             JsonProvider.parseJson(GetPath("config.json"), configJson);
         }
 
@@ -34,4 +34,3 @@ namespace MADS.Extensions
         }
     }
 }
-

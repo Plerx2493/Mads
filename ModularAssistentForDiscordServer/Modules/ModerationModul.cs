@@ -1,15 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using DSharpPlus;
+﻿using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
-using MADS;
-using MADS.Modules;
 
 namespace MADS.Modules
 {
@@ -52,10 +45,10 @@ namespace MADS.Modules
             IsHidden = false;
         }
     }
-    
+
     internal class ModerationCommands : BaseCommandModule
     {
-        public MadsServiceProvider CommandService{ get; set; }
+        public MadsServiceProvider CommandService { get; set; }
 
         [GuildIsEnabled("Moderation"), Command("kick"), Description("Kicks a user from the server"), RequireBotPermissions(Permissions.KickMembers)]
         public async Task Kick(CommandContext ctx, DiscordMember user, [RemainingText] string reason = null)
@@ -73,7 +66,7 @@ namespace MADS.Modules
                 await ctx.RespondAsync("You cannot kick a user with a higher or equal hierarchy than you");
                 return;
             }
-            
+
             //excecute kick
             await user.RemoveAsync(reason: reason);
             await ctx.RespondAsync($"{user.DisplayName} has been kicked from the server");
@@ -102,7 +95,7 @@ namespace MADS.Modules
         }
 
         [Command("mute"), Description("Mutes a user in a server"), GuildIsEnabled("Moderation"), RequireBotPermissions(Permissions.ModerateMembers)]
-        public async Task Mute(CommandContext ctx, DiscordMember user, int TimeInMinutes = 60 , [RemainingText] string reason = null)
+        public async Task Mute(CommandContext ctx, DiscordMember user, int TimeInMinutes = 60, [RemainingText] string reason = null)
         {
             if (!ctx.Member.PermissionsIn(ctx.Channel).HasPermission(Permissions.ModerateMembers))
             {
@@ -115,7 +108,7 @@ namespace MADS.Modules
                 await ctx.RespondAsync("You cannot mute a user with a higher or equal hierarchy than you");
                 return;
             }
-            
+
             await user.TimeoutAsync(DateTimeOffset.Now.AddMinutes(TimeInMinutes), reason);
             await ctx.RespondAsync($"{user.Username} has been muted");
         }
@@ -160,7 +153,7 @@ namespace MADS.Modules
         [Command("purge"), Description("Purges messages"), GuildIsEnabled("Moderation"), RequireBotPermissions(Permissions.ManageMessages)]
         public async Task Purge(CommandContext ctx, int amount = 99)
         {
-            if (amount + 1  > 100)
+            if (amount + 1 > 100)
             {
                 await ctx.RespondAsync("You cannot purge more than 99 messages at once");
                 return;
@@ -179,14 +172,12 @@ namespace MADS.Modules
             await Task.Delay(10000);
 
             await response.DeleteAsync();
-
         }
 
         [Command("scan"), Description("Scan the entire guild if there are silent raids"), RequirePermissions(Permissions.Administrator) /*Cooldown(1, 28_800, CooldownBucketType.Guild)*/]
         public async Task Scan(CommandContext ctx)
         {
             var members = await ctx.Guild.GetAllMembersAsync();
-
 
             var groupByLastNamesQuery =
                 from member in members
@@ -209,7 +200,7 @@ namespace MADS.Modules
     [GuildOnly]
     internal class ModerationSlashCommands : ApplicationCommandModule
     {
-        [SlashCommand("test","test smth")]
+        [SlashCommand("test", "test smth")]
         public async Task TestCommand(InteractionContext ctx)
         {
             var member = await ctx.Guild.GetMemberAsync(ctx.User.Id + 12313);
@@ -224,11 +215,11 @@ namespace MADS.Modules
 
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(DiscordEmbed));
         }
+
         /*
         [SlashCommand("freeze", "Freezes a conversation in a moderation channel")]
         public async Task FreezeCommand(InteractionContext ctx, [Option("number_of_messages", "Number of messages which should be freezed")] long messages, [Option("channel", "Channel where the messages should be freezed")] DiscordChannel discordChannel = null)
         {
-
         }
         */
     }

@@ -1,8 +1,8 @@
 ﻿using DSharpPlus;
 using DSharpPlus.CommandsNext;
-using DSharpPlus.SlashCommands;
-using DSharpPlus.Entities;
 using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.Entities;
+using DSharpPlus.SlashCommands;
 using MADS.Extensions;
 
 namespace MADS.Modules
@@ -13,36 +13,46 @@ namespace MADS.Modules
         /// ModularDiscordBot to which the module is attached
         /// </summary>
         ModularDiscordBot ModularDiscordClient { get; set; }
+
         /// <summary>
         /// Name of the module
         /// </summary>
         string ModulName { get; set; }
+
         /// <summary>
         /// Description of the module
         /// </summary>
         string ModulDescription { get; set; }
+
         /// <summary>
         /// Array of commandnames
         /// </summary>
         string[] Commands { get; set; }
+
         /// <summary>
         /// Dictionary in which the commanddescription is matched to the commandnames
         /// </summary>
         Dictionary<string, string> CommandDescriptions { get; set; }
+
 #pragma warning disable CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
+
         /// <summary>
         /// Class which contains the CNext commands of the module
         /// </summary>
         Type? CommandClass { get; set; }
+
         /// <summary>
         /// Class which contains the commands and context menu buttons of the module
         /// </summary>
         Type? SlashCommandClass { get; set; }
+
 #pragma warning restore CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
+
         /// <summary>
-        /// Required DiscordIntents for the module 
+        /// Required DiscordIntents for the module
         /// </summary>
         DiscordIntents RequiredIntents { get; }
+
         /// <summary>
         /// Represents if the module is shown to the user
         /// </summary>
@@ -55,7 +65,7 @@ namespace MADS.Modules
         /// <param name="updateSlashies">Set if the slash commands should be refreshed. Set to false if methode is used in a loop</param>
         public void Enable(ulong guildId, bool updateSlashies = true)
         {
-            if(ModularDiscordClient.GuildSettings.TryGetValue(guildId, out _))
+            if (ModularDiscordClient.GuildSettings.TryGetValue(guildId, out _))
             {
                 ModularDiscordClient.GuildSettings[guildId].AktivModules.Add(ModulName);
             }
@@ -128,7 +138,7 @@ namespace MADS.Modules
             if (aktivCommandsDict.TryGetValue(guildId, out IReadOnlyList<DiscordApplicationCommand> ReadonlyCommands))
             {
                 CommandList = ReadonlyCommands.ToList();
-                CommandList.RemoveAll(x => Commands.Contains(x.Name));    
+                CommandList.RemoveAll(x => Commands.Contains(x.Name));
             }
             ModularDiscordClient.DiscordClient.BulkOverwriteGuildApplicationCommandsAsync(guildId, CommandList);
             if (updateSlashies) ModularDiscordClient.SlashCommandsExtension.RefreshCommands();
@@ -136,10 +146,11 @@ namespace MADS.Modules
             DataProvider.SetConfig(ModularDiscordClient.GuildSettings);
         }
     }
-    
+
     internal class MadsServiceProvider
     {
         public ModularDiscordBot modularDiscordBot;
+
         //-> ModuleName -> List of guildIds where the module is activ
         public Dictionary<string, List<ulong>> modulesActivGuilds;
 
@@ -158,7 +169,8 @@ namespace MADS.Modules
         /// <summary>
         /// Name of the module
         /// </summary>
-        readonly string ModulName;
+        private readonly string ModulName;
+
         public GuildIsEnabled(string modulName)
         {
             ModulName = modulName;
@@ -166,7 +178,9 @@ namespace MADS.Modules
 
         public override Task<bool> ExecuteCheckAsync(CommandContext ctx, bool help)
         {
-            MadsServiceProvider services = (MadsServiceProvider) ctx.CommandsNext.Services.GetService(typeof(MadsServiceProvider));
+            if (ctx.Channel.IsPrivate) return Task.FromResult(true);
+
+            MadsServiceProvider services = (MadsServiceProvider)ctx.CommandsNext.Services.GetService(typeof(MadsServiceProvider));
 
             if (services.modulesActivGuilds.TryGetValue(ModulName, out List<ulong> guilds))
             {

@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
-
 namespace MADS.JsonModel
 {
     public struct GuildSettings

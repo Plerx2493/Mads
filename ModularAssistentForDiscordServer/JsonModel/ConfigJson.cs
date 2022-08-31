@@ -11,7 +11,7 @@ namespace MADS.JsonModel
 
         [JsonProperty("defaultPrefix")]
         public string Prefix { get; set; }
-        
+
         [JsonProperty("minmumloglvl")]
         public LogLevel LogLevel { get; set; }
 

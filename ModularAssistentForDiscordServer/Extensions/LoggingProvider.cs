@@ -3,11 +3,6 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace MADS.Extensions
 {
@@ -15,6 +10,7 @@ namespace MADS.Extensions
     {
         //Utilities
         private readonly string dirPath = DataProvider.GetPath("Logs");
+
         private readonly DateTime startDate;
         private readonly string logPath;
         private readonly ModularDiscordBot modularDiscordBot;
@@ -28,7 +24,6 @@ namespace MADS.Extensions
 
             logPath = DataProvider.GetPath("Logs", $"{startDate.Day}-{startDate.Month}-{startDate.Year}_{startDate.Hour}-{startDate.Minute}-{startDate.Second}.log");
             File.AppendAllTextAsync(logPath, "========== LOG START ==========\n\n", System.Text.Encoding.UTF8);
-
         }
 
         public async void Setup()
@@ -72,11 +67,9 @@ namespace MADS.Extensions
 
         private void SetupFeedback()
         {
-
             //Button response with modal
             modularDiscordBot.DiscordClient.ComponentInteractionCreated += async (sender, e) =>
             {
-
                 if (e.Id != "feedback-button") return;
 
                 var modal = new DiscordInteractionResponseBuilder();
@@ -88,13 +81,12 @@ namespace MADS.Extensions
                 .AddComponents(new TextInputComponent(label: "Please enter your feedback:", customId: "feedback-text", required: true, style: DSharpPlus.TextInputStyle.Paragraph));
 
                 await e.Interaction.CreateResponseAsync(InteractionResponseType.Modal, modal);
-
-
             };
 
             //Modal processing
             modularDiscordBot.DiscordClient.ModalSubmitted += async (sender, e) =>
             {
+                if (e.Interaction.Data.CustomId != "feedback-modal") return;
 
                 DiscordInteractionResponseBuilder responseBuilder = new();
                 DiscordEmbedBuilder embedBuilder = new();
@@ -122,8 +114,8 @@ namespace MADS.Extensions
                     {
                         Text = "Send by "
                         + e.Interaction.User.Username
-                        + " from guild "
-                        + guildName 
+                        + " from "
+                        + guildName
                     }
                 };
 
@@ -133,7 +125,6 @@ namespace MADS.Extensions
                 }
             };
         }
-
 
         public Task LogEvent(string message, string sender, LogLevel lvl)
         {
@@ -148,7 +139,7 @@ namespace MADS.Extensions
             var executionTime = response.Timestamp.DateTime;
             var Timespan = (executionTime - triggerTime).TotalMilliseconds;
             var Commandname = ctx.Command.Name;
-            var CommandArgs = ctx.Command.CustomAttributes;
+            var CommandArgs = ctx.RawArguments;
 
             string tmp = "";
 
@@ -182,6 +173,5 @@ namespace MADS.Extensions
                 await channel.SendMessageAsync(discordEmbed);
             }
         }
-
     }
 }
