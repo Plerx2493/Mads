@@ -87,6 +87,9 @@ namespace MADS
             await DiscordClient.ConnectAsync(act, UserStatus.Online);
             //keep alive
             await Task.Delay(-1);
+            //
+            //DEADZONE
+            //
         }
 
         private Task OnGuildDownloadCompleted(DiscordClient sender, GuildDownloadCompletedEventArgs e)
@@ -249,6 +252,18 @@ namespace MADS
 
         private async Task OnClientReady(DiscordClient sender, ReadyEventArgs e)
         {
+            var discordConfig = new DiscordConfiguration
+            {
+                Token = config.Token,
+                TokenType = TokenType.Bot,
+                AutoReconnect = true,
+                MinimumLogLevel = config.LogLevel,
+                Intents = GetRequiredIntents()
+            };
+
+            DiscordRestClient tmp = new(discordConfig);
+
+            //TODO: RestClient test
         }
 
         public void RegisterModul(Type modul)
@@ -303,7 +318,7 @@ namespace MADS
                 guildSettings = allGuildSettings[0];
             }
 
-            if (guildSettings.Prefix == null) guildSettings.Prefix = allGuildSettings[0].Prefix;
+            guildSettings.Prefix ??= allGuildSettings[0].Prefix;
 
             return Task.FromResult(msg.GetStringPrefixLength(guildSettings.Prefix));
         }

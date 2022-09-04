@@ -98,7 +98,7 @@ namespace MADS.Entities
                         break;
 
                     case (int)ActionDiscordButtonEnum.GetIDChannel:
-                        GetUserID(e, substring);
+                        GetChannelID(e, substring);
                         break;
 
                     case (int)ActionDiscordButtonEnum.MoveVoiceChannel:

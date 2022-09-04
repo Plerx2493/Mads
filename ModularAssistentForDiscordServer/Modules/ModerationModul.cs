@@ -39,7 +39,7 @@ namespace MADS.Modules
                 { "warnlevelreset", "Resets the warn level of a user" }         //TODO: Implement warning system
             };
             CommandClass = typeof(ModerationCommands);
-            SlashCommandClass = typeof(ModerationSlashCommands);
+            SlashCommandClass = null; //typeof(ModerationSlashCommands); //TODO: Fix
             RequiredIntents = 0;
             ModularDiscordClient = bot;
             IsHidden = false;
