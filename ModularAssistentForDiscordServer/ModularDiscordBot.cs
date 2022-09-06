@@ -119,7 +119,7 @@ namespace MADS
             Console.WriteLine("Guild configs loaded");
         }
 
-        internal static bool VaildateConfig()
+        private static bool VaildateConfig()
         {
             string configPath = DataProvider.GetPath("config.json");
 
@@ -185,7 +185,7 @@ namespace MADS
 
         private void RegisterCommandExtensions()
         {
-            CommandsNextConfiguration comandsConfig = new()
+            CommandsNextConfiguration commandsConfig = new()
             {
                 CaseSensitive = false,
                 DmHelp = false,
@@ -196,7 +196,7 @@ namespace MADS
                 CommandExecutor = new ParallelQueuedCommandExecutor()
             };
 
-            CommandsNextExtension = DiscordClient.UseCommandsNext(comandsConfig);
+            CommandsNextExtension = DiscordClient.UseCommandsNext(commandsConfig);
             CommandsNextExtension.RegisterCommands<BaseCommands>();
 
             madsModules.ToList().ForEach(x => x.Value.RegisterCNext());
@@ -276,12 +276,14 @@ namespace MADS
         {
             DiscordMessage response = await ctx.Channel.SendMessageAsync(message);
 
-            if (!ctx.Channel.IsPrivate)
+            if (ctx.Channel.IsPrivate)
             {
-                await Task.Delay(secondsToDelete * 1000);
-                await response.DeleteAsync();
-                await ctx.Message.DeleteAsync();
+                return response;
             }
+
+            await Task.Delay(secondsToDelete * 1000);
+            await response.DeleteAsync();
+            await ctx.Message.DeleteAsync();
 
             return response;
         }
@@ -301,7 +303,7 @@ namespace MADS
             return requiredIntents;
         }
 
-        public Task<int> GetPrefixPositionAsync(DiscordMessage msg)
+        private Task<int> GetPrefixPositionAsync(DiscordMessage msg)
         {
             GuildSettings guildSettings;
             var allGuildSettings = GuildSettings;
