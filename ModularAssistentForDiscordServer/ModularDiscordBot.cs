@@ -24,53 +24,53 @@ namespace MADS
         public SlashCommandsExtension SlashCommandsExtension;
 
         //ModuleName -> Module instance
-        public Dictionary<string, IMadsModul> MadsModules;
+        public Dictionary<string, IMadsModul> madsModules;
 
-        //ModuleName -> Guild Ids which have enabled the module
-        public readonly Dictionary<string, List<ulong>> ModulesActiveGuilds;
+        //ModuleName -> Guild Ids which have enabled the modul
+        public Dictionary<string, List<ulong>> ModulesAktivGuilds;
 
-        //GuildId -> Guild settings for certain guild
+        //GuildId -> Guildsettings for certain guild
         public Dictionary<ulong, GuildSettings> GuildSettings;
 
-        private ServiceProvider _services;
-        internal DateTime StartTime;
-        internal ConfigJson Config;
+        internal ServiceProvider Services;
+        internal DateTime startTime;
+        internal ConfigJson config;
 
         public ModularDiscordBot()
         {
-            MadsModules = new Dictionary<string, IMadsModul>();
-            ModulesActiveGuilds = new Dictionary<string, List<ulong>>();
-            StartTime = DateTime.Now;
-            Logging = new LoggingProvider(this);
+            madsModules = new();
+            ModulesAktivGuilds = new();
+            startTime = DateTime.Now;
+            Logging = new(this);
         }
 
         public async Task RunAsync()
         {
-            if (!ValidateConfig())
+            if (!VaildateConfig())
             {
                 CreateConfig();
                 return;
             }
 
-            RegisterModule(typeof(ModerationModule));
-            RegisterModule(typeof(DevModule));
+            RegisterModul(typeof(ModerationModul));
+            RegisterModul(typeof(DevModule));
 
-            Config = DataProvider.GetConfig();
+            config = DataProvider.GetConfig();
 
-            GuildSettings = Config.GuildSettings;
+            GuildSettings = config.GuildSettings;
             var discordConfig = new DiscordConfiguration
             {
-                Token = Config.Token,
+                Token = config.Token,
                 TokenType = TokenType.Bot,
                 AutoReconnect = true,
-                MinimumLogLevel = Config.LogLevel,
+                MinimumLogLevel = config.LogLevel,
                 Intents = GetRequiredIntents()
             };
 
-            DiscordClient = new DiscordClient(discordConfig);
+            DiscordClient = new(discordConfig);
 
-            _services = new ServiceCollection()
-                .AddSingleton(new MadsServiceProvider(this, ModulesActiveGuilds))
+            Services = new ServiceCollection()
+                .AddSingleton(new MadsServiceProvider(this, ModulesAktivGuilds))
                 .BuildServiceProvider();
 
             RegisterCommandExtensions();
@@ -81,14 +81,14 @@ namespace MADS
             DiscordClient.Zombied += OnZombied;
             DiscordClient.GuildDownloadCompleted += OnGuildDownloadCompleted;
 
-            DiscordActivity act = new(Config.Prefix + "help", ActivityType.Watching);
+            DiscordActivity act = new(config.Prefix + "help", ActivityType.Watching);
 
             //connect client
             await DiscordClient.ConnectAsync(act, UserStatus.Online);
             //keep alive
             await Task.Delay(-1);
             //
-            //DEAD ZONE
+            //DEADZONE
             //
         }
 
@@ -102,17 +102,15 @@ namespace MADS
         {
             Console.WriteLine("Loading guild configs");
 
-            Config.GuildSettings.ToList().ForEach(x =>
+            config.GuildSettings.ToList().ForEach(x =>
             {
                 x.Value.AktivModules.ForEach(y =>
                 {
-                    if (!MadsModules.TryGetValue(y, out IMadsModul madsModule))
+                    if (madsModules.TryGetValue(y, out IMadsModul madsModul))
                     {
-                        return;
+                        Console.WriteLine("modul:" + x.Key + ":" + madsModul.ModulName);
+                        madsModul.RegisterCommands(x.Key, false);
                     }
-
-                    Console.WriteLine("module:" + x.Key + ":" + madsModule.ModuleName);
-                    madsModule.RegisterCommands(x.Key, false);
                 });
             });
 
@@ -137,10 +135,10 @@ namespace MADS
                 [0] = new()
             };
 
-            var guildSettings = lConfig.GuildSettings;
+            var GuildSettings = lConfig.GuildSettings;
             var newGuildSettings = new Dictionary<ulong, GuildSettings>();
 
-            foreach (var guild in guildSettings)
+            foreach (var guild in GuildSettings)
             {
                 var settings = guild.Value;
                 settings.AktivModules = guild.Value.AktivModules.Distinct().ToList();
@@ -153,7 +151,7 @@ namespace MADS
             return true;
         }
 
-        private static void CreateConfig()
+        internal static void CreateConfig()
         {
             string configPath = DataProvider.GetPath("config.json");
 
@@ -167,19 +165,17 @@ namespace MADS
                 LogLevel = LogLevel.Debug,
                 DiscordEmbed = new DiscordEmbedBuilder()
                 {
-                    Color = new Optional<DiscordColor>(new DiscordColor(0, 255, 194)),
-                    Footer = new DiscordEmbedBuilder.EmbedFooter
+                    Color = new(new(0, 255, 194)),
+                    Footer = new()
                     {
                         Text = "Mads"
                     }
                 },
-                GuildSettings = new Dictionary<ulong, GuildSettings>
-                {
-                    [0] = new()
-                }
+                GuildSettings = new Dictionary<ulong, GuildSettings>()
             };
 
-            JsonProvider.ParseJson(configPath, newConfig);
+            newConfig.GuildSettings[0] = new();
+            JsonProvider.parseJson(configPath, newConfig);
 
             Console.WriteLine("Please insert your token in the config file and restart");
             Console.WriteLine("Filepath: " + configPath);
@@ -189,25 +185,25 @@ namespace MADS
 
         private void RegisterCommandExtensions()
         {
-            CommandsNextConfiguration commandsConfig = new()
+            CommandsNextConfiguration comandsConfig = new()
             {
                 CaseSensitive = false,
                 DmHelp = false,
                 EnableDms = true,
                 EnableMentionPrefix = true,
                 PrefixResolver = GetPrefixPositionAsync,
-                Services = _services,
+                Services = Services,
                 CommandExecutor = new ParallelQueuedCommandExecutor()
             };
 
-            CommandsNextExtension = DiscordClient.UseCommandsNext(commandsConfig);
+            CommandsNextExtension = DiscordClient.UseCommandsNext(comandsConfig);
             CommandsNextExtension.RegisterCommands<BaseCommands>();
 
-            MadsModules.ToList().ForEach(x => x.Value.RegisterCNext());
+            madsModules.ToList().ForEach(x => x.Value.RegisterCNext());
 
             SlashCommandsConfiguration slashConfig = new()
             {
-                Services = _services
+                Services = Services
             };
 
             SlashCommandsExtension = DiscordClient.UseSlashCommands(slashConfig);
@@ -218,7 +214,7 @@ namespace MADS
             ActionDiscordButton.EnableButtonListener(DiscordClient);
         }
 
-        private static async Task OnSlashCommandErrored(SlashCommandsExtension sender, SlashCommandErrorEventArgs e)
+        private async Task OnSlashCommandErrored(SlashCommandsExtension sender, SlashCommandErrorEventArgs e)
         {
             var typeOfException = e.Exception.GetType();
             if (typeOfException == typeof(SlashExecutionChecksFailedException) || typeOfException == typeof(ArgumentException))
@@ -226,19 +222,19 @@ namespace MADS
                 return;
             }
 
-            var discordEmbed = new DiscordEmbedBuilder
+            var DiscordEmbed = new DiscordEmbedBuilder
             {
                 Title = "Error",
                 Description = $"The command execution failed",
                 Color = DiscordColor.Red,
                 Timestamp = DateTime.Now,
             };
-            discordEmbed.AddField("Exception:", e.Exception.Message + "\n" + e.Exception.StackTrace);
+            DiscordEmbed.AddField("Exception:", e.Exception.Message + "\n" + e.Exception.StackTrace);
 
-            await e.Context.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(discordEmbed));
+            await e.Context.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(DiscordEmbed));
         }
 
-        private static async Task OnCNextErrored(CommandsNextExtension sender, CommandErrorEventArgs e)
+        private async Task OnCNextErrored(CommandsNextExtension sender, CommandErrorEventArgs e)
         {
             var typeOfException = e.Exception.GetType();
             if (typeOfException == typeof(ChecksFailedException) || typeOfException == typeof(ArgumentException) || typeOfException == typeof(CommandNotFoundException))
@@ -258,10 +254,10 @@ namespace MADS
         {
             var discordConfig = new DiscordConfiguration
             {
-                Token = Config.Token,
+                Token = config.Token,
                 TokenType = TokenType.Bot,
                 AutoReconnect = true,
-                MinimumLogLevel = Config.LogLevel,
+                MinimumLogLevel = config.LogLevel,
                 Intents = GetRequiredIntents()
             };
 
@@ -270,39 +266,34 @@ namespace MADS
             //TODO: RestClient test
         }
 
-        private void RegisterModule(Type module)
+        public void RegisterModul(Type modul)
         {
-            IMadsModul newModule = (IMadsModul)Activator.CreateInstance(module, this);
-            if (newModule != null)
-            {
-                MadsModules[newModule.ModuleName] = newModule;
-            }
+            IMadsModul newModul = (IMadsModul)Activator.CreateInstance(modul, this);
+            madsModules[newModul.ModulName] = newModul;
         }
 
         public static async Task<DiscordMessage> AnswerWithDelete(CommandContext ctx, DiscordEmbed message, int secondsToDelete = 20)
         {
             DiscordMessage response = await ctx.Channel.SendMessageAsync(message);
 
-            if (ctx.Channel.IsPrivate)
+            if (!ctx.Channel.IsPrivate)
             {
-                return response;
+                await Task.Delay(secondsToDelete * 1000);
+                await response.DeleteAsync();
+                await ctx.Message.DeleteAsync();
             }
-
-            await Task.Delay(secondsToDelete * 1000);
-            await response.DeleteAsync();
-            await ctx.Message.DeleteAsync();
 
             return response;
         }
 
-        private DiscordIntents GetRequiredIntents()
+        public DiscordIntents GetRequiredIntents()
         {
             DiscordIntents requiredIntents =
                 DiscordIntents.GuildMessages
                 | DiscordIntents.DirectMessages
                 | DiscordIntents.Guilds;
 
-            MadsModules.ToList().ForEach(x =>
+            madsModules.ToList().ForEach(x =>
             {
                 requiredIntents |= x.Value.RequiredIntents;
             });
@@ -310,7 +301,7 @@ namespace MADS
             return requiredIntents;
         }
 
-        private Task<int> GetPrefixPositionAsync(DiscordMessage msg)
+        public Task<int> GetPrefixPositionAsync(DiscordMessage msg)
         {
             GuildSettings guildSettings;
             var allGuildSettings = GuildSettings;
