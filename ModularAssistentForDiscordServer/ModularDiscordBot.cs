@@ -27,7 +27,7 @@ namespace MADS
         public Dictionary<string, IMadsModul> madsModules;
 
         //ModuleName -> Guild Ids which have enabled the modul
-        public Dictionary<string, List<ulong>> ModulesAktivGuilds;
+        public Dictionary<string, List<ulong>> ModulesActiveGuilds;
 
         //GuildId -> Guildsettings for certain guild
         public Dictionary<ulong, GuildSettings> GuildSettings;
@@ -39,7 +39,7 @@ namespace MADS
         public ModularDiscordBot()
         {
             madsModules = new();
-            ModulesAktivGuilds = new();
+            ModulesActiveGuilds = new();
             startTime = DateTime.Now;
             Logging = new(this);
         }
@@ -70,7 +70,7 @@ namespace MADS
             DiscordClient = new(discordConfig);
 
             Services = new ServiceCollection()
-                .AddSingleton(new MadsServiceProvider(this, ModulesAktivGuilds))
+                .AddSingleton(new MadsServiceProvider(this, ModulesActiveGuilds))
                 .BuildServiceProvider();
 
             RegisterCommandExtensions();
@@ -175,7 +175,7 @@ namespace MADS
             };
 
             newConfig.GuildSettings[0] = new();
-            JsonProvider.ParseJson<>(configPath, newConfig);
+            JsonProvider.ParseJson(configPath, newConfig);
 
             Console.WriteLine("Please insert your token in the config file and restart");
             Console.WriteLine("Filepath: " + configPath);
