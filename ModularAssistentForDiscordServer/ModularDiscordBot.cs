@@ -46,13 +46,13 @@ namespace MADS
 
         public async Task RunAsync()
         {
-            if (!VaildateConfig())
+            if (!ValidateConfig())
             {
                 CreateConfig();
                 return;
             }
 
-            RegisterModul(typeof(ModerationModul));
+            RegisterModul(typeof(ModerationModule));
             RegisterModul(typeof(DevModule));
 
             config = DataProvider.GetConfig();
@@ -108,7 +108,7 @@ namespace MADS
                 {
                     if (madsModules.TryGetValue(y, out IMadsModul madsModul))
                     {
-                        Console.WriteLine("modul:" + x.Key + ":" + madsModul.ModulName);
+                        Console.WriteLine("modul:" + x.Key + ":" + madsModul.ModuleName);
                         madsModul.RegisterCommands(x.Key, false);
                     }
                 });
@@ -175,7 +175,7 @@ namespace MADS
             };
 
             newConfig.GuildSettings[0] = new();
-            JsonProvider.parseJson(configPath, newConfig);
+            JsonProvider.ParseJson<>(configPath, newConfig);
 
             Console.WriteLine("Please insert your token in the config file and restart");
             Console.WriteLine("Filepath: " + configPath);
@@ -269,7 +269,7 @@ namespace MADS
         public void RegisterModul(Type modul)
         {
             IMadsModul newModul = (IMadsModul)Activator.CreateInstance(modul, this);
-            madsModules[newModul.ModulName] = newModul;
+            madsModules[newModul.ModuleName] = newModul;
         }
 
         public static async Task<DiscordMessage> AnswerWithDelete(CommandContext ctx, DiscordEmbed message, int secondsToDelete = 20)

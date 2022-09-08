@@ -17,7 +17,7 @@ namespace MADS.Utility
         [Command("ping"), Aliases("status"), Description("Get the ping of the websocket"), Cooldown(1, 30, CooldownBucketType.Channel)]
         public async Task Ping(CommandContext ctx)
         {
-            var diff = DateTime.Now - CommandService.ModularDiscordBot.StartTime;
+            var diff = DateTime.Now - CommandService.ModularDiscordBot.startTime;
             var date = $"{diff.Days} days {diff.Hours} hours {diff.Minutes} minutes";
 
             DiscordEmbedBuilder discordEmbedBuilder = GuildSettings.GetDiscordEmbed();
@@ -39,7 +39,7 @@ namespace MADS.Utility
             string inviteUri = ctx.Client.CurrentApplication.GenerateOAuthUri(null, Permissions.Administrator, OAuthScope.Bot, OAuthScope.ApplicationsCommands);
             string addMe = $"[Click here!]({inviteUri.Replace(" ", "%20")})";
 
-            var diff = DateTime.Now - CommandService.ModularDiscordBot.StartTime;
+            var diff = DateTime.Now - CommandService.ModularDiscordBot.startTime;
             string date = $"{diff.Days} days {diff.Hours} hours {diff.Minutes} minutes";
 
             discordEmbedBuilder
@@ -116,7 +116,7 @@ namespace MADS.Utility
         [Command("enable"), Description("Enable given module"), RequirePermissions(Permissions.Administrator), RequireGuild]
         public async Task EnableModule(CommandContext ctx, [Description("Name of new module")] string moduleName)
         {
-            if (!CommandService.ModularDiscordBot.MadsModules.TryGetValue(moduleName, out _))
+            if (!CommandService.ModularDiscordBot.madsModules.TryGetValue(moduleName, out _))
             {
                 await ctx.RespondAsync("Module not found");
                 return;
@@ -129,14 +129,14 @@ namespace MADS.Utility
                 return;
             }
 
-            CommandService.ModularDiscordBot.MadsModules[moduleName].Enable(ctx.Guild.Id);
+            CommandService.ModularDiscordBot.madsModules[moduleName].Enable(ctx.Guild.Id);
             await ctx.RespondAsync("Module is now enabled");
         }
 
         [Command("disable"), Description("Disable given module"), RequirePermissions(Permissions.Administrator), RequireGuild]
         public async Task DisableModule(CommandContext ctx, [Description("Name of module")] string moduleName)
         {
-            if (!CommandService.ModularDiscordBot.MadsModules.TryGetValue(moduleName, out _))
+            if (!CommandService.ModularDiscordBot.madsModules.TryGetValue(moduleName, out _))
             {
                 await ctx.RespondAsync("Module not found");
                 return;
@@ -149,14 +149,14 @@ namespace MADS.Utility
                 return;
             }
 
-            CommandService.ModularDiscordBot.MadsModules[moduleName].Disable(ctx.Guild.Id);
+            CommandService.ModularDiscordBot.madsModules[moduleName].Disable(ctx.Guild.Id);
             await ctx.RespondAsync("Module is now disabled");
         }
 
         [Command("modules"), Description("List all modules"), RequirePermissions(Permissions.Administrator), RequireGuild]
         public async Task ListModules(CommandContext ctx)
         {
-            var modules = CommandService.ModularDiscordBot.MadsModules.Keys.ToList();
+            var modules = CommandService.ModularDiscordBot.madsModules.Keys.ToList();
             var response = modules.Aggregate("Available modules:\n", (current, module) => current + (module + "\n"));
             await ctx.RespondAsync(response);
         }
