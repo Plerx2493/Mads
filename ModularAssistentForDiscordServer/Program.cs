@@ -2,22 +2,23 @@
 
 namespace MADS
 {
-    internal class MainProgram
+    internal static class MainProgram
     {
         public static void Main()
         {
-            ModularDiscordBot modularDiscordBot = new();
-            
-            try
+            while (true)
             {
-                modularDiscordBot.RunAsync().GetAwaiter().GetResult();
-            }
-            catch(Exception e)
-            {
-                modularDiscordBot.Logging.LogToOwner($"Bot crashed: {e.Message}", "core", LogLevel.Critical);
-            }
+                ModularDiscordBot modularDiscordBot = new();
 
-            Main();
+                try
+                {
+                    modularDiscordBot.RunAsync().GetAwaiter().GetResult();
+                }
+                catch (Exception e)
+                {
+                    modularDiscordBot.Logging.LogToOwner(string.Concat("**", e.GetType().ToString(), "**: ", e.Message), "core", LogLevel.Critical);
+                }
+            }
         }
     }
 }

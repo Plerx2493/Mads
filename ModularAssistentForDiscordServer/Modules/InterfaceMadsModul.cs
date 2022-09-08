@@ -17,20 +17,20 @@ namespace MADS.Modules
         /// <summary>
         /// Name of the module
         /// </summary>
-        string ModulName { get; set; }
+        string ModuleName { get; set; }
 
         /// <summary>
         /// Description of the module
         /// </summary>
-        string ModulDescription { get; set; }
+        string ModuleDescription { get; set; }
 
         /// <summary>
-        /// Array of commandnames
+        /// Array of command names
         /// </summary>
         string[] Commands { get; set; }
 
         /// <summary>
-        /// Dictionary in which the commanddescription is matched to the commandnames
+        /// Dictionary in which the command description is matched to the command name
         /// </summary>
         Dictionary<string, string> CommandDescriptions { get; set; }
 
@@ -67,12 +67,12 @@ namespace MADS.Modules
         {
             if (ModularDiscordClient.GuildSettings.TryGetValue(guildId, out _))
             {
-                ModularDiscordClient.GuildSettings[guildId].AktivModules.Add(ModulName);
+                ModularDiscordClient.GuildSettings[guildId].AktivModules.Add(ModuleName);
             }
             else
             {
                 ModularDiscordClient.GuildSettings.Add(guildId, new());
-                ModularDiscordClient.GuildSettings[guildId].AktivModules.Add(ModulName);
+                ModularDiscordClient.GuildSettings[guildId].AktivModules.Add(ModuleName);
             }
 
             RegisterCommands(guildId, updateSlashies);
@@ -85,9 +85,9 @@ namespace MADS.Modules
         /// <param name="updateSlashies">Set if the slash commands should be refreshed. Set to false if methode is used in a loop</param>
         public void RegisterCommands(ulong guildId, bool updateSlashies = true)
         {
-            if (ModularDiscordClient.ModulesAktivGuilds.TryGetValue(ModulName, out _))
+            if (ModularDiscordClient.ModulesActiveGuilds.TryGetValue(ModuleName, out _))
             {
-                ModularDiscordClient.ModulesAktivGuilds[ModulName].Add(guildId);
+                ModularDiscordClient.ModulesActiveGuilds[ModuleName].Add(guildId);
             }
             else
             {
@@ -95,7 +95,7 @@ namespace MADS.Modules
                 {
                     guildId
                 };
-                ModularDiscordClient.ModulesAktivGuilds[ModulName] = newList;
+                ModularDiscordClient.ModulesActiveGuilds[ModuleName] = newList;
             }
 
             if (SlashCommandClass is not null && typeof(ApplicationCommandModule).IsAssignableFrom(SlashCommandClass))
@@ -129,18 +129,18 @@ namespace MADS.Modules
         /// <param name="updateSlashies">Set if the slash commands should be refreshed. Set to false if methode is used in a loop and refresh manuel after the loop</param>
         public void Disable(ulong guildId, bool updateSlashies = true)
         {
-            ModularDiscordClient.ModulesAktivGuilds[ModulName].RemoveAll(x => x == guildId);
+            ModularDiscordClient.ModulesActiveGuilds[ModuleName].RemoveAll(x => x == guildId);
 
-            var aktivCommandsList = ModularDiscordClient.SlashCommandsExtension.RegisteredCommands;
-            var aktivCommandsDict = aktivCommandsList.ToDictionary(x => x.Key, x => x.Value);
+            var activeCommandsList = ModularDiscordClient.SlashCommandsExtension.RegisteredCommands;
+            var activeCommandsDict = activeCommandsList.ToDictionary(x => x.Key, x => x.Value);
 
-            List<DiscordApplicationCommand> CommandList = new();
-            if (aktivCommandsDict.TryGetValue(guildId, out IReadOnlyList<DiscordApplicationCommand> ReadonlyCommands))
+            List<DiscordApplicationCommand> commandList = new();
+            if (activeCommandsDict.TryGetValue(guildId, out IReadOnlyList<DiscordApplicationCommand> readonlyCommands))
             {
-                CommandList = ReadonlyCommands.ToList();
-                CommandList.RemoveAll(x => Commands.Contains(x.Name));
+                commandList = readonlyCommands.ToList();
+                commandList.RemoveAll(x => Commands.Contains(x.Name));
             }
-            ModularDiscordClient.DiscordClient.BulkOverwriteGuildApplicationCommandsAsync(guildId, CommandList);
+            ModularDiscordClient.DiscordClient.BulkOverwriteGuildApplicationCommandsAsync(guildId, commandList);
             if (updateSlashies) ModularDiscordClient.SlashCommandsExtension.RefreshCommands();
 
             DataProvider.SetConfig(ModularDiscordClient.GuildSettings);
@@ -149,31 +149,31 @@ namespace MADS.Modules
 
     internal class MadsServiceProvider
     {
-        public ModularDiscordBot modularDiscordBot;
+        public ModularDiscordBot ModularDiscordBot;
 
         //-> ModuleName -> List of guildIds where the module is activ
-        public Dictionary<string, List<ulong>> modulesActivGuilds;
+        public Dictionary<string, List<ulong>> ModulesActivGuilds;
 
         public MadsServiceProvider(ModularDiscordBot modularDiscordBot, Dictionary<string, List<ulong>> modulesActivGuilds)
         {
-            this.modularDiscordBot = modularDiscordBot;
-            this.modulesActivGuilds = modulesActivGuilds;
+            this.ModularDiscordBot = modularDiscordBot;
+            this.ModulesActivGuilds = modulesActivGuilds;
         }
     }
 
     /// <summary>
-    /// Atribute for modules to check if the module is enabled in given guild
+    /// Attribute for modules to check if the module is enabled in given guild
     /// </summary>
     internal class GuildIsEnabled : CheckBaseAttribute
     {
         /// <summary>
         /// Name of the module
         /// </summary>
-        private readonly string ModulName;
+        private readonly string _moduleName;
 
-        public GuildIsEnabled(string modulName)
+        public GuildIsEnabled(string moduleName)
         {
-            ModulName = modulName;
+            _moduleName = moduleName;
         }
 
         public override Task<bool> ExecuteCheckAsync(CommandContext ctx, bool help)
@@ -182,7 +182,7 @@ namespace MADS.Modules
 
             MadsServiceProvider services = (MadsServiceProvider)ctx.CommandsNext.Services.GetService(typeof(MadsServiceProvider));
 
-            if (services.modulesActivGuilds.TryGetValue(ModulName, out List<ulong> guilds))
+            if (services.ModulesActivGuilds.TryGetValue(_moduleName, out List<ulong> guilds))
             {
                 if (guilds.Contains(ctx.Guild.Id))
                 {
@@ -209,14 +209,20 @@ namespace MADS.Modules
         internal DiscordEmbedBuilder GetStandardEmbed(CommandContext ctx, string title, string message)
         {
             DiscordEmbedBuilder discordEmbedBuilder = new();
+            
+            if (ctx.Member != null)
+            {
+                discordEmbedBuilder
+                    .WithAuthor(ctx.Member.Nickname, ctx.Member.AvatarUrl, ctx.Member.AvatarUrl);
+            }
+            
             discordEmbedBuilder
-                .WithAuthor(ctx.Member.Nickname, ctx.Member.AvatarUrl, ctx.Member.AvatarUrl)
-                .WithColor(new(0, 155, 194))
+                .WithColor(new DiscordColor(0, 155, 194))
                 .WithFooter("Mads")
                 .WithTimestamp(DateTime.Now)
                 .WithTitle(title)
                 .WithDescription(message);
-
+            
             return discordEmbedBuilder;
         }
     }

@@ -8,7 +8,7 @@ namespace MADS.Entities
     {
         public static DiscordButtonComponent Build(ActionDiscordButtonEnum action, DiscordButtonComponent button, params object[] args)
         {
-            int actioncode;
+            int actionCode;
 
             string customId;
             switch (action)
@@ -16,44 +16,44 @@ namespace MADS.Entities
                 case ActionDiscordButtonEnum.BanUser:
                     if (args.Length != 1) throw new ArgumentException("Only one id possible");
                     if (args[0].GetType() != typeof(ulong)) throw new ArgumentException("Please provide a id (ulong)");
-                    actioncode = (int)ActionDiscordButtonEnum.BanUser;
-                    customId = actioncode + ":" + args[0];
+                    actionCode = (int)ActionDiscordButtonEnum.BanUser;
+                    customId = actionCode + ":" + args[0];
                     break;
 
                 case ActionDiscordButtonEnum.KickUser:
                     if (args.Length != 1) throw new ArgumentException("Only one id possible");
                     if (args[0].GetType() != typeof(ulong)) throw new ArgumentException("Please provide a id (ulong)");
-                    actioncode = (int)ActionDiscordButtonEnum.BanUser;
-                    customId = actioncode + ":" + args[0];
+                    actionCode = (int)ActionDiscordButtonEnum.BanUser;
+                    customId = actionCode + ":" + args[0];
                     break;
 
-                case ActionDiscordButtonEnum.GetIDUser:
+                case ActionDiscordButtonEnum.GetIdUser:
                     if (args.Length != 1) throw new ArgumentException("Only one id possible");
                     if (args[0].GetType() != typeof(ulong)) throw new ArgumentException("Please provide a id (ulong)");
-                    actioncode = (int)ActionDiscordButtonEnum.GetIDUser;
-                    customId = actioncode + ":" + args[0];
+                    actionCode = (int)ActionDiscordButtonEnum.GetIdUser;
+                    customId = actionCode + ":" + args[0];
                     break;
 
-                case ActionDiscordButtonEnum.GetIDGuild:
+                case ActionDiscordButtonEnum.GetIdGuild:
                     if (args.Length != 1) throw new ArgumentException("Only one id possible");
                     if (args[0].GetType() != typeof(ulong)) throw new ArgumentException("Please provide a id (ulong)");
-                    actioncode = (int)ActionDiscordButtonEnum.GetIDGuild;
-                    customId = actioncode + ":" + args[0];
+                    actionCode = (int)ActionDiscordButtonEnum.GetIdGuild;
+                    customId = actionCode + ":" + args[0];
                     break;
 
-                case ActionDiscordButtonEnum.GetIDChannel:
+                case ActionDiscordButtonEnum.GetIdChannel:
                     if (args.Length != 1) throw new ArgumentException("Only one id possible");
                     if (args[0].GetType() != typeof(ulong)) throw new ArgumentException("Please provide a id (ulong)");
-                    actioncode = (int)ActionDiscordButtonEnum.GetIDChannel;
-                    customId = actioncode + ":" + args[0];
+                    actionCode = (int)ActionDiscordButtonEnum.GetIdChannel;
+                    customId = actionCode + ":" + args[0];
                     break;
 
                 case ActionDiscordButtonEnum.MoveVoiceChannel:
                     if (args.Length != 2) throw new ArgumentException("Only 2 ids possible");
                     if (args[0].GetType() != typeof(ulong)) throw new ArgumentException("Please provide 2 ids (ulong)");
                     if (args[1].GetType() != typeof(ulong)) throw new ArgumentException("Please provide 2 ids (ulong)");
-                    actioncode = (int)ActionDiscordButtonEnum.MoveVoiceChannel;
-                    customId = actioncode + ":" + args[0] + ":" + args[1];
+                    actionCode = (int)ActionDiscordButtonEnum.MoveVoiceChannel;
+                    customId = actionCode + ":" + args[0] + ":" + args[1];
                     break;
 
                 default:
@@ -62,11 +62,11 @@ namespace MADS.Entities
 
             if (customId is null) throw new Exception();
 
-            string lable = button.Label;
+            string label = button.Label;
             var style = button.Style;
-            var CommandButton = new DiscordButtonComponent(style, customId, lable);
+            var commandButton = new DiscordButtonComponent(style, customId, label);
 
-            return CommandButton;
+            return commandButton;
         }
 
         public static void EnableButtonListener(DiscordClient client)
@@ -89,16 +89,16 @@ namespace MADS.Entities
                         KickUser(e, substring);
                         break;
 
-                    case (int)ActionDiscordButtonEnum.GetIDUser:
-                        GetUserID(e, substring);
+                    case (int)ActionDiscordButtonEnum.GetIdUser:
+                        GetUserId(e, substring);
                         break;
 
-                    case (int)ActionDiscordButtonEnum.GetIDGuild:
-                        GetGuildID(e, substring);
+                    case (int)ActionDiscordButtonEnum.GetIdGuild:
+                        GetGuildId(e, substring);
                         break;
 
-                    case (int)ActionDiscordButtonEnum.GetIDChannel:
-                        GetChannelID(e, substring);
+                    case (int)ActionDiscordButtonEnum.GetIdChannel:
+                        GetChannelId(e, substring);
                         break;
 
                     case (int)ActionDiscordButtonEnum.MoveVoiceChannel:
@@ -112,45 +112,41 @@ namespace MADS.Entities
             };
         }
 
-        private static void MoveVoiceChannelUser(ComponentInteractionCreateEventArgs e, string[] substring)
+        private static async void MoveVoiceChannelUser(ComponentInteractionCreateEventArgs e, IReadOnlyList<string> substring)
         {
+            var member = await e.Guild.GetMemberAsync(e.User.Id);
+            if (!member.Permissions.HasPermission(Permissions.MoveMembers)) { return; }
             DiscordChannel originChannel = e.Guild.GetChannel(ulong.Parse(substring[1]));
             DiscordChannel targetChannel = e.Guild.GetChannel(ulong.Parse(substring[2]));
 
-            foreach (DiscordMember member in originChannel.Users)
+            foreach (DiscordMember voiceMember in originChannel.Users)
             {
-                targetChannel.PlaceMemberAsync(member);
+                targetChannel.PlaceMemberAsync(voiceMember);
             }
             e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource);
         }
 
-        private static async void BanUser(ComponentInteractionCreateEventArgs e, string[] substring)
+        private static async void BanUser(ComponentInteractionCreateEventArgs e, IReadOnlyList<string> substring)
         {
             var member = await e.Guild.GetMemberAsync(e.User.Id);
-            var memberPermissions = member.Permissions;
-            var neededPermissions = Permissions.BanMembers;
+            if (!member.Permissions.HasPermission(Permissions.BanMembers)) { return; }
 
-            if (!PermissionMethods.HasPermission(memberPermissions, neededPermissions)) { return; }
-
-            ulong userID = ulong.Parse(substring[1]);
-            await e.Guild.BanMemberAsync(userID);
+            ulong userId = ulong.Parse(substring[1]);
+            await e.Guild.BanMemberAsync(userId);
             e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource);
         }
 
-        private static async void KickUser(ComponentInteractionCreateEventArgs e, string[] substring)
+        private static async void KickUser(ComponentInteractionCreateEventArgs e, IReadOnlyList<string> substring)
         {
             var member = await e.Guild.GetMemberAsync(e.User.Id);
-            var memberPermissions = member.Permissions;
-            var neededPermissions = Permissions.KickMembers;
+            if (!member.Permissions.HasPermission(Permissions.KickMembers)) { return; }
 
-            if (!PermissionMethods.HasPermission(memberPermissions, neededPermissions)) { return; }
-
-            ulong userID = ulong.Parse(substring[1]);
-            await e.Guild.BanMemberAsync(userID);
+            ulong userId = ulong.Parse(substring[1]);
+            await e.Guild.BanMemberAsync(userId);
             e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource);
         }
 
-        private static async void GetUserID(ComponentInteractionCreateEventArgs e, string[] substring)
+        private static async void GetUserId(InteractionCreateEventArgs e, IReadOnlyList<string> substring)
         {
             var response = new DiscordInteractionResponseBuilder();
 
@@ -160,7 +156,7 @@ namespace MADS.Entities
             await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, response);
         }
 
-        private static async void GetGuildID(ComponentInteractionCreateEventArgs e, string[] substring)
+        private static async void GetGuildId(InteractionCreateEventArgs e, IReadOnlyList<string> substring)
         {
             var response = new DiscordInteractionResponseBuilder();
 
@@ -170,7 +166,7 @@ namespace MADS.Entities
             await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, response);
         }
 
-        private static async void GetChannelID(ComponentInteractionCreateEventArgs e, string[] substring)
+        private static async void GetChannelId(InteractionCreateEventArgs e, IReadOnlyList<string> substring)
         {
             var response = new DiscordInteractionResponseBuilder();
 

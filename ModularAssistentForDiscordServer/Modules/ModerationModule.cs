@@ -6,12 +6,12 @@ using DSharpPlus.SlashCommands;
 
 namespace MADS.Modules
 {
-    internal class ModerationModul : IMadsModul
+    internal class ModerationModule : IMadsModul
     {
         public ModularDiscordBot ModularDiscordClient { get; set; }
         public List<ulong> GuildsEnabled { get; set; }
-        public string ModulName { get; set; }
-        public string ModulDescription { get; set; }
+        public string ModuleName { get; set; }
+        public string ModuleDescription { get; set; }
         public string[] Commands { get; set; }
         public Dictionary<string, string> CommandDescriptions { get; set; }
         public Type CommandClass { get; set; }
@@ -19,10 +19,10 @@ namespace MADS.Modules
         public DiscordIntents RequiredIntents { get; set; }
         public bool IsHidden { get; init; }
 
-        public ModerationModul(ModularDiscordBot bot)
+        public ModerationModule(ModularDiscordBot bot)
         {
-            ModulName = "Moderation";
-            ModulDescription = "Moderation commands";
+            ModuleName = "Moderation";
+            ModuleDescription = "Moderation commands";
             Commands = new string[] { "kick", "ban", "mute", "unmute", "purge", "warn", "unwarn", "warnlist", "warnlevel", "warnlevelset", "warnlevelreset", "moderation test", "test" };
             CommandDescriptions = new Dictionary<string, string>
             {
@@ -50,7 +50,7 @@ namespace MADS.Modules
     {
         public MadsServiceProvider CommandService { get; set; }
 
-        [GuildIsEnabled("Moderation"), Command("kick"), Description("Kicks a user from the server"), RequireBotPermissions(Permissions.KickMembers)]
+        [GuildIsEnabled("Moderation"), Command("kick"), Description("Kicks a user from the server"), RequireBotPermissions(Permissions.KickMembers), RequireGuild]
         public async Task Kick(CommandContext ctx, DiscordMember user, [RemainingText] string reason = null)
         {
             //check if user has permission to kick member
@@ -67,12 +67,12 @@ namespace MADS.Modules
                 return;
             }
 
-            //excecute kick
+            //execute kick
             await user.RemoveAsync(reason: reason);
             await ctx.RespondAsync($"{user.DisplayName} has been kicked from the server");
         }
 
-        [Command("ban"), Description("Bans a user from the server"), GuildIsEnabled("Moderation"), RequireBotPermissions(Permissions.BanMembers)]
+        [Command("ban"), Description("Bans a user from the server"), GuildIsEnabled("Moderation"), RequireBotPermissions(Permissions.BanMembers), RequireGuild]
         public async Task Ban(CommandContext ctx, DiscordMember user, [RemainingText] string reason = null)
         {
             //check if user has permission to ban member
@@ -94,8 +94,8 @@ namespace MADS.Modules
             await ctx.RespondAsync($"{user.DisplayName} has been kicked from the server");
         }
 
-        [Command("mute"), Description("Mutes a user in a server"), GuildIsEnabled("Moderation"), RequireBotPermissions(Permissions.ModerateMembers)]
-        public async Task Mute(CommandContext ctx, DiscordMember user, int TimeInMinutes = 60, [RemainingText] string reason = null)
+        [Command("mute"), Description("Mutes a user in a server"), GuildIsEnabled("Moderation"), RequireBotPermissions(Permissions.ModerateMembers), RequireGuild]
+        public async Task Mute(CommandContext ctx, DiscordMember user, int timeInMinutes = 60, [RemainingText] string reason = null)
         {
             if (!ctx.Member.PermissionsIn(ctx.Channel).HasPermission(Permissions.ModerateMembers))
             {
@@ -109,11 +109,11 @@ namespace MADS.Modules
                 return;
             }
 
-            await user.TimeoutAsync(DateTimeOffset.Now.AddMinutes(TimeInMinutes), reason);
+            await user.TimeoutAsync(DateTimeOffset.Now.AddMinutes(timeInMinutes), reason);
             await ctx.RespondAsync($"{user.Username} has been muted");
         }
 
-        [Command("unmute"), Description("Unmutes a user in a server"), GuildIsEnabled("Moderation"), RequireBotPermissions(Permissions.ModerateMembers)]
+        [Command("unmute"), Description("Unmutes a user in a server"), GuildIsEnabled("Moderation"), RequireBotPermissions(Permissions.ModerateMembers), RequireGuild]
         public async Task Unmute(CommandContext ctx, DiscordMember user, [RemainingText] string reason = null)
         {
             if (!ctx.Member.PermissionsIn(ctx.Channel).HasPermission(Permissions.ModerateMembers))
@@ -132,7 +132,7 @@ namespace MADS.Modules
             await ctx.RespondAsync($"{user.Username} has been unmuted");
         }
 
-        [Command("warn"), Description("Warns a user in a server"), GuildIsEnabled("Moderation"), RequireBotPermissions(Permissions.KickMembers)]
+        [Command("warn"), Description("Warns a user in a server"), GuildIsEnabled("Moderation"), RequireBotPermissions(Permissions.KickMembers), RequireGuild]
         public async Task Warn(CommandContext ctx, DiscordMember user, [RemainingText] string reason = null)
         {
             if (!ctx.Member.PermissionsIn(ctx.Channel).HasPermission(Permissions.KickMembers))
@@ -150,7 +150,7 @@ namespace MADS.Modules
             await ctx.RespondAsync($"{user.Username} has been warned");
         }
 
-        [Command("purge"), Description("Purges messages"), GuildIsEnabled("Moderation"), RequireBotPermissions(Permissions.ManageMessages)]
+        [Command("purge"), Description("Purges messages"), GuildIsEnabled("Moderation"), RequireBotPermissions(Permissions.ManageMessages), RequireGuild]
         public async Task Purge(CommandContext ctx, int amount = 99)
         {
             if (amount + 1 > 100)
@@ -167,14 +167,14 @@ namespace MADS.Modules
 
             await ctx.Channel.DeleteMessagesAsync(messages);
 
-            var response = await ctx.Channel.SendMessageAsync($"{messages.Count} messages deleted {DiscordEmoji.FromName(CommandService.modularDiscordBot.DiscordClient, ":Bussi:")}");
+            var response = await ctx.Channel.SendMessageAsync($"{messages.Count} messages deleted {DiscordEmoji.FromName(CommandService.ModularDiscordBot.DiscordClient, ":Bussi:")}");
 
             await Task.Delay(10000);
 
             await response.DeleteAsync();
         }
 
-        [Command("scan"), Description("Scan the entire guild if there are silent raids"), RequirePermissions(Permissions.Administrator) /*Cooldown(1, 28_800, CooldownBucketType.Guild)*/]
+        [Command("scan"), Description("Scan the entire guild if there are silent raids"), RequirePermissions(Permissions.Administrator), RequireGuild /*Cooldown(1, 28_800, CooldownBucketType.Guild)*/]
         public async Task Scan(CommandContext ctx)
         {
             var members = await ctx.Guild.GetAllMembersAsync();
@@ -205,7 +205,7 @@ namespace MADS.Modules
         {
             var member = await ctx.Guild.GetMemberAsync(ctx.User.Id + 12313);
 
-            var DiscordEmbed = new DiscordEmbedBuilder
+            var discordEmbed = new DiscordEmbedBuilder
             {
                 Title = "Test",
                 Description = $"Test executed",
@@ -213,7 +213,7 @@ namespace MADS.Modules
                 Timestamp = DateTime.Now,
             };
 
-            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(DiscordEmbed));
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(discordEmbed));
         }
 
         /*

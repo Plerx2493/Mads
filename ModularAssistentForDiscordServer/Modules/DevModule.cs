@@ -2,7 +2,6 @@
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
-using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 
@@ -11,8 +10,8 @@ namespace MADS.Modules
     internal class DevModule : IMadsModul
     {
         public ModularDiscordBot ModularDiscordClient { get; set; }
-        public string ModulName { get; set; }
-        public string ModulDescription { get; set; }
+        public string ModuleName { get; set; }
+        public string ModuleDescription { get; set; }
         public string[] Commands { get; set; }
         public Dictionary<string, string> CommandDescriptions { get; set; }
         public Type CommandClass { get; set; }
@@ -25,10 +24,10 @@ namespace MADS.Modules
         public DevModule(ModularDiscordBot modularDiscordClient)
         {
             ModularDiscordClient = modularDiscordClient;
-            ModulName = "Dev";
-            ModulDescription = "";
-            Commands = new string[] { "guild", "channel" };
-            CommandDescriptions = new();
+            ModuleName = "Dev";
+            ModuleDescription = "";
+            Commands = new[] { "guild", "channel" };
+            CommandDescriptions = new Dictionary<string, string>();
             CommandClass = typeof(DevCommands);
             SlashCommandClass = null;
             RequiredIntents = 0;
@@ -63,36 +62,34 @@ namespace MADS.Modules
         }
 
         [Command("eval"), Description("Evaluate the result of c# code")]
-        public async Task Eval(CommandContext context, [RemainingText] string code)
+        public async Task Eval(CommandContext ctx, [RemainingText] string code)
         {
-            var message = context.Message;
+            int codeStart = code.IndexOf("```", StringComparison.Ordinal) + 3;
+            codeStart = code.IndexOf('\n', codeStart) + 1;
+            var codeEnd = code.LastIndexOf("```", StringComparison.Ordinal);
 
-            var code_start = code.IndexOf("```") + 3;
-            code_start = code.IndexOf('\n', code_start) + 1;
-            var code_end = code.LastIndexOf("```");
-
-            if (code_start == -1 || code_end == -1)
+            if (codeStart == -1 || codeEnd == -1)
                 throw new ArgumentException("⚠️ You need to wrap the code into a code block.");
 
-            var cs_code = code[code_start..code_end];
+            var csCode = code[codeStart..codeEnd];
 
-            message = await context.RespondAsync(embed: new DiscordEmbedBuilder()
+            var message = await ctx.RespondAsync(embed: new DiscordEmbedBuilder()
                 .WithColor(new DiscordColor("#FF007F"))
                 .WithDescription("💭 Evaluating...")
                 .Build());
 
             try
             {
-                TestVariables global_variabls = new(context.Message, context.Client, context, CommandService.modularDiscordBot);
+                TestVariables globalVariables = new(ctx.Message, ctx.Client, ctx, CommandService.ModularDiscordBot);
 
-                ScriptOptions scriptoptions = ScriptOptions.Default;
-                scriptoptions = scriptoptions.WithImports("System", "System.Collections.Generic", "System.Linq", "System.Text", "System.Threading.Tasks", "DSharpPlus", "DSharpPlus.Entities", "DSharpPlus.CommandsNext", "ModularAssistentForDiscordServer");
-                scriptoptions = scriptoptions.WithReferences(AppDomain.CurrentDomain.GetAssemblies().Where(assembly => !assembly.IsDynamic && !string.IsNullOrWhiteSpace(assembly.Location)));
+                ScriptOptions scriptOptions = ScriptOptions.Default;
+                scriptOptions = scriptOptions.WithImports("System", "System.Collections.Generic", "System.Linq", "System.Text", "System.Threading.Tasks", "DSharpPlus", "DSharpPlus.Entities", "DSharpPlus.CommandsNext", "ModularAssistentForDiscordServer");
+                scriptOptions = scriptOptions.WithReferences(AppDomain.CurrentDomain.GetAssemblies().Where(assembly => !assembly.IsDynamic && !string.IsNullOrWhiteSpace(assembly.Location)));
 
-                Script<object> script = CSharpScript.Create(cs_code, scriptoptions, typeof(TestVariables));
+                Script<object> script = CSharpScript.Create(csCode, scriptOptions, typeof(TestVariables));
                 script.Compile();
-                ScriptState<object> result = await script.RunAsync(global_variabls);
-                if (result != null && result.ReturnValue != null && !string.IsNullOrWhiteSpace(result.ReturnValue.ToString()))
+                ScriptState<object> result = await script.RunAsync(globalVariables);
+                if (result?.ReturnValue != null && !string.IsNullOrWhiteSpace(result.ReturnValue.ToString()))
                     await message.ModifyAsync(new DiscordEmbedBuilder
                     {
                         Title = "✅ Evaluation Result",
@@ -127,15 +124,13 @@ namespace MADS.Modules
         public DiscordUser User { get; set; }
         public DiscordMember Member { get; set; }
         public CommandContext Context { get; set; }
-
         public DiscordClient Client { get; set; }
-
-        public ModularDiscordBot MDB { get; set; }
+        public ModularDiscordBot Mdb { get; set; }
 
         public TestVariables(DiscordMessage msg, DiscordClient client, CommandContext ctx, ModularDiscordBot mdb)
         {
             Client = client;
-            MDB = mdb;
+            Mdb = mdb;
             Message = msg;
             Channel = msg.Channel;
             Guild = Channel.Guild;

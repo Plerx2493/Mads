@@ -9,21 +9,21 @@ namespace MADS.Extensions
     public class LoggingProvider
     {
         //Utilities
-        private readonly string dirPath = DataProvider.GetPath("Logs");
+        private readonly string _dirPath = DataProvider.GetPath("Logs");
 
-        private readonly DateTime startDate;
-        private readonly string logPath;
-        private readonly ModularDiscordBot modularDiscordBot;
-        private readonly List<DiscordDmChannel> OwnerChannel = new();
+        private readonly DateTime _startDate;
+        private readonly string _logPath;
+        private readonly ModularDiscordBot _modularDiscordBot;
+        private readonly List<DiscordDmChannel> _ownerChannel = new();
 
         internal LoggingProvider(ModularDiscordBot dBot)
         {
-            startDate = DateTime.Now;
-            modularDiscordBot = dBot;
-            Directory.CreateDirectory(dirPath);
+            _startDate = DateTime.Now;
+            _modularDiscordBot = dBot;
+            Directory.CreateDirectory(_dirPath);
 
-            logPath = DataProvider.GetPath("Logs", $"{startDate.Day}-{startDate.Month}-{startDate.Year}_{startDate.Hour}-{startDate.Minute}-{startDate.Second}.log");
-            File.AppendAllTextAsync(logPath, "========== LOG START ==========\n\n", System.Text.Encoding.UTF8);
+            _logPath = DataProvider.GetPath("Logs", $"{_startDate.Day}-{_startDate.Month}-{_startDate.Year}_{_startDate.Hour}-{_startDate.Minute}-{_startDate.Second}.log");
+            File.AppendAllTextAsync(_logPath, "========== LOG START ==========\n\n", System.Text.Encoding.UTF8);
         }
 
         public async void Setup()
@@ -34,9 +34,9 @@ namespace MADS.Extensions
 
         private async void PopulateOwnerChannel()
         {
-            var application = modularDiscordBot.DiscordClient.CurrentApplication;
-            var owners = application.Owners;
-            var guilds = modularDiscordBot.DiscordClient.Guilds.Values;
+            var application = _modularDiscordBot.DiscordClient.CurrentApplication;
+            var owners = application.Owners.ToArray();
+            var guilds = _modularDiscordBot.DiscordClient.Guilds.Values.ToArray();
 
             foreach (DiscordUser owner in owners)
             {
@@ -55,36 +55,37 @@ namespace MADS.Extensions
                     break;
                 }
 
-                if (member is not null)
+                if (member is null)
                 {
-                    var channel = await member.CreateDmChannelAsync();
-                    OwnerChannel.Add(channel);
+                    continue;
                 }
+
+                var channel = await member.CreateDmChannelAsync();
+                _ownerChannel.Add(channel);
             }
 
-            Console.WriteLine($"Found {OwnerChannel.Count} dm Channel for {owners.Count()} application owner");
+            Console.WriteLine($"Found {_ownerChannel.Count} dm Channel for {owners.Length} application owner");
         }
 
         private void SetupFeedback()
         {
             //Button response with modal
-            modularDiscordBot.DiscordClient.ComponentInteractionCreated += async (sender, e) =>
+            _modularDiscordBot.DiscordClient.ComponentInteractionCreated += async (sender, e) =>
             {
                 if (e.Id != "feedback-button") return;
 
                 var modal = new DiscordInteractionResponseBuilder();
-                var messageEmbed = new DiscordEmbedBuilder();
 
                 modal
                 .WithTitle("Feedback")
                 .WithCustomId("feedback-modal")
-                .AddComponents(new TextInputComponent(label: "Please enter your feedback:", customId: "feedback-text", required: true, style: DSharpPlus.TextInputStyle.Paragraph));
+                .AddComponents(new TextInputComponent(label: "Please enter your feedback:", customId: "feedback-text", required: true, style: TextInputStyle.Paragraph));
 
                 await e.Interaction.CreateResponseAsync(InteractionResponseType.Modal, modal);
             };
 
             //Modal processing
-            modularDiscordBot.DiscordClient.ModalSubmitted += async (sender, e) =>
+            _modularDiscordBot.DiscordClient.ModalSubmitted += async (sender, e) =>
             {
                 if (e.Interaction.Data.CustomId != "feedback-modal") return;
 
@@ -97,7 +98,7 @@ namespace MADS.Extensions
 
                 responseBuilder
                 .AddEmbed(embedBuilder)
-                .AsEphemeral(true);
+                .AsEphemeral();
 
                 await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, responseBuilder);
 
@@ -119,7 +120,7 @@ namespace MADS.Extensions
                     }
                 };
 
-                foreach (DiscordDmChannel channel in OwnerChannel)
+                foreach (DiscordDmChannel channel in _ownerChannel)
                 {
                     await channel.SendMessageAsync(discordEmbed);
                 }
@@ -129,7 +130,7 @@ namespace MADS.Extensions
         public Task LogEvent(string message, string sender, LogLevel lvl)
         {
             string log = $"[{DateTime.Now:yyyy'-'MM'-'dd'T'HH':'mm':'ss}] [{lvl}] [{sender}] {message}";
-            File.AppendAllTextAsync(logPath, log + "\n", System.Text.Encoding.UTF8);
+            File.AppendAllTextAsync(_logPath, log + "\n", System.Text.Encoding.UTF8);
             return Task.CompletedTask;
         }
 
@@ -137,24 +138,22 @@ namespace MADS.Extensions
         {
             var triggerTime = ctx.Message.Timestamp.DateTime;
             var executionTime = response.Timestamp.DateTime;
-            var Timespan = (executionTime - triggerTime).TotalMilliseconds;
-            var Commandname = ctx.Command.Name;
-            var CommandArgs = ctx.RawArguments;
-
-            string tmp = "";
-
-            foreach (var arg in CommandArgs)
+            var timespan = (executionTime - triggerTime).TotalMilliseconds;
+            if (ctx.Command != null)
             {
-                tmp += arg.ToString() + ", ";
+                var commandName = ctx.Command.Name;
+                var commandArgs = ctx.RawArguments;
+
+                string tmp = commandArgs.Aggregate("", (current, arg) => current + (arg.ToString() + ", "));
+
+                tmp = tmp.Remove(tmp.Length - 2);
+
+                var logEntry = $"[{DateTime.Now:dd'.'MM'.'yyyy'-'HH':'mm':'ss}] [INFO] [{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [{commandName}] [{tmp}] {timespan} milliseconds to execute";
+                await File.AppendAllTextAsync(_logPath, logEntry + "\n", System.Text.Encoding.UTF8);
             }
-
-            tmp = tmp.Remove(tmp.Length - 2);
-
-            var logEntry = $"[{DateTime.Now:dd'.'MM'.'yyyy'-'HH':'mm':'ss}] [INFO] [{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [{Commandname}] [{tmp}] {Timespan} milliseconds to execute";
-            await File.AppendAllTextAsync(logPath, logEntry + "\n", System.Text.Encoding.UTF8);
         }
 
-        public async Task LogToOwner(string message, string sender, LogLevel logLevel)
+        public async Task<List<DiscordMessage>> LogToOwner(string message, string sender, LogLevel logLevel)
         {
             var discordEmbed = new DiscordEmbedBuilder
             {
@@ -168,10 +167,14 @@ namespace MADS.Extensions
                 }
             };
 
-            foreach (DiscordDmChannel channel in OwnerChannel)
+            List<DiscordMessage> messageList = new();
+
+            foreach (DiscordDmChannel channel in _ownerChannel)
             {
-                await channel.SendMessageAsync(discordEmbed);
+                messageList.Add(await channel.SendMessageAsync(discordEmbed));
             }
+
+            return messageList;
         }
     }
 }

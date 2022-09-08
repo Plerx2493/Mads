@@ -2,11 +2,11 @@
 {
     internal class EventHandlerService
     {
-        private ModularDiscordBot ModularDiscordBot;
+        private ModularDiscordBot _modularDiscordBot;
 
         public EventHandlerService(ModularDiscordBot modularDiscordBot)
         {
-            ModularDiscordBot = modularDiscordBot;
+            _modularDiscordBot = modularDiscordBot;
         }
     }
 }

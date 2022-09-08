@@ -10,17 +10,17 @@ namespace MADS.JsonModel
         {
             Prefix = "!";
             LogLevel = LogLevel.Information;
-            AktivModules = new();
+            AktivModules = new List<string>();
             AuditChannel = 0;
             AuditLogs = false;
         }
 
-        public DiscordEmbedBuilder GetDiscordEmbed()
+        public static DiscordEmbedBuilder GetDiscordEmbed()
         {
             var standardEmbed = new DiscordEmbedBuilder()
             {
-                Color = new(new(0, 255, 194)),
-                Footer = new()
+                Color = new Optional<DiscordColor>(new DiscordColor(0, 255, 194)),
+                Footer = new DiscordEmbedBuilder.EmbedFooter
                 {
                     Text = "Mads"
                 }

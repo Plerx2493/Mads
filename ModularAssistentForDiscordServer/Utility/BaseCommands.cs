@@ -2,7 +2,6 @@
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
-using MADS.Entities;
 using MADS.Extensions;
 using MADS.JsonModel;
 using MADS.Modules;
@@ -13,15 +12,15 @@ namespace MADS.Utility
     internal class BaseCommands : BaseCommandModule
     {
         public MadsServiceProvider CommandService { get; set; }
-        private readonly string EMOJI_REGEX = @"<a?:(.+?):(\d+)>";
+        private const string EmojiRegex = @"<a?:(.+?):(\d+)>";
 
         [Command("ping"), Aliases("status"), Description("Get the ping of the websocket"), Cooldown(1, 30, CooldownBucketType.Channel)]
         public async Task Ping(CommandContext ctx)
         {
-            var diff = DateTime.Now - CommandService.modularDiscordBot.startTime;
-            var date = string.Format("{0} days {1} hours {2} minutes", diff.Days, diff.Hours, diff.Minutes);
+            var diff = DateTime.Now - CommandService.ModularDiscordBot.StartTime;
+            var date = $"{diff.Days} days {diff.Hours} hours {diff.Minutes} minutes";
 
-            DiscordEmbedBuilder discordEmbedBuilder = CommandService.modularDiscordBot.GuildSettings[0].GetDiscordEmbed();
+            DiscordEmbedBuilder discordEmbedBuilder = GuildSettings.GetDiscordEmbed();
             discordEmbedBuilder
                 .WithTitle("Status")
                 .WithTimestamp(DateTime.Now)
@@ -29,23 +28,23 @@ namespace MADS.Utility
                 .AddField("Websocket ping", $"{ctx.Client.Ping} ms");
 
             var response = await ModularDiscordBot.AnswerWithDelete(ctx, discordEmbedBuilder.Build(), 20);
-            CommandService.modularDiscordBot.Logging.LogCommandExecutionAsync(ctx, response);
+            CommandService.ModularDiscordBot.Logging.LogCommandExecutionAsync(ctx, response);
         }
 
         [Command("about"), Aliases("info"), Description("Displays a little information about this bot"), Cooldown(1, 30, CooldownBucketType.Channel)]
         public async Task About(CommandContext ctx)
         {
-            var discordEmbedBuilder = CommandService.modularDiscordBot.config.GuildSettings[0].GetDiscordEmbed();
+            var discordEmbedBuilder = GuildSettings.GetDiscordEmbed();
             var discordMessageBuilder = new DiscordMessageBuilder();
             string inviteUri = ctx.Client.CurrentApplication.GenerateOAuthUri(null, Permissions.Administrator, OAuthScope.Bot, OAuthScope.ApplicationsCommands);
             string addMe = $"[Click here!]({inviteUri.Replace(" ", "%20")})";
 
-            var diff = DateTime.Now - CommandService.modularDiscordBot.startTime;
-            string date = string.Format("{0} days {1} hours {2} minutes", diff.Days, diff.Hours, diff.Minutes);
+            var diff = DateTime.Now - CommandService.ModularDiscordBot.StartTime;
+            string date = $"{diff.Days} days {diff.Hours} hours {diff.Minutes} minutes";
 
             discordEmbedBuilder
                 .WithTitle("About me")
-                .WithDescription("A modular desinged discord bot for moderation and stuff")
+                .WithDescription("A modular designed discord bot for moderation and stuff")
                 .WithAuthor(ctx.Client.CurrentUser.Username, ctx.Client.CurrentUser.AvatarUrl, ctx.Client.CurrentUser.AvatarUrl)
                 .AddField("Owner:", "[Plerx#0175](https://github.com/Plerx2493/)", true)
                 .AddField("Source:", "[Github](https://github.com/Plerx2493/Mads)", true)
@@ -59,23 +58,15 @@ namespace MADS.Utility
             discordMessageBuilder.AddComponents(new DiscordButtonComponent(ButtonStyle.Success, "feedback-button", "Feedback"));
 
             var response = await ctx.RespondAsync(discordMessageBuilder);
-            CommandService.modularDiscordBot.Logging.LogCommandExecutionAsync(ctx, response);
+            CommandService.ModularDiscordBot.Logging.LogCommandExecutionAsync(ctx, response);
         }
 
         [Command("prefix"), Description("Get the bot prefix for this server"), Cooldown(1, 30, CooldownBucketType.Channel)]
         public async Task GetPrefix(CommandContext ctx)
         {
-            GuildSettings guildSettings;
-            var allGuildSettings = CommandService.modularDiscordBot.GuildSettings;
+            var allGuildSettings = CommandService.ModularDiscordBot.GuildSettings;
 
-            if (ctx.Guild is not null)
-            {
-                if (!allGuildSettings.TryGetValue(ctx.Guild.Id, out guildSettings))
-                {
-                    guildSettings = allGuildSettings[0];
-                }
-            }
-            else
+            if (!allGuildSettings.TryGetValue(ctx.Guild.Id, out GuildSettings guildSettings))
             {
                 guildSettings = allGuildSettings[0];
             }
@@ -86,96 +77,95 @@ namespace MADS.Utility
         [Command("setprefix"), Description("Set the bot prefix for this server"), RequirePermissions(Permissions.Administrator), RequireGuild]
         public async Task SetPrefix(CommandContext ctx, [Description("The new prefix")] string prefix)
         {
-            var allGuildSettings = CommandService.modularDiscordBot.GuildSettings;
+            var allGuildSettings = CommandService.ModularDiscordBot.GuildSettings;
 
             if (!allGuildSettings.TryGetValue(ctx.Guild.Id, out GuildSettings guildSettings))
             {
-                CommandService.modularDiscordBot.GuildSettings.Add(ctx.Guild.Id, new GuildSettings() { Prefix = prefix });
+                CommandService.ModularDiscordBot.GuildSettings.Add(ctx.Guild.Id, new GuildSettings() { Prefix = prefix });
             }
             else
             {
                 guildSettings.Prefix = prefix;
-                CommandService.modularDiscordBot.GuildSettings[ctx.Guild.Id] = guildSettings;
+                CommandService.ModularDiscordBot.GuildSettings[ctx.Guild.Id] = guildSettings;
             }
 
-            DataProvider.SetConfig(CommandService.modularDiscordBot.GuildSettings);
+            DataProvider.SetConfig(CommandService.ModularDiscordBot.GuildSettings);
 
             ctx.Guild.CurrentMember.ModifyAsync(x => x.Nickname = ctx.Guild.CurrentMember.Username + $" [{prefix}]");
 
-            await ctx.RespondAsync("New prefix is: " + $"`{CommandService.modularDiscordBot.GuildSettings[ctx.Guild.Id].Prefix}`");
+            await ctx.RespondAsync("New prefix is: " + $"`{CommandService.ModularDiscordBot.GuildSettings[ctx.Guild.Id].Prefix}`");
         }
 
         [Command("test"), RequireOwner]
-        public async Task Test(CommandContext ctx, DiscordChannel ch1, DiscordChannel ch2)
+        public async Task Test(CommandContext ctx)
         {
-            var msg = new DiscordMessageBuilder();
-            var button = ActionDiscordButton.Build(ActionDiscordButtonEnum.MoveVoiceChannel, new DiscordButtonComponent(ButtonStyle.Success, "", "Spring!"), ch1.Id, ch2.Id);
+            var msg = await ctx.RespondAsync(embed: new DiscordEmbedBuilder()
+                .WithColor(new DiscordColor("#FF007F"))
+                .WithDescription("Test")
+                .Build());
 
-            msg.AddComponents(button);
-            msg.Content = "Hüpf";
+            await Task.Delay(2000);
 
-            await ctx.Channel.SendMessageAsync(msg);
+            await msg.ModifyEmbedSuppressionAsync(true);
+
+            await Task.Delay(2000);
+
+            await msg.ModifyEmbedSuppressionAsync(false);
         }
 
         [Command("enable"), Description("Enable given module"), RequirePermissions(Permissions.Administrator), RequireGuild]
         public async Task EnableModule(CommandContext ctx, [Description("Name of new module")] string moduleName)
         {
-            if (!CommandService.modularDiscordBot.madsModules.TryGetValue(moduleName, out _))
+            if (!CommandService.ModularDiscordBot.MadsModules.TryGetValue(moduleName, out _))
             {
                 await ctx.RespondAsync("Module not found");
                 return;
             }
 
-            var isEnabled = CommandService.modularDiscordBot.GuildSettings[ctx.Guild.Id].AktivModules.Contains(moduleName);
+            var isEnabled = CommandService.ModularDiscordBot.GuildSettings[ctx.Guild.Id].AktivModules.Contains(moduleName);
             if (isEnabled)
             {
                 await ctx.RespondAsync("Module already active");
                 return;
             }
 
-            CommandService.modularDiscordBot.madsModules[moduleName].Enable(ctx.Guild.Id);
+            CommandService.ModularDiscordBot.MadsModules[moduleName].Enable(ctx.Guild.Id);
             await ctx.RespondAsync("Module is now enabled");
-            return;
         }
 
         [Command("disable"), Description("Disable given module"), RequirePermissions(Permissions.Administrator), RequireGuild]
         public async Task DisableModule(CommandContext ctx, [Description("Name of module")] string moduleName)
         {
-            if (!CommandService.modularDiscordBot.madsModules.TryGetValue(moduleName, out _))
+            if (!CommandService.ModularDiscordBot.MadsModules.TryGetValue(moduleName, out _))
             {
                 await ctx.RespondAsync("Module not found");
                 return;
             }
 
-            var isEnabled = CommandService.modularDiscordBot.GuildSettings[ctx.Guild.Id].AktivModules.Contains(moduleName);
+            var isEnabled = CommandService.ModularDiscordBot.GuildSettings[ctx.Guild.Id].AktivModules.Contains(moduleName);
             if (!isEnabled)
             {
                 await ctx.RespondAsync("Module was not active");
                 return;
             }
 
-            CommandService.modularDiscordBot.madsModules[moduleName].Disable(ctx.Guild.Id);
+            CommandService.ModularDiscordBot.MadsModules[moduleName].Disable(ctx.Guild.Id);
             await ctx.RespondAsync("Module is now disabled");
-            return;
         }
 
         [Command("modules"), Description("List all modules"), RequirePermissions(Permissions.Administrator), RequireGuild]
         public async Task ListModules(CommandContext ctx)
         {
-            var modules = CommandService.modularDiscordBot.madsModules.Keys.ToList();
-            var response = "Available modules:\n";
-            foreach (var module in modules)
-            {
-                response += module + "\n";
-            }
+            var modules = CommandService.ModularDiscordBot.MadsModules.Keys.ToList();
+            var response = modules.Aggregate("Available modules:\n", (current, module) => current + (module + "\n"));
             await ctx.RespondAsync(response);
         }
 
-        [Command("modulesactive"), Description("Get activ modules"), RequirePermissions(Permissions.Administrator), RequireGuild]
+        [Command("modulesActive"), Description("Get active modules"), RequirePermissions(Permissions.Administrator), RequireGuild]
         public async Task ListActiveModules(CommandContext ctx)
         {
             var response = "";
-            var tmp = CommandService.modulesActivGuilds;
+            var tmp = CommandService.ModulesActivGuilds;
 
             tmp.ToList().ForEach(x =>
             {
@@ -186,7 +176,7 @@ namespace MADS.Utility
             });
 
             if (response == "") await ctx.RespondAsync("No modules active");
-            else await ctx.RespondAsync("Activ Modules: \n" + response);
+            else await ctx.RespondAsync("Active Modules: \n" + response);
         }
 
         [Command("exit"), Description("Exit the bot"), RequirePermissions(Permissions.Administrator), RequireGuild]
@@ -204,7 +194,7 @@ namespace MADS.Utility
 
         [Command("yoink")]
         [Description("Copies an emoji from a different server to this one")]
-        [RequirePermissions(Permissions.ManageEmojis)]
+        [RequirePermissions(Permissions.ManageEmojis), Priority(1)]
         public async Task YoinkAsync(CommandContext ctx, DiscordEmoji emoji, [RemainingText] string name = "")
         {
             if (!emoji.ToString().StartsWith('<'))
@@ -216,7 +206,7 @@ namespace MADS.Utility
         }
 
         [Command("yoink")]
-        [RequirePermissions(Permissions.ManageEmojis)]
+        [RequirePermissions(Permissions.ManageEmojis), Priority(0)]
         public async Task YoinkAsync(CommandContext ctx, int index = 1)
         {
             if (ctx.Message.ReferencedMessage is null)
@@ -224,10 +214,10 @@ namespace MADS.Utility
                 await ctx.RespondAsync("⚠️ You need to reply to an existing message to use this command!");
             }
 
-            var matches = Regex.Matches(ctx.Message.ReferencedMessage.Content, EMOJI_REGEX);
+            var matches = Regex.Matches(ctx.Message.ReferencedMessage.Content, EmojiRegex);
             if (matches.Count < index || index < 1)
             {
-                await ctx.RespondAsync("⚠️ Referenced emoji not found!");
+                await ctx.RespondAsync("⚠️ Emoji not found!");
                 return;
             }
 
@@ -235,25 +225,23 @@ namespace MADS.Utility
             var emojiName = matches[index - 1].Groups[1].Value;
             var animated = matches[index - 1].Value.StartsWith("<a");
 
-            if (ulong.TryParse(split, out ulong emoji_id))
+            if (ulong.TryParse(split, out ulong emojiId))
             {
-                await StealEmoji(ctx, emojiName, emoji_id, animated);
-                return;
+                await StealEmoji(ctx, emojiName, emojiId, animated);
             }
             else
             {
                 await ctx.RespondAsync("⚠️ Failed to fetch your new emoji.");
-                return;
             }
         }
 
-        private async Task StealEmoji(CommandContext ctx, string name, ulong id, bool animated)
+        private static async Task StealEmoji(CommandContext ctx, string name, ulong id, bool animated)
         {
             using HttpClient httpClient = new();
-            var downloadedEmoji = await httpClient.GetStreamAsync($"https://cdn.discordapp.com/emojis/{id}.{(animated ? "gif" : "png")}");
-            using MemoryStream memory = new();
-            downloadedEmoji.CopyTo(memory);
-            downloadedEmoji.Dispose();
+            Stream downloadedEmoji = await httpClient.GetStreamAsync($"https://cdn.discordapp.com/emojis/{id}.{(animated ? "gif" : "png")}");
+            MemoryStream memory = new();
+            await downloadedEmoji.CopyToAsync(memory);
+            await downloadedEmoji.DisposeAsync();
             var newEmoji = await ctx.Guild.CreateEmojiAsync(name, memory);
             await ctx.RespondAsync($"✅ Yoink! This emoji has been added to your server: {newEmoji}");
         }

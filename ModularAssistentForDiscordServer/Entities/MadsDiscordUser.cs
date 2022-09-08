@@ -1,157 +1,137 @@
-﻿namespace ModularAssistentForDiscordServer.Entities
+﻿namespace MADS.Entities
 {
     internal class MadsDiscordUser
     {
-        private ulong ID;
-        private Dictionary<ulong, int> NumberOfWarnings;
-        private Dictionary<ulong, int> NumberOfBans;
-        private Dictionary<ulong, int> NumberOfMutes;
-        private Dictionary<ulong, int> NumberOfKicks;
-        private Dictionary<ulong, string> ModComments;
+        private readonly ulong _id;
+        private Dictionary<ulong, int> _numberOfWarnings;
+        private Dictionary<ulong, int> _numberOfBans;
+        private Dictionary<ulong, int> _numberOfMutes;
+        private Dictionary<ulong, int> _numberOfKicks;
+        private Dictionary<ulong, string> _modComments;
 
         public MadsDiscordUser(ulong id)
         {
-            ID = id;
-            NumberOfWarnings = new();
-            NumberOfBans = new();
-            NumberOfMutes = new();
-            NumberOfKicks = new();
-            ModComments = new();
+            _id = id;
+            _numberOfWarnings = new Dictionary<ulong, int>();
+            _numberOfBans = new Dictionary<ulong, int>();
+            _numberOfMutes = new Dictionary<ulong, int>();
+            _numberOfKicks = new Dictionary<ulong, int>();
+            _modComments = new Dictionary<ulong, string>();
         }
 
-        public ulong GetID()
+        public ulong GetId()
         {
-            return ID;
+            return _id;
         }
 
         public int GetNumberOfWarnings(ulong id)
         {
-            if (NumberOfWarnings.ContainsKey(id))
-            {
-                return NumberOfWarnings[id];
-            }
-            return 0;
+            return _numberOfWarnings.ContainsKey(id) ? _numberOfWarnings[id] : 0;
         }
 
         public int GetNumberOfBans(ulong id)
         {
-            if (NumberOfBans.ContainsKey(id))
-            {
-                return NumberOfBans[id];
-            }
-            return 0;
+            return _numberOfBans.ContainsKey(id) ? _numberOfBans[id] : 0;
         }
 
         public int GetNumberOfMutes(ulong id)
         {
-            if (NumberOfMutes.ContainsKey(id))
-            {
-                return NumberOfMutes[id];
-            }
-            return 0;
+            return _numberOfMutes.ContainsKey(id) ? _numberOfMutes[id] : 0;
         }
 
         public int GetNumberOfKicks(ulong id)
         {
-            if (NumberOfKicks.ContainsKey(id))
-            {
-                return NumberOfKicks[id];
-            }
-            return 0;
+            return _numberOfKicks.ContainsKey(id) ? _numberOfKicks[id] : 0;
         }
 
         public string GetModComments(ulong id)
         {
-            if (ModComments.ContainsKey(id))
-            {
-                return ModComments[id];
-            }
-            return "";
+            return _modComments.ContainsKey(id) ? _modComments[id] : "";
         }
 
         public void AddModComment(ulong id, string comment)
         {
-            if (ModComments.ContainsKey(id))
+            if (_modComments.ContainsKey(id))
             {
-                ModComments[id] += comment;
+                _modComments[id] += comment;
             }
             else
             {
-                ModComments.Add(id, comment);
+                _modComments.Add(id, comment);
             }
         }
 
         public void OverrideModComment(ulong id, string comment)
         {
-            if (ModComments.ContainsKey(id))
+            if (_modComments.ContainsKey(id))
             {
-                ModComments[id] = comment;
+                _modComments[id] = comment;
             }
             else
             {
-                ModComments.Add(id, comment);
+                _modComments.Add(id, comment);
             }
         }
 
         public void RemoveModComment(ulong id)
         {
-            ModComments.Remove(id);
+            _modComments.Remove(id);
         }
 
         public void AddWarnings(ulong id, int number)
         {
-            if (NumberOfWarnings.ContainsKey(id))
+            if (_numberOfWarnings.ContainsKey(id))
             {
-                NumberOfWarnings[id] += number;
+                _numberOfWarnings[id] += number;
             }
             else
             {
-                NumberOfWarnings.Add(id, number);
+                _numberOfWarnings.Add(id, number);
             }
         }
 
         public void AddBans(ulong id, int number)
         {
-            if (NumberOfBans.ContainsKey(id))
+            if (_numberOfBans.ContainsKey(id))
             {
-                NumberOfBans[id] += number;
+                _numberOfBans[id] += number;
             }
             else
             {
-                NumberOfBans.Add(id, number);
+                _numberOfBans.Add(id, number);
             }
         }
 
         public void AddMutes(ulong id, int number)
         {
-            if (NumberOfMutes.ContainsKey(id))
+            if (_numberOfMutes.ContainsKey(id))
             {
-                NumberOfMutes[id] += number;
+                _numberOfMutes[id] += number;
             }
             else
             {
-                NumberOfMutes.Add(id, number);
+                _numberOfMutes.Add(id, number);
             }
         }
 
         public void AddKicks(ulong id, int number)
         {
-            if (NumberOfKicks.ContainsKey(id))
+            if (_numberOfKicks.ContainsKey(id))
             {
-                NumberOfKicks[id] += number;
+                _numberOfKicks[id] += number;
             }
             else
             {
-                NumberOfKicks.Add(id, number);
+                _numberOfKicks.Add(id, number);
             }
         }
 
         public void RemoveWarnings(ulong id, int number)
         {
-            if (NumberOfWarnings.ContainsKey(id))
+            if (_numberOfWarnings.ContainsKey(id))
             {
-                NumberOfWarnings[id] -= number;
-                if (NumberOfWarnings[id] == 0) NumberOfWarnings.Remove(id);
+                _numberOfWarnings[id] -= number;
+                if (_numberOfWarnings[id] == 0) _numberOfWarnings.Remove(id);
             }
         }
     }

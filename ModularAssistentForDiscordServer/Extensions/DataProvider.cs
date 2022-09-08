@@ -6,12 +6,12 @@ namespace MADS.Extensions
     {
         public static ConfigJson GetConfig()
         {
-            return JsonProvider.readFile<ConfigJson>(GetPath("config.json"));
+            return JsonProvider.ReadFile<ConfigJson>(GetPath("config.json"));
         }
 
-        public static JsonModel GetJson<JsonModel>(string path)
+        public static TJsonModel GetJson<TJsonModel>(string path)
         {
-            return JsonProvider.readFile<JsonModel>(GetPath(path));
+            return JsonProvider.ReadFile<TJsonModel>(GetPath(path));
         }
 
         public static void SetConfig(Dictionary<ulong, GuildSettings> guildSettings)
@@ -20,12 +20,12 @@ namespace MADS.Extensions
 
             configJson.GuildSettings = guildSettings;
 
-            JsonProvider.parseJson(GetPath("config.json"), configJson);
+            JsonProvider.ParseJson(GetPath("config.json"), configJson);
         }
 
         public static void SetConfig(ConfigJson configJson)
         {
-            JsonProvider.parseJson(GetPath("config.json"), configJson);
+            JsonProvider.ParseJson(GetPath("config.json"), configJson);
         }
 
         public static string GetPath(params string[] path)

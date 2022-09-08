@@ -4,9 +4,9 @@
     {
         BanUser,
         KickUser,
-        GetIDUser,
-        GetIDChannel,
-        GetIDGuild,
+        GetIdUser,
+        GetIdChannel,
+        GetIdGuild,
         MoveVoiceChannel
     }
 }

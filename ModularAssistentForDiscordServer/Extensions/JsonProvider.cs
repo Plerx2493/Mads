@@ -2,33 +2,33 @@
 
 namespace MADS.Extensions
 {
-    internal class JsonProvider
+    internal static class JsonProvider
     {
-        public static JsonModel readFile<JsonModel>(string path)
+        public static TJsonModel ReadFile<TJsonModel>(string path)
         {
             using StreamReader streamReader = File.OpenText(path);
-            return JsonConvert.DeserializeObject<JsonModel>(streamReader.ReadToEnd());
+            return JsonConvert.DeserializeObject<TJsonModel>(streamReader.ReadToEnd());
         }
 
-        public static JsonModel[] readFileToArray<JsonModel>(string path)
+        public static TJsonModel[] ReadFileToArray<TJsonModel>(string path)
         {
             using StreamReader streamReader = File.OpenText(path);
-            return JsonConvert.DeserializeObject<JsonModel[]>(streamReader.ReadToEnd());
+            return JsonConvert.DeserializeObject<TJsonModel[]>(streamReader.ReadToEnd());
         }
 
-        public static List<JsonModel> readFileToList<JsonModel>(string path)
+        public static List<TJsonModel> ReadFileToList<TJsonModel>(string path)
         {
             using StreamReader streamReader = File.OpenText(path);
-            return JsonConvert.DeserializeObject<List<JsonModel>>(streamReader.ReadToEnd());
+            return JsonConvert.DeserializeObject<List<TJsonModel>>(streamReader.ReadToEnd());
         }
 
-        public static void parseJsonArray<JsonModel>(string path, JsonModel[] model)
+        public static void ParseJsonArray<TJsonModel>(string path, TJsonModel[] model)
         {
             string parsedJson = JsonConvert.SerializeObject(model, Formatting.Indented);
             File.WriteAllText(path, parsedJson);
         }
 
-        public static void parseJson<JsonModel>(string path, JsonModel model)
+        public static void ParseJson<TJsonModel>(string path, TJsonModel model)
         {
             string parsedJson = JsonConvert.SerializeObject(model, Formatting.Indented);
             File.WriteAllText(path, parsedJson);
