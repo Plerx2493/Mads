@@ -1,4 +1,5 @@
-﻿using DSharpPlus;
+﻿using System.Diagnostics;
+using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
@@ -6,6 +7,10 @@ using MADS.Extensions;
 using MADS.JsonModel;
 using MADS.Modules;
 using System.Text.RegularExpressions;
+using DSharpPlus.Exceptions;
+using Humanizer;
+using Humanizer.Localisation;
+using MADS.Entities;
 
 namespace MADS.Utility
 {
@@ -46,11 +51,12 @@ namespace MADS.Utility
                 .WithTitle("About me")
                 .WithDescription("A modular designed discord bot for moderation and stuff")
                 .WithAuthor(ctx.Client.CurrentUser.Username, ctx.Client.CurrentUser.AvatarUrl, ctx.Client.CurrentUser.AvatarUrl)
+                .WithColor(new DiscordColor(0, 255, 194))
                 .AddField("Owner:", "[Plerx#0175](https://github.com/Plerx2493/)", true)
                 .AddField("Source:", "[Github](https://github.com/Plerx2493/Mads)", true)
                 .AddField("D#+ Version:", ctx.Client.VersionString)
                 .AddField("Guilds", ctx.Client.Guilds.Count.ToString(), true)
-                .AddField("Uptime", date, true)
+                .AddField("Uptime", date.Humanize(), true)
                 .AddField("Ping", $"{ctx.Client.Ping} ms", true)
                 .AddField("Add me", addMe);
 
@@ -96,21 +102,16 @@ namespace MADS.Utility
             await ctx.RespondAsync("New prefix is: " + $"`{CommandService.ModularDiscordBot.GuildSettings[ctx.Guild.Id].Prefix}`");
         }
 
-        [Command("test"), RequireOwner]
-        public async Task Test(CommandContext ctx)
+        [Command("jumppad"), Aliases("jp"), RequireGuild, RequireUserPermissions(permissions: Permissions.MoveMembers)]
+        public async Task Test(CommandContext ctx, ulong originChannel, ulong targetChannel)
         {
-            var msg = await ctx.RespondAsync(embed: new DiscordEmbedBuilder()
-                .WithColor(new DiscordColor("#FF007F"))
-                .WithDescription("Test")
-                .Build());
-
-            await Task.Delay(2000);
-
-            await msg.ModifyEmbedSuppressionAsync(true);
-
-            await Task.Delay(2000);
-
-            await msg.ModifyEmbedSuppressionAsync(false);
+            DiscordMessageBuilder message = new();
+            DiscordButtonComponent newButton = new(ButtonStyle.Success, "test", "Hüpf");
+            var actionButton = ActionDiscordButton.Build(ActionDiscordButtonEnum.MoveVoiceChannel, newButton, originChannel, targetChannel);
+            
+            message.AddComponents(actionButton);
+            message.Content = "Jumppad";
+            await ctx.RespondAsync(message);
         }
 
         [Command("enable"), Description("Enable given module"), RequirePermissions(Permissions.Administrator), RequireGuild]
@@ -212,6 +213,7 @@ namespace MADS.Utility
             if (ctx.Message.ReferencedMessage is null)
             {
                 await ctx.RespondAsync("⚠️ You need to reply to an existing message to use this command!");
+                return;
             }
 
             var matches = Regex.Matches(ctx.Message.ReferencedMessage.Content, EmojiRegex);
@@ -244,6 +246,70 @@ namespace MADS.Utility
             await downloadedEmoji.DisposeAsync();
             var newEmoji = await ctx.Guild.CreateEmojiAsync(name, memory);
             await ctx.RespondAsync($"✅ Yoink! This emoji has been added to your server: {newEmoji}");
+        }
+        
+        [Command("botstats"), Aliases("bs","stats")]
+        [Description("Get statistics about Mads")]
+        public async Task GetBotStatsAsync(CommandContext ctx)
+        {
+            using var process  = Process.GetCurrentProcess();
+            
+            var members = CommandService.ModularDiscordBot.DiscordClient.Guilds.Values.Select(x =>x.MemberCount).Sum();
+            var guilds  = CommandService.ModularDiscordBot.DiscordClient.Guilds.Count;
+            var ping = CommandService.ModularDiscordBot.DiscordClient.Ping;
+            GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
+            var heapMemory = $"{process.PrivateMemorySize64 / 1024 / 1024} MB";
+             
+            var embed = new DiscordEmbedBuilder();            
+            embed
+                .WithTitle("Statistics")
+                .WithColor(new DiscordColor(0, 255, 194))
+                .AddField("Membercount:", members.ToString("N0"), true)
+                .AddField("Guildcount:", guilds.ToString("N0"), true)
+                .AddField("Ping:", ping.ToString("N0"), true)
+                .AddField("Threads:", $"{ThreadPool.ThreadCount}", true)
+                .AddField("Memory:", heapMemory, true)
+                .AddField("Uptime:", $"{DateTimeOffset.UtcNow.Subtract(process.StartTime).Humanize(2, minUnit: TimeUnit.Millisecond, maxUnit: TimeUnit.Day)}", true);
+           
+            await ctx.RespondAsync(embed);
+        }
+
+        [Command("user"), Aliases("userinfo", "stalking")]
+        public async Task GetUserInfo(CommandContext ctx, DiscordUser user = null)
+        {
+            DiscordMember member = null;
+            
+            user ??= ctx.User;
+            try
+            {
+                if (!ctx.Channel.IsPrivate) member = await ctx.Guild.GetMemberAsync(user.Id);
+            }
+            catch (DiscordException e)
+            {
+                if (e.GetType() != typeof(NotFoundException)) throw;
+            }
+            
+            DiscordEmbedBuilder embed = new();
+
+            embed
+                .WithAuthor($"{user.Username}#{user.Discriminator}", null, user.AvatarUrl)
+                .WithColor(new DiscordColor(0, 255, 194))
+                .AddField("Creation:", $"{user.CreationTimestamp.Humanize()} {Formatter.Timestamp(user.CreationTimestamp, TimestampFormat.ShortDate)}", true)
+                .AddField("ID:", user.Id.ToString(), true);
+
+            if (member is not null)
+            {
+                embed.AddField("Joined at:", $"{member.JoinedAt.Humanize()} {Formatter.Timestamp(member.JoinedAt, TimestampFormat.ShortDate)}", true);
+                if (member.MfaEnabled.HasValue) embed.AddField("2FA:", member.MfaEnabled.ToString());
+                    
+                embed
+                    .AddField("Permissions:", member.Permissions.Humanize())
+                    .AddField("Hierarchy:", member.Hierarchy.ToString(), true);
+                if (member.Roles.Any()) embed.AddField("Roles", member.Roles.Select(x=> x.Name).Humanize());
+                
+            }
+            
+            await ctx.RespondAsync(embed.Build());
         }
     }
 }

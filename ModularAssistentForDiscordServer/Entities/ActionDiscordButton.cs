@@ -10,42 +10,42 @@ namespace MADS.Entities
         {
             int actionCode;
 
-            string customId;
+            string customId = "CMD:";
             switch (action)
             {
                 case ActionDiscordButtonEnum.BanUser:
                     if (args.Length != 1) throw new ArgumentException("Only one id possible");
                     if (args[0].GetType() != typeof(ulong)) throw new ArgumentException("Please provide a id (ulong)");
                     actionCode = (int)ActionDiscordButtonEnum.BanUser;
-                    customId = actionCode + ":" + args[0];
+                    customId += actionCode + ":" + args[0];
                     break;
 
                 case ActionDiscordButtonEnum.KickUser:
                     if (args.Length != 1) throw new ArgumentException("Only one id possible");
                     if (args[0].GetType() != typeof(ulong)) throw new ArgumentException("Please provide a id (ulong)");
                     actionCode = (int)ActionDiscordButtonEnum.BanUser;
-                    customId = actionCode + ":" + args[0];
+                    customId += actionCode + ":" + args[0];
                     break;
 
                 case ActionDiscordButtonEnum.GetIdUser:
                     if (args.Length != 1) throw new ArgumentException("Only one id possible");
                     if (args[0].GetType() != typeof(ulong)) throw new ArgumentException("Please provide a id (ulong)");
                     actionCode = (int)ActionDiscordButtonEnum.GetIdUser;
-                    customId = actionCode + ":" + args[0];
+                    customId += actionCode + ":" + args[0];
                     break;
 
                 case ActionDiscordButtonEnum.GetIdGuild:
                     if (args.Length != 1) throw new ArgumentException("Only one id possible");
                     if (args[0].GetType() != typeof(ulong)) throw new ArgumentException("Please provide a id (ulong)");
                     actionCode = (int)ActionDiscordButtonEnum.GetIdGuild;
-                    customId = actionCode + ":" + args[0];
+                    customId += actionCode + ":" + args[0];
                     break;
 
                 case ActionDiscordButtonEnum.GetIdChannel:
                     if (args.Length != 1) throw new ArgumentException("Only one id possible");
                     if (args[0].GetType() != typeof(ulong)) throw new ArgumentException("Please provide a id (ulong)");
                     actionCode = (int)ActionDiscordButtonEnum.GetIdChannel;
-                    customId = actionCode + ":" + args[0];
+                    customId += actionCode + ":" + args[0];
                     break;
 
                 case ActionDiscordButtonEnum.MoveVoiceChannel:
@@ -53,14 +53,12 @@ namespace MADS.Entities
                     if (args[0].GetType() != typeof(ulong)) throw new ArgumentException("Please provide 2 ids (ulong)");
                     if (args[1].GetType() != typeof(ulong)) throw new ArgumentException("Please provide 2 ids (ulong)");
                     actionCode = (int)ActionDiscordButtonEnum.MoveVoiceChannel;
-                    customId = actionCode + ":" + args[0] + ":" + args[1];
+                    customId += actionCode + ":" + args[0] + ":" + args[1];
                     break;
 
                 default:
                     throw new NotImplementedException("Action code not implemented");
             }
-
-            if (customId is null) throw new Exception();
 
             string label = button.Label;
             var style = button.Style;
@@ -71,13 +69,17 @@ namespace MADS.Entities
 
         public static void EnableButtonListener(DiscordClient client)
         {
-            client.ComponentInteractionCreated += (s, e) =>
+            client.ComponentInteractionCreated += async (s, e) =>
             {
+                if (!e.Id.StartsWith("CMD:")) return;
+                
                 var substring = e.Id.Split(':');
-                if (!int.TryParse(substring[0], out int actionCode))
+                if (!int.TryParse(substring[1], out int actionCode))
                 {
-                    return null;
+                    return;
                 }
+
+                substring = substring.Skip(1).ToArray();
 
                 switch (actionCode)
                 {
@@ -102,17 +104,16 @@ namespace MADS.Entities
                         break;
 
                     case (int)ActionDiscordButtonEnum.MoveVoiceChannel:
-                        MoveVoiceChannelUser(e, substring);
+                        await MoveVoiceChannelUser(e, substring);
                         break;
 
                     default:
                         throw new NotImplementedException("Action code not implemented");
                 }
-                return null;
             };
         }
 
-        private static async void MoveVoiceChannelUser(ComponentInteractionCreateEventArgs e, IReadOnlyList<string> substring)
+        private static async Task MoveVoiceChannelUser(ComponentInteractionCreateEventArgs e, IReadOnlyList<string> substring)
         {
             var member = await e.Guild.GetMemberAsync(e.User.Id);
             if (!member.Permissions.HasPermission(Permissions.MoveMembers)) { return; }
@@ -151,7 +152,7 @@ namespace MADS.Entities
             var response = new DiscordInteractionResponseBuilder();
 
             response.WithContent("User id: " + ulong.Parse(substring[1]));
-            response.AsEphemeral(true);
+            response.AsEphemeral();
 
             await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, response);
         }
@@ -161,7 +162,7 @@ namespace MADS.Entities
             var response = new DiscordInteractionResponseBuilder();
 
             response.WithContent("Guild id: " + ulong.Parse(substring[1]));
-            response.AsEphemeral(true);
+            response.AsEphemeral();
 
             await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, response);
         }
@@ -171,7 +172,7 @@ namespace MADS.Entities
             var response = new DiscordInteractionResponseBuilder();
 
             response.WithContent("Channel id: " + ulong.Parse(substring[1]));
-            response.AsEphemeral(true);
+            response.AsEphemeral();
 
             await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, response);
         }

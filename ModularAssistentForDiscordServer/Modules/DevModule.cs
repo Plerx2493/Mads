@@ -43,7 +43,7 @@ namespace MADS.Modules
         [Command("guild")]
         public async Task GetGuild(CommandContext ctx, ulong id)
         {
-            var tmp = await ctx.Client.GetChannelAsync(id);
+            var tmp = await ctx.Client.GetGuildAsync(id);
             await ctx.RespondAsync($"Guild: {tmp.Name}");
         }
 
@@ -52,13 +52,6 @@ namespace MADS.Modules
         {
             var tmp = await ctx.Client.GetChannelAsync(id);
             await ctx.RespondAsync($"Channel: {tmp.Name}");
-        }
-
-        [Command("user")]
-        public async Task GetUser(CommandContext ctx, ulong id)
-        {
-            var tmp = await ctx.Client.GetUserAsync(id);
-            await ctx.RespondAsync($"User: {tmp.Username}");
         }
 
         [Command("eval"), Description("Evaluate the result of c# code")]
@@ -83,7 +76,7 @@ namespace MADS.Modules
                 TestVariables globalVariables = new(ctx.Message, ctx.Client, ctx, CommandService.ModularDiscordBot);
 
                 ScriptOptions scriptOptions = ScriptOptions.Default;
-                scriptOptions = scriptOptions.WithImports("System", "System.Collections.Generic", "System.Linq", "System.Text", "System.Threading.Tasks", "DSharpPlus", "DSharpPlus.Entities", "DSharpPlus.CommandsNext", "ModularAssistentForDiscordServer");
+                scriptOptions = scriptOptions.WithImports("System", "System.Collections.Generic", "System.Linq", "System.Text", "System.Threading.Tasks", "DSharpPlus", "DSharpPlus.Entities", "DSharpPlus.CommandsNext", "MADS");
                 scriptOptions = scriptOptions.WithReferences(AppDomain.CurrentDomain.GetAssemblies().Where(assembly => !assembly.IsDynamic && !string.IsNullOrWhiteSpace(assembly.Location)));
 
                 Script<object> script = CSharpScript.Create(csCode, scriptOptions, typeof(TestVariables));
@@ -136,7 +129,7 @@ namespace MADS.Modules
             Guild = Channel.Guild;
             User = Message.Author;
             if (Guild != null)
-                Member = Guild.GetMemberAsync(User.Id).ConfigureAwait(false).GetAwaiter().GetResult();
+                Member = Guild.GetMemberAsync(User.Id).GetAwaiter().GetResult();
             Context = ctx;
         }
     }

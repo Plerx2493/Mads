@@ -6,19 +6,19 @@ namespace MADS
     {
         public static void Main()
         {
-            while (true)
+            ModularDiscordBot modularDiscordBot = new();
+            modularDiscordBot.RunAsync().GetAwaiter().GetResult();
+            try
             {
-                ModularDiscordBot modularDiscordBot = new();
-
-                try
-                {
-                    modularDiscordBot.RunAsync().GetAwaiter().GetResult();
-                }
-                catch (Exception e)
-                {
-                    modularDiscordBot.Logging.LogToOwner(string.Concat("**", e.GetType().ToString(), "**: ", e.Message), "core", LogLevel.Critical);
-                }
+                
             }
+            catch (Exception e)
+            {
+                modularDiscordBot.Logging.LogToOwner(string.Concat("**", e.GetType().ToString(), "**: ", e.Message),
+                    "core", LogLevel.Critical);
+            }
+
+            Main();
         }
     }
 }

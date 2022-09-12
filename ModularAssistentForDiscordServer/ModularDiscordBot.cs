@@ -32,9 +32,10 @@ namespace MADS
         //GuildId -> Guildsettings for certain guild
         public Dictionary<ulong, GuildSettings> GuildSettings;
 
-        internal ServiceProvider Services;
+        private ServiceProvider Services;
         internal DateTime startTime;
         internal ConfigJson config;
+
 
         public ModularDiscordBot()
         {
@@ -135,10 +136,10 @@ namespace MADS
                 [0] = new()
             };
 
-            var GuildSettings = lConfig.GuildSettings;
+            var guildSettings = lConfig.GuildSettings;
             var newGuildSettings = new Dictionary<ulong, GuildSettings>();
 
-            foreach (var guild in GuildSettings)
+            foreach (var guild in guildSettings)
             {
                 var settings = guild.Value;
                 settings.AktivModules = guild.Value.AktivModules.Distinct().ToList();
@@ -291,7 +292,8 @@ namespace MADS
             DiscordIntents requiredIntents =
                 DiscordIntents.GuildMessages
                 | DiscordIntents.DirectMessages
-                | DiscordIntents.Guilds;
+                | DiscordIntents.Guilds
+                | DiscordIntents.GuildVoiceStates;
 
             madsModules.ToList().ForEach(x =>
             {

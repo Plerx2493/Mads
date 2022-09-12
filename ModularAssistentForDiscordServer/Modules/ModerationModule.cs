@@ -39,7 +39,7 @@ namespace MADS.Modules
                 { "warnlevelreset", "Resets the warn level of a user" }         //TODO: Implement warning system
             };
             CommandClass = typeof(ModerationCommands);
-            SlashCommandClass = null; //typeof(ModerationSlashCommands); //TODO: Fix
+            SlashCommandClass = typeof(ModerationSlashCommands); //TODO: Fix
             RequiredIntents = 0;
             ModularDiscordClient = bot;
             IsHidden = false;
@@ -76,7 +76,7 @@ namespace MADS.Modules
         public async Task Ban(CommandContext ctx, DiscordMember user, [RemainingText] string reason = null)
         {
             //check if user has permission to ban member
-            if (!ctx.Member.PermissionsIn(ctx.Channel).HasPermission(Permissions.KickMembers))
+            if (!ctx.Member!.PermissionsIn(ctx.Channel).HasPermission(Permissions.KickMembers))
             {
                 await ctx.RespondAsync("You do not have the permission to ban users");
                 return;
@@ -203,6 +203,7 @@ namespace MADS.Modules
         [SlashCommand("test", "test smth")]
         public async Task TestCommand(InteractionContext ctx)
         {
+            /*
             var member = await ctx.Guild.GetMemberAsync(ctx.User.Id + 12313);
 
             var discordEmbed = new DiscordEmbedBuilder
@@ -213,6 +214,22 @@ namespace MADS.Modules
                 Timestamp = DateTime.Now,
             };
 
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(discordEmbed));
+            */
+            var tmp = await ctx.Client.GetGlobalApplicationCommandsAsync();
+            foreach (var cmd in tmp)
+            {
+                await ctx.Client.DeleteGlobalApplicationCommandAsync(cmd.Id);
+            }
+            
+            var discordEmbed = new DiscordEmbedBuilder
+            {
+                Title = "Test",
+                Description = $"Test executed",
+                Color = DiscordColor.Blue,
+                Timestamp = DateTime.Now,
+            };
+            
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(discordEmbed));
         }
 
