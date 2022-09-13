@@ -6,7 +6,7 @@ using DSharpPlus.SlashCommands;
 
 namespace MADS.Modules;
 
-internal class ModerationModule
+internal class ModerationModule : IMadsModul
 {
     public List<ulong>                GuildsEnabled        { get; set; }
     public ModularDiscordBot          ModularDiscordClient { get; set; }
