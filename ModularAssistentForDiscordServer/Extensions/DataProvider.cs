@@ -1,4 +1,5 @@
-﻿using MADS.JsonModel;
+﻿using MADS.Entities;
+using MADS.JsonModel;
 
 namespace MADS.Extensions;
 

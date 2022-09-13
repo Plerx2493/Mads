@@ -8,11 +8,11 @@ using DSharpPlus.Exceptions;
 using Humanizer;
 using Humanizer.Localisation;
 using MADS.CustomComponents;
+using MADS.Entities;
 using MADS.Extensions;
 using MADS.JsonModel;
-using MADS.Modules;
 
-namespace MADS.Utility;
+namespace MADS.Commands.Text;
 
 internal class BaseCommands : BaseCommandModule
 {
@@ -34,7 +34,7 @@ internal class BaseCommands : BaseCommandModule
             .AddField("Websocket ping", $"{ctx.Client.Ping} ms");
 
         var response = await ModularDiscordBot.AnswerWithDelete(ctx, discordEmbedBuilder.Build());
-        CommandService.ModularDiscordBot.Logging.LogCommandExecutionAsync(ctx, response);
+        await CommandService.ModularDiscordBot.Logging.LogCommandExecutionAsync(ctx, response);
     }
 
     [Command("about"), Aliases("info"), Description("Displays a little information about this bot"),
@@ -69,7 +69,7 @@ internal class BaseCommands : BaseCommandModule
             "Feedback"));
 
         var response = await ctx.RespondAsync(discordMessageBuilder);
-        CommandService.ModularDiscordBot.Logging.LogCommandExecutionAsync(ctx, response);
+        await CommandService.ModularDiscordBot.Logging.LogCommandExecutionAsync(ctx, response);
     }
 
     [Command("prefix"), Description("Get the bot prefix for this server"), Cooldown(1, 30, CooldownBucketType.Channel)]
@@ -104,7 +104,7 @@ internal class BaseCommands : BaseCommandModule
 
         DataProvider.SetConfig(CommandService.ModularDiscordBot.GuildSettings);
 
-        ctx.Guild.CurrentMember.ModifyAsync(x => x.Nickname = ctx.Guild.CurrentMember.Username + $" [{prefix}]");
+        await ctx.Guild.CurrentMember.ModifyAsync(x => x.Nickname = ctx.Guild.CurrentMember.Username + $" [{prefix}]");
 
         await ctx.RespondAsync("New prefix is: "
                                + $"`{CommandService.ModularDiscordBot.GuildSettings[ctx.Guild.Id].Prefix}`");
@@ -123,80 +123,7 @@ internal class BaseCommands : BaseCommandModule
         await ctx.RespondAsync(message);
     }
 
-    [Command("enable"), Description("Enable given module"), RequirePermissions(Permissions.Administrator), RequireGuild]
-    public async Task EnableModule(CommandContext ctx, [Description("Name of new module")] string moduleName)
-    {
-        if (!CommandService.ModularDiscordBot.madsModules.TryGetValue(moduleName, out _))
-        {
-            await ctx.RespondAsync("Module not found");
-            return;
-        }
-
-        var isEnabled = CommandService.ModularDiscordBot.GuildSettings[ctx.Guild.Id].AktivModules.Contains(moduleName);
-        if (isEnabled)
-        {
-            await ctx.RespondAsync("Module already active");
-            return;
-        }
-
-        CommandService.ModularDiscordBot.madsModules[moduleName].Enable(ctx.Guild.Id);
-        await ctx.RespondAsync("Module is now enabled");
-    }
-
-    [Command("disable"), Description("Disable given module"), RequirePermissions(Permissions.Administrator),
-     RequireGuild]
-    public async Task DisableModule(CommandContext ctx, [Description("Name of module")] string moduleName)
-    {
-        if (!CommandService.ModularDiscordBot.madsModules.TryGetValue(moduleName, out _))
-        {
-            await ctx.RespondAsync("Module not found");
-            return;
-        }
-
-        var isEnabled = CommandService.ModularDiscordBot.GuildSettings[ctx.Guild.Id].AktivModules.Contains(moduleName);
-        if (!isEnabled)
-        {
-            await ctx.RespondAsync("Module was not active");
-            return;
-        }
-
-        CommandService.ModularDiscordBot.madsModules[moduleName].Disable(ctx.Guild.Id);
-        await ctx.RespondAsync("Module is now disabled");
-    }
-
-    [Command("modules"), Description("List all modules"), RequirePermissions(Permissions.Administrator), RequireGuild]
-    public async Task ListModules(CommandContext ctx)
-    {
-        var modules = CommandService.ModularDiscordBot.madsModules.Keys.ToList();
-        var response = modules.Aggregate("Available modules:\n", (current, module) => current + module + "\n");
-        await ctx.RespondAsync(response);
-    }
-
-    [Command("modulesActive"), Description("Get active modules"), RequirePermissions(Permissions.Administrator),
-     RequireGuild]
-    public async Task ListActiveModules(CommandContext ctx)
-    {
-        var response = "";
-        var tmp = CommandService.ModulesActivGuilds;
-
-        tmp.ToList().ForEach(x =>
-        {
-            if (x.Value.Contains(ctx.Guild.Id))
-            {
-                response += x.Key + "\n";
-            }
-        });
-
-        if (response == "")
-        {
-            await ctx.RespondAsync("No modules active");
-        }
-        else
-        {
-            await ctx.RespondAsync("Active Modules: \n" + response);
-        }
-    }
-
+    
     [Command("exit"), Description("Exit the bot"), RequirePermissions(Permissions.Administrator), RequireGuild]
     public static async Task ExitGuild(CommandContext ctx)
     {

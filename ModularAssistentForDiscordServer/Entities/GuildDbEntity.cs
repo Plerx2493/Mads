@@ -1,19 +1,23 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MADS.Entities;
 
+[Table("guilds")]
 public class GuildDbEntity
 {
-    [Required]
-    public string Prefix = "";
-
     [Key]
+    [Column("Id")]
     public ulong Id { get; set; }
+    
+    [Required]
+    [Column("prefix")]
+    public string Prefix = "";
 
     [Required]
     public GuildConfigDbEntity Config { get; set; }
 
     public List<GuildUserDbEntity> Users { get; set; }
 
-    public List<GuildIncidentDbEntity> Incidents { get; set; }
+    public List<IncidentDbEntity> Incidents { get; set; }
 }

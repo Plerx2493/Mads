@@ -5,36 +5,7 @@ using DSharpPlus.Entities;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 
-namespace MADS.Modules
-{
-    internal class DevModule : IMadsModul
-    {
-        public List<ulong>                GuildsEnabled        { get; set; }
-        public ModularDiscordBot          ModularDiscordClient { get; set; }
-        public string                     ModuleName           { get; set; }
-        public string                     ModuleDescription    { get; set; }
-        public string[]                   Commands             { get; set; }
-        public Dictionary<string, string> CommandDescriptions  { get; set; }
-        public Type                       CommandClass         { get; set; }
-        public Type                       SlashCommandClass    { get; set; }
-
-        public DiscordIntents RequiredIntents { get; set; }
-
-        public bool IsHidden { get; init; }
-
-        public DevModule(ModularDiscordBot modularDiscordClient)
-        {
-            ModularDiscordClient = modularDiscordClient;
-            ModuleName = "Dev";
-            ModuleDescription = "";
-            Commands = new[] { "guild", "channel" };
-            CommandDescriptions = new Dictionary<string, string>();
-            CommandClass = typeof(DevCommands);
-            SlashCommandClass = null;
-            RequiredIntents = 0;
-            IsHidden = true;
-        }
-    }
+namespace MADS.Commands.Text;
 
 [RequireOwner, Hidden]
 internal class DevCommands : BaseCommandModule
@@ -122,28 +93,27 @@ internal class DevCommands : BaseCommandModule
     }
 }
 
-    public class TestVariables
+public class TestVariables
+{
+    public TestVariables(DiscordMessage msg, DiscordClient client, CommandContext ctx, ModularDiscordBot mdb)
     {
-        public DiscordMessage Message { get; set; }
-        public DiscordChannel Channel { get; set; }
-        public DiscordGuild Guild { get; set; }
-        public DiscordUser User { get; set; }
-        public DiscordMember Member { get; set; }
-        public CommandContext Context { get; set; }
-        public DiscordClient Client { get; set; }
-        public ModularDiscordBot Mdb { get; set; }
-
-        public TestVariables(DiscordMessage msg, DiscordClient client, CommandContext ctx, ModularDiscordBot mdb)
-        {
-            Client = client;
-            Mdb = mdb;
-            Message = msg;
-            Channel = msg.Channel;
-            Guild = Channel.Guild;
-            User = Message.Author;
-            if (Guild != null)
-                Member = Guild.GetMemberAsync(User.Id).GetAwaiter().GetResult();
-            Context = ctx;
-        }
+        Client = client;
+        Mdb = mdb;
+        Message = msg;
+        Channel = msg.Channel;
+        Guild = Channel.Guild;
+        User = Message.Author;
+        if (Guild != null)
+            Member = Guild.GetMemberAsync(User.Id).GetAwaiter().GetResult();
+        Context = ctx;
     }
+
+    public DiscordMessage    Message { get; set; }
+    public DiscordChannel    Channel { get; set; }
+    public DiscordGuild      Guild   { get; set; }
+    public DiscordUser       User    { get; set; }
+    public DiscordMember     Member  { get; set; }
+    public CommandContext    Context { get; set; }
+    public DiscordClient     Client  { get; set; }
+    public ModularDiscordBot Mdb     { get; set; }
 }
