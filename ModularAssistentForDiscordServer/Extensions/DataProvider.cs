@@ -1,36 +1,35 @@
 ﻿using MADS.JsonModel;
 
-namespace MADS.Extensions
+namespace MADS.Extensions;
+
+internal static class DataProvider
 {
-    internal static class DataProvider
+    public static ConfigJson GetConfig()
     {
-        public static ConfigJson GetConfig()
-        {
-            return JsonProvider.ReadFile<ConfigJson>(GetPath("config.json"));
-        }
+        return JsonProvider.ReadFile<ConfigJson>(GetPath("config.json"));
+    }
 
-        public static TJsonModel GetJson<TJsonModel>(string path)
-        {
-            return JsonProvider.ReadFile<TJsonModel>(GetPath(path));
-        }
+    public static TJsonModel GetJson<TJsonModel>(string path)
+    {
+        return JsonProvider.ReadFile<TJsonModel>(GetPath(path));
+    }
 
-        public static void SetConfig(Dictionary<ulong, GuildSettings> guildSettings)
-        {
-            ConfigJson configJson = GetConfig();
+    public static void SetConfig(Dictionary<ulong, GuildSettings> guildSettings)
+    {
+        var configJson = GetConfig();
 
-            configJson.GuildSettings = guildSettings;
+        configJson.GuildSettings = guildSettings;
 
-            JsonProvider.ParseJson(GetPath("config.json"), configJson);
-        }
+        JsonProvider.ParseJson(GetPath("config.json"), configJson);
+    }
 
-        public static void SetConfig(ConfigJson configJson)
-        {
-            JsonProvider.ParseJson(GetPath("config.json"), configJson);
-        }
+    public static void SetConfig(ConfigJson configJson)
+    {
+        JsonProvider.ParseJson(GetPath("config.json"), configJson);
+    }
 
-        public static string GetPath(params string[] path)
-        {
-            return Path.GetFullPath(Path.Combine(path));
-        }
+    public static string GetPath(params string[] path)
+    {
+        return Path.GetFullPath(Path.Combine(path));
     }
 }
