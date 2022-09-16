@@ -12,7 +12,8 @@ using MADS.CustomComponents;
 using MADS.Entities;
 using MADS.Extensions;
 using MADS.JsonModel;
-using MADS.Utility;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -20,18 +21,20 @@ namespace MADS;
 
 public class ModularDiscordBot
 {
-    
-    internal ConfigJson             config;
-    public   DiscordClient          DiscordClient;
-    public   LoggingProvider        Logging;
-    private  ServiceProvider        Services;
-    public   SlashCommandsExtension SlashCommandsExtension;
-    public   CommandsNextExtension  CommandsNextExtension;
-    internal DateTime               startTime;
+    private          IDbContextFactory<MadsContext> _dbFactory;
+    internal         ConfigJson                     config;
+    public           DiscordClient                  DiscordClient;
+    public           LoggingProvider                Logging;
+    private          ServiceProvider                Services;
+    public           SlashCommandsExtension         SlashCommandsExtension;
+    public           CommandsNextExtension          CommandsNextExtension;
+    internal         DateTime                       startTime;
+    public           MadsContext                    Data; 
 
 
     public ModularDiscordBot()
     {
+        //Data = new();
         startTime = DateTime.Now;
         Logging = new LoggingProvider(this);
     }
@@ -59,8 +62,11 @@ public class ModularDiscordBot
 
         Services = new ServiceCollection()
                    .AddSingleton(new MadsServiceProvider(this))
+                   .AddDbContextFactory<MadsContext>()
                    .BuildServiceProvider();
 
+        _dbFactory = Services.GetService<IDbContextFactory<MadsContext>>();
+        
         RegisterCommandExtensions();
 
         EnableGuildConfigs();
@@ -86,19 +92,25 @@ public class ModularDiscordBot
         return Task.CompletedTask;
     }
 
-    private void EnableGuildConfigs()
+    private async void EnableGuildConfigs()
     {
         Console.WriteLine("Loading guild configs");
 
-        config.GuildSettings.ToList().ForEach(x =>
+        var dbContext = await _dbFactory.CreateDbContextAsync();
+        var defaultGuild = new GuildDbEntity()
         {
-            x.Value.AktivModules.ForEach(y =>
-            {
-                
-            });
-        });
-
-        SlashCommandsExtension.RefreshCommands();
+            Id = 0,
+            Prefix = "!"
+        };
+        
+        defaultGuild.Config = new GuildConfigDbEntity()
+        {
+            Guild = defaultGuild,
+            GuildId = 0,
+            Prefix = "!"
+        };
+        
+        dbContext.Guilds.Add(defaultGuild);
 
         Console.WriteLine("Guild configs loaded");
     }
@@ -114,22 +126,8 @@ public class ModularDiscordBot
         if (lConfig.Token is null or "" or "<Your Token here>") { return false; }
         if (lConfig.Prefix is null or "") { lConfig.Prefix = "!"; }
 
-        lConfig.GuildSettings ??= new Dictionary<ulong, GuildSettings>
-        {
-            [0] = new()
-        };
+        lConfig.GuildSetting = new();
 
-        var guildSettings = lConfig.GuildSettings;
-        Dictionary<ulong, GuildSettings> newGuildSettings = new();
-
-        foreach (var guild in guildSettings)
-        {
-            var settings = guild.Value;
-            settings.AktivModules = guild.Value.AktivModules.Distinct().ToList();
-            newGuildSettings[guild.Key] = settings;
-        }
-
-        lConfig.GuildSettings = newGuildSettings;
         DataProvider.SetConfig(lConfig);
 
         return true;
@@ -155,10 +153,8 @@ public class ModularDiscordBot
                     Text = "Mads"
                 }
             },
-            GuildSettings = new Dictionary<ulong, GuildSettings>()
+            GuildSetting = new()
         };
-
-        newConfig.GuildSettings[0] = new GuildSettings();
         JsonProvider.ParseJson(configPath, newConfig);
 
         Console.WriteLine("Please insert your token in the config file and restart");
@@ -271,22 +267,17 @@ public class ModularDiscordBot
 
     private Task<int> GetPrefixPositionAsync(DiscordMessage msg)
     {
-        GuildSettings guildSettings;
-        var allGuildSettings = GuildSettings;
-
+        var dbContext = _dbFactory.CreateDbContext();
+        GuildDbEntity guildSettings = new GuildDbEntity();
+        
         if (msg.Channel.Guild is not null)
         {
-            if (!allGuildSettings.TryGetValue(msg.Channel.Guild.Id, out guildSettings))
-            {
-                guildSettings = allGuildSettings[0];
-            }
+            guildSettings = dbContext.Guilds.FirstOrDefault(x => x.Id == msg.Channel.GuildId);
         }
         else
         {
-            guildSettings = allGuildSettings[0];
+            guildSettings = dbContext.Guilds.FirstOrDefault(x => x.Id == 0);
         }
-
-        guildSettings.Prefix ??= allGuildSettings[0].Prefix;
 
         return Task.FromResult(msg.GetStringPrefixLength(guildSettings.Prefix));
     }

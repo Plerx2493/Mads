@@ -15,15 +15,6 @@ internal static class DataProvider
         return JsonProvider.ReadFile<TJsonModel>(GetPath(path));
     }
 
-    public static void SetConfig(Dictionary<ulong, GuildSettings> guildSettings)
-    {
-        var configJson = GetConfig();
-
-        configJson.GuildSettings = guildSettings;
-
-        JsonProvider.ParseJson(GetPath("config.json"), configJson);
-    }
-
     public static void SetConfig(ConfigJson configJson)
     {
         JsonProvider.ParseJson(GetPath("config.json"), configJson);

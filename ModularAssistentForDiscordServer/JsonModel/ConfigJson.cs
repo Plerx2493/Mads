@@ -19,6 +19,6 @@ internal struct ConfigJson
     [JsonProperty("defaultEmbed")]
     public DiscordEmbedBuilder DiscordEmbed { get; set; }
 
-    [JsonProperty("guildSettings")]
-    public Dictionary<ulong, GuildSettings> GuildSettings { get; set; }
+    [JsonProperty("guildSetting")]
+    public GuildSettings GuildSetting { get; set; }
 }

@@ -10,14 +10,15 @@ using Humanizer.Localisation;
 using MADS.CustomComponents;
 using MADS.Entities;
 using MADS.Extensions;
-using MADS.JsonModel;
+using Microsoft.EntityFrameworkCore;
 
 namespace MADS.Commands.Text;
 
 internal class BaseCommands : BaseCommandModule
 {
-    private const string              EmojiRegex = @"<a?:(.+?):(\d+)>";
-    public        MadsServiceProvider CommandService { get; set; }
+    private const   string                         EmojiRegex = @"<a?:(.+?):(\d+)>";
+    public          MadsServiceProvider            CommandService { get; set; }
+    public          IDbContextFactory<MadsContext> _dbFactory     { get; set; }
 
     [Command("ping"), Aliases("status"), Description("Get the ping of the websocket"),
      Cooldown(1, 30, CooldownBucketType.Channel)]
@@ -26,7 +27,7 @@ internal class BaseCommands : BaseCommandModule
         var diff = DateTime.Now - CommandService.ModularDiscordBot.startTime;
         var date = $"{diff.Days} days {diff.Hours} hours {diff.Minutes} minutes";
 
-        var discordEmbedBuilder = GuildSettings.GetDiscordEmbed();
+        var discordEmbedBuilder = CommandUtility.GetDiscordEmbed();
         discordEmbedBuilder
             .WithTitle("Status")
             .WithTimestamp(DateTime.Now)
@@ -41,7 +42,7 @@ internal class BaseCommands : BaseCommandModule
      Cooldown(1, 30, CooldownBucketType.Channel)]
     public async Task About(CommandContext ctx)
     {
-        var discordEmbedBuilder = GuildSettings.GetDiscordEmbed();
+        var discordEmbedBuilder = CommandUtility.GetDiscordEmbed();
         var discordMessageBuilder = new DiscordMessageBuilder();
         var inviteUri = ctx.Client.CurrentApplication.GenerateOAuthUri(null, Permissions.Administrator, OAuthScope.Bot,
             OAuthScope.ApplicationsCommands);
@@ -72,42 +73,47 @@ internal class BaseCommands : BaseCommandModule
         await CommandService.ModularDiscordBot.Logging.LogCommandExecutionAsync(ctx, response);
     }
 
-    [Command("prefix"), Description("Get the bot prefix for this server"), Cooldown(1, 30, CooldownBucketType.Channel)]
+    [Command("prefix"), Description("Get the bot prefix for this server"), Cooldown(1, 30, CooldownBucketType.Channel), RequireGuild]
     public async Task GetPrefix(CommandContext ctx)
     {
-        var allGuildSettings = CommandService.ModularDiscordBot.GuildSettings;
-
-        if (!allGuildSettings.TryGetValue(ctx.Guild.Id, out var guildSettings))
+        var dbContext = await _dbFactory.CreateDbContextAsync();
+        GuildConfigDbEntity config;
+        
+        if (dbContext.Guilds.Any(x => x.Id == ctx.Guild.Id))
         {
-            guildSettings = allGuildSettings[0];
+           config = dbContext.Guilds.First(x => x.Id == ctx.Guild.Id).Config;
         }
-
-        await ctx.RespondAsync("Current prefix is: `" + guildSettings.Prefix + "`");
+        else
+        {
+            config = dbContext.Guilds.First(x => x.Id == 0).Config;
+        }
+        
+        await ctx.RespondAsync("Current prefix is: `" + config.Prefix + "`");
     }
-
+    
     [Command("setprefix"), Description("Set the bot prefix for this server"),
      RequirePermissions(Permissions.Administrator), RequireGuild]
     public async Task SetPrefix(CommandContext ctx, [Description("The new prefix")] string prefix)
     {
-        var allGuildSettings = CommandService.ModularDiscordBot.GuildSettings;
-
-        if (!allGuildSettings.TryGetValue(ctx.Guild.Id, out var guildSettings))
+        var dbContext = await _dbFactory.CreateDbContextAsync();
+        GuildConfigDbEntity config;
+        
+        if (dbContext.Guilds.Any(x => x.Id == ctx.Guild.Id))
         {
-            CommandService.ModularDiscordBot.GuildSettings.Add(ctx.Guild.Id, new GuildSettings
-                { Prefix = prefix });
+            config = dbContext.Guilds.First(x => x.Id == ctx.Guild.Id).Config;
         }
         else
         {
-            guildSettings.Prefix = prefix;
-            CommandService.ModularDiscordBot.GuildSettings[ctx.Guild.Id] = guildSettings;
+            config = dbContext.Guilds.First(x => x.Id == 0).Config;
         }
 
-        DataProvider.SetConfig(CommandService.ModularDiscordBot.GuildSettings);
+        config.Prefix = prefix;
+        
+        dbContext.SaveChanges();
 
         await ctx.Guild.CurrentMember.ModifyAsync(x => x.Nickname = ctx.Guild.CurrentMember.Username + $" [{prefix}]");
 
-        await ctx.RespondAsync("New prefix is: "
-                               + $"`{CommandService.ModularDiscordBot.GuildSettings[ctx.Guild.Id].Prefix}`");
+        await ctx.RespondAsync($"New prefix is: `{prefix}`");
     }
 
     [Command("jumppad"), Aliases("jp"), RequireGuild, RequireUserPermissions(permissions: Permissions.MoveMembers)]
