@@ -1,5 +1,6 @@
 ﻿using MADS.Commands;
 using MADS.Entities;
+using MADS.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,7 +22,7 @@ internal static class MainProgram
             modularDiscordBot.Logging.LogToOwner(string.Concat("**", e.GetType().ToString(), "**: ", e.Message),
                 "core", LogLevel.Critical);
         }
-
+        
         Main();
     }
     
@@ -30,7 +31,7 @@ internal static class MainProgram
         public MadsContext CreateDbContext(string[] args)
         {
             var optionsBuilder = new DbContextOptionsBuilder<MadsContext>();
-            var connectionString = "Server=192.168.178.61,Port=3306;Database=MadsDB;User=USR;Password=PWD;";
+            var connectionString = DataProvider.GetConfig().ConnectionString;   //;
             optionsBuilder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
 
             return new MadsContext(optionsBuilder.Options);

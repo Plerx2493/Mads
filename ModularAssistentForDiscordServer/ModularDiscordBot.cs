@@ -1,4 +1,5 @@
-﻿using DSharpPlus;
+﻿using System.Reflection;
+using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.CommandsNext.Executors;
@@ -21,21 +22,22 @@ namespace MADS;
 
 public class ModularDiscordBot
 {
-    private          IDbContextFactory<MadsContext> _dbFactory;
-    internal         ConfigJson                     config;
-    public           DiscordClient                  DiscordClient;
-    public           LoggingProvider                Logging;
-    private          ServiceProvider                Services;
-    public           SlashCommandsExtension         SlashCommandsExtension;
-    public           CommandsNextExtension          CommandsNextExtension;
-    internal         DateTime                       startTime;
-    public           MadsContext                    Data; 
+    public DiscordClient   DiscordClient;
+    public LoggingProvider Logging;
+    public DateTime        StartTime;
+    public MadsContext     Data; 
+    
+    private IDbContextFactory<MadsContext> _dbFactory;
+    private ConfigJson                     _config;
+    private ServiceProvider                _services;
+    private SlashCommandsExtension         _slashCommandsExtension;
+    private CommandsNextExtension          _commandsNextExtension;
+    
 
 
     public ModularDiscordBot()
     {
-        //Data = new();
-        startTime = DateTime.Now;
+        StartTime = DateTime.Now;
         Logging = new LoggingProvider(this);
     }
 
@@ -47,25 +49,27 @@ public class ModularDiscordBot
             return;
         }
 
-        config = DataProvider.GetConfig();
+        _config = DataProvider.GetConfig();
         
         DiscordConfiguration discordConfig = new()
         {
-            Token = config.Token,
+            Token = _config.Token,
             TokenType = TokenType.Bot,
             AutoReconnect = true,
-            MinimumLogLevel = config.LogLevel,
+            MinimumLogLevel = _config.LogLevel,
             Intents = GetRequiredIntents()
         };
 
         DiscordClient = new DiscordClient(discordConfig);
-
-        Services = new ServiceCollection()
+        var connectionString = DataProvider.GetConfig().ConnectionString;
+        
+        _services = new ServiceCollection()
                    .AddSingleton(new MadsServiceProvider(this))
-                   .AddDbContextFactory<MadsContext>()
+                   .AddDbContextFactory<MadsContext>(options =>
+                       options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)))
                    .BuildServiceProvider();
 
-        _dbFactory = Services.GetService<IDbContextFactory<MadsContext>>();
+        _dbFactory = _services.GetService<IDbContextFactory<MadsContext>>();
         
         RegisterCommandExtensions();
 
@@ -75,7 +79,7 @@ public class ModularDiscordBot
         DiscordClient.Zombied += OnZombied;
         DiscordClient.GuildDownloadCompleted += OnGuildDownloadCompleted;
 
-        DiscordActivity act = new(config.Prefix + "help", ActivityType.Watching);
+        DiscordActivity act = new(_config.Prefix + "help", ActivityType.Watching);
 
         //connect client
         await DiscordClient.ConnectAsync(act, UserStatus.Online);
@@ -100,18 +104,20 @@ public class ModularDiscordBot
         var defaultGuild = new GuildDbEntity()
         {
             Id = 0,
-            Prefix = "!"
+            Prefix = "!",
+            Incidents = new(),
+            Users = new()
         };
         
         defaultGuild.Config = new GuildConfigDbEntity()
         {
             Guild = defaultGuild,
-            GuildId = 0,
+            GuildId = defaultGuild.Id,
             Prefix = "!"
         };
         
-        dbContext.Guilds.Add(defaultGuild);
-
+        dbContext.Guilds.Upsert(defaultGuild);
+        await dbContext.SaveChangesAsync();
         Console.WriteLine("Guild configs loaded");
     }
 
@@ -125,8 +131,7 @@ public class ModularDiscordBot
 
         if (lConfig.Token is null or "" or "<Your Token here>") { return false; }
         if (lConfig.Prefix is null or "") { lConfig.Prefix = "!"; }
-
-        lConfig.GuildSetting = new();
+        if (lConfig.ConnectionString is null or "") return false;
 
         DataProvider.SetConfig(lConfig);
 
@@ -145,15 +150,6 @@ public class ModularDiscordBot
             Token = "<Your Token here>",
             Prefix = "!",
             LogLevel = LogLevel.Debug,
-            DiscordEmbed = new DiscordEmbedBuilder
-            {
-                Color = new Optional<DiscordColor>(new DiscordColor(0, 255, 194)),
-                Footer = new DiscordEmbedBuilder.EmbedFooter
-                {
-                    Text = "Mads"
-                }
-            },
-            GuildSetting = new()
         };
         JsonProvider.ParseJson(configPath, newConfig);
 
@@ -165,6 +161,8 @@ public class ModularDiscordBot
 
     private void RegisterCommandExtensions()
     {
+        var asm = Assembly.GetExecutingAssembly();
+        
         CommandsNextConfiguration commandsConfig = new()
         {
             CaseSensitive = false,
@@ -172,24 +170,22 @@ public class ModularDiscordBot
             EnableDms = true,
             EnableMentionPrefix = true,
             PrefixResolver = GetPrefixPositionAsync,
-            Services = Services,
+            Services = _services,
             CommandExecutor = new ParallelQueuedCommandExecutor()
         };
 
-        CommandsNextExtension = DiscordClient.UseCommandsNext(commandsConfig);
-        CommandsNextExtension.RegisterCommands<BaseCommands>();
-        CommandsNextExtension.RegisterCommands<ModerationCommands>();
-        CommandsNextExtension.RegisterCommands<DevCommands>();
+        _commandsNextExtension = DiscordClient.UseCommandsNext(commandsConfig);
+        _commandsNextExtension.RegisterCommands(asm);
         
         SlashCommandsConfiguration slashConfig = new()
         {
-            Services = Services
+            Services = _services
         };
 
-        SlashCommandsExtension = DiscordClient.UseSlashCommands(slashConfig);
-
-        CommandsNextExtension.CommandErrored += OnCNextErrored;
-        SlashCommandsExtension.SlashCommandErrored += OnSlashCommandErrored;
+        _slashCommandsExtension = DiscordClient.UseSlashCommands(slashConfig);
+        _slashCommandsExtension.RegisterCommands(asm);
+        _commandsNextExtension.CommandErrored += OnCNextErrored;
+        _slashCommandsExtension.SlashCommandErrored += OnSlashCommandErrored;
 
         ActionDiscordButton.EnableButtonListener(DiscordClient);
     }
@@ -252,16 +248,9 @@ public class ModularDiscordBot
         return response;
     }
 
-    public static DiscordIntents GetRequiredIntents()
+    private static DiscordIntents GetRequiredIntents()
     {
-        var requiredIntents = DiscordIntents.All;
-            //DiscordIntents.GuildMessages
-            //| DiscordIntents.DirectMessages
-            //| DiscordIntents.Guilds
-            //| DiscordIntents.GuildVoiceStates;
-
-        
-
+        const DiscordIntents requiredIntents = DiscordIntents.All;
         return requiredIntents;
     }
 

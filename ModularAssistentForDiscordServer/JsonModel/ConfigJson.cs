@@ -16,9 +16,6 @@ internal struct ConfigJson
     [JsonProperty("minmumloglvl")]
     public LogLevel LogLevel { get; set; }
 
-    [JsonProperty("defaultEmbed")]
-    public DiscordEmbedBuilder DiscordEmbed { get; set; }
-
-    [JsonProperty("guildSetting")]
-    public GuildSettings GuildSetting { get; set; }
+    [JsonProperty("databaseConnectionString")]
+    public string ConnectionString{ get; set; }
 }

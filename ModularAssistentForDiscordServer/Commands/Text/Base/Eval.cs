@@ -5,29 +5,15 @@ using DSharpPlus.Entities;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 
-namespace MADS.Commands.Text;
+namespace MADS.Commands.Text.Base;
 
 [RequireOwner, Hidden]
-internal class DevCommands : BaseCommandModule
+internal class Eval : BaseCommandModule
 {
     public MadsServiceProvider CommandService { get; set; }
 
-    [Command("guild")]
-    public async Task GetGuild(CommandContext ctx, ulong id)
-    {
-        var tmp = await ctx.Client.GetGuildAsync(id);
-        await ctx.RespondAsync($"Guild: {tmp.Name}");
-    }
-
-    [Command("channel")]
-    public async Task GetChannel(CommandContext ctx, ulong id)
-    {
-        var tmp = await ctx.Client.GetChannelAsync(id);
-        await ctx.RespondAsync($"Channel: {tmp.Name}");
-    }
-
     [Command("eval"), Description("Evaluate the result of c# code")]
-    public async Task Eval(CommandContext ctx, [RemainingText] string code)
+    public async Task EvalCommand(CommandContext ctx, [RemainingText] string code)
     {
         var codeStart = code.IndexOf("```", StringComparison.Ordinal) + 3;
         codeStart = code.IndexOf('\n', codeStart) + 1;

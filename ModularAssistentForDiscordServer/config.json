@@ -1,0 +1,6 @@
+{
+  "token": "ODA3MjgzNDc0NTUyOTc5NTA4.YB1vUg.s2Fneet6j6nKgkaFOBpVnVroFxA",
+  "defaultPrefix": "!",
+  "minmumloglvl": 1,
+  "databaseConnectionString": "Server=192.168.178.61,Port=3306;Database=MadsDB;User=root;Password=owsip#63;"
+}

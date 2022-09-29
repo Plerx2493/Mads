@@ -117,21 +117,22 @@ internal class ModerationCommands : BaseCommandModule
 
     [Command("purge"), Description("Purges messages"),
      RequireBotPermissions(Permissions.ManageMessages), RequireGuild]
-    public async Task Purge(CommandContext ctx, int amount = 99)
+    public async Task Purge(CommandContext ctx, int amount = 100)
     {
-        if (amount + 1 > 100)
+        if (amount > 100)
         {
-            await ctx.RespondAsync("You cannot purge more than 99 messages at once");
+            await ctx.RespondAsync("You cannot purge more than 100 messages at once");
             return;
         }
 
-        var messagesApi = await ctx.Channel.GetMessagesAsync(amount + 1);
+        var messagesApi = await ctx.Channel.GetMessagesBeforeAsync(ctx.Message.Id, amount);
         List<DiscordMessage> messages = new();
         messages.AddRange(messagesApi);
 
         messages.RemoveAll(x => (DateTime.UtcNow - x.Timestamp).TotalDays > 14);
 
         await ctx.Channel.DeleteMessagesAsync(messages);
+        await ctx.Message.DeleteAsync();
 
         var response = await ctx.Channel.SendMessageAsync(
             $"{messages.Count} messages deleted {DiscordEmoji.FromName(CommandService.ModularDiscordBot.DiscordClient, ":Bussi:")}");

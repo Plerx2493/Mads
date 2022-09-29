@@ -1,46 +1,51 @@
 ﻿using System;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace MADS.Migrations
 {
-    /// <inheritdoc />
-    public partial class Init : Migration
+    public partial class Initial : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.AlterDatabase()
+                .Annotation("MySql:CharSet", "utf8mb4");
+
             migrationBuilder.CreateTable(
                 name: "GuildConfigs",
                 columns: table => new
                 {
-                    guild_id = table.Column<ulong>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    prefix = table.Column<string>(type: "TEXT", nullable: true)
+                    guild_id = table.Column<ulong>(type: "bigint unsigned", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    prefix = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_GuildConfigs", x => x.guild_id);
-                });
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
                 name: "users",
                 columns: table => new
                 {
-                    id = table.Column<ulong>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true)
+                    id = table.Column<ulong>(type: "bigint unsigned", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_users", x => x.id);
-                });
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
                 name: "guilds",
                 columns: table => new
                 {
-                    Id = table.Column<ulong>(type: "INTEGER", nullable: false)
+                    Id = table.Column<ulong>(type: "bigint unsigned", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -51,14 +56,15 @@ namespace MADS.Migrations
                         principalTable: "GuildConfigs",
                         principalColumn: "guild_id",
                         onDelete: ReferentialAction.Cascade);
-                });
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
                 name: "GuildUsers",
                 columns: table => new
                 {
-                    UserId = table.Column<ulong>(type: "INTEGER", nullable: false),
-                    GuildId = table.Column<ulong>(type: "INTEGER", nullable: false)
+                    UserId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
+                    GuildId = table.Column<ulong>(type: "bigint unsigned", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -75,18 +81,20 @@ namespace MADS.Migrations
                         principalTable: "users",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
-                });
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
                 name: "Incidents",
                 columns: table => new
                 {
-                    Id = table.Column<ulong>(type: "INTEGER", nullable: false),
-                    target_id = table.Column<ulong>(type: "INTEGER", nullable: false),
-                    moderator_id = table.Column<ulong>(type: "INTEGER", nullable: false),
-                    reason = table.Column<string>(type: "TEXT", nullable: true),
-                    TargetUserId = table.Column<ulong>(type: "INTEGER", nullable: true),
-                    CreationTimeStamp = table.Column<DateTimeOffset>(type: "TEXT", nullable: false)
+                    Id = table.Column<ulong>(type: "bigint unsigned", nullable: false),
+                    target_id = table.Column<ulong>(type: "bigint unsigned", nullable: false),
+                    moderator_id = table.Column<ulong>(type: "bigint unsigned", nullable: false),
+                    reason = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    TargetUserId = table.Column<ulong>(type: "bigint unsigned", nullable: true),
+                    CreationTimeStamp = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -102,7 +110,8 @@ namespace MADS.Migrations
                         column: x => x.TargetUserId,
                         principalTable: "users",
                         principalColumn: "id");
-                });
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateIndex(
                 name: "IX_GuildUsers_GuildId",
@@ -115,7 +124,6 @@ namespace MADS.Migrations
                 column: "TargetUserId");
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(

@@ -15,17 +15,19 @@ namespace MADS.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "7.0.0-preview.7.22376.2");
+            modelBuilder
+                .HasAnnotation("ProductVersion", "6.0.9")
+                .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("MADS.Entities.GuildConfigDbEntity", b =>
                 {
                     b.Property<ulong>("GuildId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("bigint unsigned")
                         .HasColumnName("guild_id");
 
                     b.Property<string>("Prefix")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("longtext")
                         .HasColumnName("prefix");
 
                     b.HasKey("GuildId");
@@ -36,7 +38,7 @@ namespace MADS.Migrations
             modelBuilder.Entity("MADS.Entities.GuildDbEntity", b =>
                 {
                     b.Property<ulong>("Id")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("bigint unsigned")
                         .HasColumnName("Id");
 
                     b.HasKey("Id");
@@ -47,10 +49,10 @@ namespace MADS.Migrations
             modelBuilder.Entity("MADS.Entities.GuildUserDbEntity", b =>
                 {
                     b.Property<ulong>("UserId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint unsigned");
 
                     b.Property<ulong>("GuildId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint unsigned");
 
                     b.HasKey("UserId");
 
@@ -62,25 +64,25 @@ namespace MADS.Migrations
             modelBuilder.Entity("MADS.Entities.IncidentDbEntity", b =>
                 {
                     b.Property<ulong>("Id")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint unsigned");
 
                     b.Property<DateTimeOffset>("CreationTimeStamp")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<ulong>("ModeratorId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("bigint unsigned")
                         .HasColumnName("moderator_id");
 
                     b.Property<string>("Reason")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("longtext")
                         .HasColumnName("reason");
 
                     b.Property<ulong>("TargetId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("bigint unsigned")
                         .HasColumnName("target_id");
 
                     b.Property<ulong?>("TargetUserId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint unsigned");
 
                     b.HasKey("Id");
 
@@ -93,7 +95,7 @@ namespace MADS.Migrations
                 {
                     b.Property<ulong>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("bigint unsigned")
                         .HasColumnName("id");
 
                     b.HasKey("Id");

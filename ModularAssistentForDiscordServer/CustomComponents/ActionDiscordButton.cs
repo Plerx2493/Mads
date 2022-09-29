@@ -1,4 +1,5 @@
-﻿using DSharpPlus;
+﻿using System.Text.RegularExpressions;
+using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 
@@ -111,7 +112,7 @@ public static class ActionDiscordButton
     {
         client.ComponentInteractionCreated += async (s, e) =>
         {
-            if (!e.Id.StartsWith("CMD:"))
+            if (!Regex.IsMatch(e.Id, @"^CMD:\d{4}(?::\d{1,20}){0,3}$"))
             {
                 return;
             }
