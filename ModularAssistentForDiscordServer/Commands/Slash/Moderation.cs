@@ -10,19 +10,6 @@ internal class ModerationSlashCommands : ApplicationCommandModule
     [SlashCommand("test", "test smth")]
     public async Task TestCommand(InteractionContext ctx)
     {
-        /*
-        var member = await ctx.Guild.GetMemberAsync(ctx.User.Id + 12313);
-
-        var discordEmbed = new DiscordEmbedBuilder
-        {
-            Title = "Test",
-            Description = $"Test executed",
-            Color = DiscordColor.Blue,
-            Timestamp = DateTime.Now,
-        };
-
-        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(discordEmbed));
-        */
         var tmp = await ctx.Client.GetGlobalApplicationCommandsAsync();
         foreach (var cmd in tmp)
         {

@@ -8,11 +8,11 @@ public class GuildDbEntity
 {
     [Key]
     [Column("Id")]
-    public ulong Id { get; set; }
+    public ulong Id = 0;
     
     [Required]
     [Column("prefix")]
-    public string Prefix = "";
+    public string Prefix = "!";
 
     [Required]
     public GuildConfigDbEntity Config { get; set; }

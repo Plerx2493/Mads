@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MADS.Commands.Text.Base;
 
-internal class Ping : BaseCommandModule
+public class Ping : BaseCommandModule
 {
     private MadsServiceProvider            CommandService { get; set; }
     public  IDbContextFactory<MadsContext> DbFactory      { get; set; }

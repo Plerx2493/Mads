@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MADS.Commands.Text.Base;
 
-internal class UserInfo : BaseCommandModule
+public class UserInfo : BaseCommandModule
 {
     public        MadsServiceProvider            CommandService { get; set; }
     public        IDbContextFactory<MadsContext> DbFactory      { get; set; }

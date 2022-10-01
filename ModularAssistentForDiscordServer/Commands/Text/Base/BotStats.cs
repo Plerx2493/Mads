@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MADS.Commands.Text.Base;
 
-internal class BotStats : BaseCommandModule
+public class BotStats : BaseCommandModule
 {
     public MadsServiceProvider            CommandService { get; set; }
     public IDbContextFactory<MadsContext> DbFactory      { get; set; }

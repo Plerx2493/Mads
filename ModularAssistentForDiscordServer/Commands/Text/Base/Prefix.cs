@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MADS.Commands.Text.Base;
 
-internal class Prefix : BaseCommandModule
+public class Prefix : BaseCommandModule
 {
     public        MadsServiceProvider            CommandService { get; set; }
     public        IDbContextFactory<MadsContext> DbFactory      { get; set; }
@@ -44,9 +44,12 @@ internal class Prefix : BaseCommandModule
         }
         else
         {
-            config = dbContext.Guilds.First(x => x.Id == 0).Config;
+            config = new (dbContext.Guilds.First(x => x.Id == 0).Config);
         }
-
+        
+        config.GuildId = ctx.Guild.Id;
+        
+        dbContext.Upsert(config);
         config.Prefix = prefix;
         
         await dbContext.SaveChangesAsync();

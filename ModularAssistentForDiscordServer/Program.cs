@@ -1,9 +1,7 @@
-﻿using MADS.Commands;
-using MADS.Entities;
+﻿using MADS.Entities;
 using MADS.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace MADS;

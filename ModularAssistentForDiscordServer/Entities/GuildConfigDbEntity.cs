@@ -13,5 +13,23 @@ public class GuildConfigDbEntity
     public string Prefix { get; set; }
     
     
-    public GuildDbEntity Guild { get; set; }    
+    public GuildDbEntity Guild { get; set; }
+
+    public GuildConfigDbEntity(ulong guildId, string prefix, GuildDbEntity guild)
+    {
+        GuildId = guildId;
+        Prefix = prefix;
+        Guild = guild;
+    }
+
+    public GuildConfigDbEntity(GuildConfigDbEntity old)
+    {
+        GuildId = old.GuildId;
+        Prefix = old.Prefix;
+        Guild = old.Guild;
+    }
+
+    public GuildConfigDbEntity()
+    {
+    }
 }           

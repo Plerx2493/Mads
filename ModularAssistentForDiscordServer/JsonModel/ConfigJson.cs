@@ -1,6 +1,4 @@
-﻿using DSharpPlus.Entities;
-using MADS.Entities;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
 namespace MADS.JsonModel;

@@ -1,5 +1,4 @@
-﻿using System.Data.Entity.ModelConfiguration.Configuration;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace MADS.Entities;
 

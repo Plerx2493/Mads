@@ -110,7 +110,7 @@ public static class ActionDiscordButton
 
     public static void EnableButtonListener(DiscordClient client)
     {
-        client.ComponentInteractionCreated += async (s, e) =>
+        client.ComponentInteractionCreated += async (_, e) =>
         {
             if (!Regex.IsMatch(e.Id, @"^CMD:\d{4}(?::\d{1,20}){0,3}$"))
             {

@@ -1,6 +1,6 @@
 ﻿namespace MADS.Commands;
 
-internal class MadsServiceProvider
+public class MadsServiceProvider
 {
     public ModularDiscordBot ModularDiscordBot;
     public MadsServiceProvider(ModularDiscordBot modularDiscordBot)

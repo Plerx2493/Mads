@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis.Scripting;
 namespace MADS.Commands.Text.Base;
 
 [RequireOwner, Hidden]
-internal class Eval : BaseCommandModule
+public class Eval : BaseCommandModule
 {
     public MadsServiceProvider CommandService { get; set; }
 
