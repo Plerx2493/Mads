@@ -5,7 +5,7 @@ using DSharpPlus.Entities;
 
 namespace MADS.Commands.Text;
 
-internal class ModerationCommands : BaseCommandModule
+public class ModerationCommands : BaseCommandModule
 {
     public MadsServiceProvider CommandService { get; set; }
 
@@ -14,14 +14,14 @@ internal class ModerationCommands : BaseCommandModule
     public async Task Kick(CommandContext ctx, DiscordMember user, [RemainingText] string reason = null)
     {
         //check if user has permission to kick member
-        if (!ctx.Member.PermissionsIn(ctx.Channel).HasPermission(Permissions.KickMembers))
+        if (ctx.Member != null && !ctx.Member.PermissionsIn(ctx.Channel).HasPermission(Permissions.KickMembers))
         {
             await ctx.RespondAsync("You do not have the permission to kick users");
             return;
         }
 
         //Check if user has a higher or equal hierarchy than the user who is trying to kick
-        if (ctx.Member.Hierarchy <= user.Hierarchy)
+        if (ctx.Member != null && ctx.Member.Hierarchy <= user.Hierarchy)
         {
             await ctx.RespondAsync("You cannot kick a user with a higher or equal hierarchy than you");
             return;
@@ -50,7 +50,7 @@ internal class ModerationCommands : BaseCommandModule
             return;
         }
 
-        //excecute ban
+        //execute ban
         await user.BanAsync(reason: reason);
         await ctx.RespondAsync($"{user.DisplayName} has been kicked from the server");
     }
@@ -60,7 +60,7 @@ internal class ModerationCommands : BaseCommandModule
     public async Task Mute(CommandContext ctx, DiscordMember user, int timeInMinutes = 60,
         [RemainingText] string reason = null)
     {
-        if (!ctx.Member.PermissionsIn(ctx.Channel).HasPermission(Permissions.ModerateMembers))
+        if (!ctx.Member!.PermissionsIn(ctx.Channel).HasPermission(Permissions.ModerateMembers))
         {
             await ctx.RespondAsync("You do not have the permission to mute users");
             return;

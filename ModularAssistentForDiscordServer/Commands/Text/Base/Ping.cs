@@ -7,8 +7,8 @@ namespace MADS.Commands.Text.Base;
 
 public class Ping : BaseCommandModule
 {
-    private MadsServiceProvider            CommandService { get; set; }
-    public  IDbContextFactory<MadsContext> DbFactory      { get; set; }
+    private MadsServiceProvider CommandService { get; set; }
+    public IDbContextFactory<MadsContext> DbFactory { get; set; }
 
     [Command("ping"), Aliases("status"), Description("Get the ping of the websocket"),
      Cooldown(1, 30, CooldownBucketType.Channel)]

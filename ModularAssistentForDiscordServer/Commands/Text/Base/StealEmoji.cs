@@ -8,7 +8,7 @@ namespace MADS.Commands.Text.Base;
 
 public class StealEmoji : BaseCommandModule
 {
-    private const string EmojiRegex          = @"<a?:(.+?):(\d+)>";
+    private const string EmojiRegex = @"<a?:(.+?):(\d+)>";
 
     [Command("yoink"), Description("Copies an emoji from a different server to this one"),
      RequirePermissions(Permissions.ManageEmojis), Priority(1)]

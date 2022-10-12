@@ -10,9 +10,9 @@ namespace MADS.Commands.Text.Base;
 
 public class About : BaseCommandModule
 {
-    private MadsServiceProvider            CommandService { get; set; }
-    public  IDbContextFactory<MadsContext> DbFactory      { get; set; }
-    
+    private MadsServiceProvider CommandService { get; set; }
+    public IDbContextFactory<MadsContext> DbFactory { get; set; }
+
     [Command("about"), Aliases("info"), Description("Displays a little information about this bot"),
      Cooldown(1, 30, CooldownBucketType.Channel)]
     public async Task AboutCommand(CommandContext ctx)

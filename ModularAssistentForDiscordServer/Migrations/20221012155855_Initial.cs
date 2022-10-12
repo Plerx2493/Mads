@@ -17,19 +17,20 @@ namespace MADS.Migrations
                 name: "GuildConfigs",
                 columns: table => new
                 {
-                    guild_id = table.Column<ulong>(type: "bigint unsigned", nullable: false)
+                    id = table.Column<ulong>(type: "bigint unsigned", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    discordId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
                     prefix = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_GuildConfigs", x => x.guild_id);
+                    table.PrimaryKey("PK_GuildConfigs", x => x.id);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "users",
+                name: "Users",
                 columns: table => new
                 {
                     id = table.Column<ulong>(type: "bigint unsigned", nullable: false)
@@ -37,24 +38,29 @@ namespace MADS.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_users", x => x.id);
+                    table.PrimaryKey("PK_Users", x => x.id);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "guilds",
+                name: "Guilds",
                 columns: table => new
                 {
-                    Id = table.Column<ulong>(type: "bigint unsigned", nullable: false)
+                    id = table.Column<ulong>(type: "bigint unsigned", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    discordId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
+                    prefix = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ConfigId = table.Column<ulong>(type: "bigint unsigned", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_guilds", x => x.Id);
+                    table.PrimaryKey("PK_Guilds", x => x.id);
                     table.ForeignKey(
-                        name: "FK_guilds_GuildConfigs_Id",
-                        column: x => x.Id,
+                        name: "FK_Guilds_GuildConfigs_ConfigId",
+                        column: x => x.ConfigId,
                         principalTable: "GuildConfigs",
-                        principalColumn: "guild_id",
+                        principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
@@ -63,24 +69,26 @@ namespace MADS.Migrations
                 name: "GuildUsers",
                 columns: table => new
                 {
-                    UserId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    GuildId = table.Column<ulong>(type: "bigint unsigned", nullable: false)
+                    id = table.Column<ulong>(type: "bigint unsigned", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    discordId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
+                    guildId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
+                    UserId = table.Column<ulong>(type: "bigint unsigned", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_GuildUsers", x => x.UserId);
+                    table.PrimaryKey("PK_GuildUsers", x => x.id);
                     table.ForeignKey(
-                        name: "FK_GuildUsers_guilds_GuildId",
-                        column: x => x.GuildId,
-                        principalTable: "guilds",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_GuildUsers_users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "users",
+                        name: "FK_GuildUsers_Guilds_guildId",
+                        column: x => x.guildId,
+                        principalTable: "Guilds",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_GuildUsers_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "id");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -100,23 +108,33 @@ namespace MADS.Migrations
                 {
                     table.PrimaryKey("PK_Incidents", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Incidents_guilds_Id",
+                        name: "FK_Incidents_Guilds_Id",
                         column: x => x.Id,
-                        principalTable: "guilds",
-                        principalColumn: "Id",
+                        principalTable: "Guilds",
+                        principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Incidents_users_TargetUserId",
+                        name: "FK_Incidents_Users_TargetUserId",
                         column: x => x.TargetUserId,
-                        principalTable: "users",
+                        principalTable: "Users",
                         principalColumn: "id");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateIndex(
-                name: "IX_GuildUsers_GuildId",
+                name: "IX_Guilds_ConfigId",
+                table: "Guilds",
+                column: "ConfigId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_GuildUsers_guildId",
                 table: "GuildUsers",
-                column: "GuildId");
+                column: "guildId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_GuildUsers_UserId",
+                table: "GuildUsers",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Incidents_TargetUserId",
@@ -133,10 +151,10 @@ namespace MADS.Migrations
                 name: "Incidents");
 
             migrationBuilder.DropTable(
-                name: "guilds");
+                name: "Guilds");
 
             migrationBuilder.DropTable(
-                name: "users");
+                name: "Users");
 
             migrationBuilder.DropTable(
                 name: "GuildConfigs");

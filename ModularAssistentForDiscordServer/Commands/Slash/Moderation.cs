@@ -1,20 +1,21 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
+using MADS.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace MADS.Commands.Slash;
 
 [SlashCommandGroup("Moderation", "Commands to moderate a guild"), GuildOnly]
-internal class ModerationSlashCommands : ApplicationCommandModule
+public class ModerationSlashCommands : ApplicationCommandModule
 {
+    public IDbContextFactory<MadsContext> DbFactory { get; set; }
+    
     [SlashCommand("test", "test smth")]
     public async Task TestCommand(InteractionContext ctx)
     {
-        var tmp = await ctx.Client.GetGlobalApplicationCommandsAsync();
-        foreach (var cmd in tmp)
-        {
-            await ctx.Client.DeleteGlobalApplicationCommandAsync(cmd.Id);
-        }
+        var dbcontext = DbFactory.CreateDbContext();
+        var tmp = dbcontext.Guilds.First(x => x.Id == 0);
 
         var discordEmbed = new DiscordEmbedBuilder
         {

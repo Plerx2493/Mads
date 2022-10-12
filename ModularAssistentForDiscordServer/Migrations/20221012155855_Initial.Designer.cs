@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MADS.Migrations
 {
     [DbContext(typeof(MadsContext))]
-    [Migration("20220926155832_Initial")]
+    [Migration("20221012155855_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -23,16 +23,20 @@ namespace MADS.Migrations
 
             modelBuilder.Entity("MADS.Entities.GuildConfigDbEntity", b =>
                 {
-                    b.Property<ulong>("GuildId")
+                    b.Property<ulong>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint unsigned")
-                        .HasColumnName("guild_id");
+                        .HasColumnName("id");
+
+                    b.Property<ulong>("DiscordGuildId")
+                        .HasColumnType("bigint unsigned")
+                        .HasColumnName("discordId");
 
                     b.Property<string>("Prefix")
                         .HasColumnType("longtext")
                         .HasColumnName("prefix");
 
-                    b.HasKey("GuildId");
+                    b.HasKey("Id");
 
                     b.ToTable("GuildConfigs");
                 });
@@ -40,25 +44,52 @@ namespace MADS.Migrations
             modelBuilder.Entity("MADS.Entities.GuildDbEntity", b =>
                 {
                     b.Property<ulong>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("bigint unsigned")
-                        .HasColumnName("Id");
+                        .HasColumnName("id");
+
+                    b.Property<ulong>("ConfigId")
+                        .HasColumnType("bigint unsigned");
+
+                    b.Property<ulong>("DiscordId")
+                        .HasColumnType("bigint unsigned")
+                        .HasColumnName("discordId");
+
+                    b.Property<string>("Prefix")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("prefix");
 
                     b.HasKey("Id");
 
-                    b.ToTable("guilds");
+                    b.HasIndex("ConfigId");
+
+                    b.ToTable("Guilds");
                 });
 
             modelBuilder.Entity("MADS.Entities.GuildUserDbEntity", b =>
                 {
-                    b.Property<ulong>("UserId")
-                        .HasColumnType("bigint unsigned");
+                    b.Property<ulong>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint unsigned")
+                        .HasColumnName("id");
+
+                    b.Property<ulong>("DiscordId")
+                        .HasColumnType("bigint unsigned")
+                        .HasColumnName("discordId");
 
                     b.Property<ulong>("GuildId")
+                        .HasColumnType("bigint unsigned")
+                        .HasColumnName("guildId");
+
+                    b.Property<ulong?>("UserId")
                         .HasColumnType("bigint unsigned");
 
-                    b.HasKey("UserId");
+                    b.HasKey("Id");
 
                     b.HasIndex("GuildId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("GuildUsers");
                 });
@@ -102,14 +133,14 @@ namespace MADS.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("users");
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("MADS.Entities.GuildDbEntity", b =>
                 {
                     b.HasOne("MADS.Entities.GuildConfigDbEntity", "Config")
-                        .WithOne("Guild")
-                        .HasForeignKey("MADS.Entities.GuildDbEntity", "Id")
+                        .WithMany()
+                        .HasForeignKey("ConfigId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -126,9 +157,7 @@ namespace MADS.Migrations
 
                     b.HasOne("MADS.Entities.UserDbEntity", "User")
                         .WithMany("Guilds")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserId");
 
                     b.Navigation("Guild");
 
@@ -150,11 +179,6 @@ namespace MADS.Migrations
                     b.Navigation("Guild");
 
                     b.Navigation("TargetUser");
-                });
-
-            modelBuilder.Entity("MADS.Entities.GuildConfigDbEntity", b =>
-                {
-                    b.Navigation("Guild");
                 });
 
             modelBuilder.Entity("MADS.Entities.GuildDbEntity", b =>

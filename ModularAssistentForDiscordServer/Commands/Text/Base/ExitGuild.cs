@@ -16,6 +16,7 @@ public class ExitGuild : BaseCommandModule
     [Command("leave"), Description("Leave given server"), RequireGuild, Hidden, RequireOwner]
     public static async Task LeaveGuildOwner(CommandContext ctx)
     {
+        await ctx.Message.DeleteAsync();
         await ctx.Guild.LeaveAsync();
     }
 }

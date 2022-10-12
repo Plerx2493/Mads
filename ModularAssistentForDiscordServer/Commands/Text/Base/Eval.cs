@@ -94,12 +94,12 @@ public class TestVariables
         Context = ctx;
     }
 
-    public DiscordMessage    Message { get; set; }
-    public DiscordChannel    Channel { get; set; }
-    public DiscordGuild      Guild   { get; set; }
-    public DiscordUser       User    { get; set; }
-    public DiscordMember     Member  { get; set; }
-    public CommandContext    Context { get; set; }
-    public DiscordClient     Client  { get; set; }
-    public ModularDiscordBot Mdb     { get; set; }
+    public DiscordMessage Message { get; set; }
+    public DiscordChannel Channel { get; set; }
+    public DiscordGuild Guild { get; set; }
+    public DiscordUser User { get; set; }
+    public DiscordMember Member { get; set; }
+    public CommandContext Context { get; set; }
+    public DiscordClient Client { get; set; }
+    public ModularDiscordBot Mdb { get; set; }
 }

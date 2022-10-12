@@ -20,16 +20,16 @@ internal static class MainProgram
             modularDiscordBot.Logging.LogToOwner(string.Concat("**", e.GetType().ToString(), "**: ", e.Message),
                 "core", LogLevel.Critical);
         }
-        
+
         Main();
     }
-    
+
     public class MadsContextFactory : IDesignTimeDbContextFactory<MadsContext>
     {
         public MadsContext CreateDbContext(string[] args)
         {
             var optionsBuilder = new DbContextOptionsBuilder<MadsContext>();
-            var connectionString = DataProvider.GetConfig().ConnectionString;   //;
+            var connectionString = DataProvider.GetConfig().ConnectionString;
             optionsBuilder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
 
             return new MadsContext(optionsBuilder.Options);

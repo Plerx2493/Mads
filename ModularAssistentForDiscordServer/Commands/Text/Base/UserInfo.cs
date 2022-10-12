@@ -11,8 +11,8 @@ namespace MADS.Commands.Text.Base;
 
 public class UserInfo : BaseCommandModule
 {
-    public        MadsServiceProvider            CommandService { get; set; }
-    public        IDbContextFactory<MadsContext> DbFactory      { get; set; }
+    public MadsServiceProvider CommandService { get; set; }
+    public IDbContextFactory<MadsContext> DbFactory { get; set; }
 
     [Command("user"), Aliases("userinfo", "stalking")]
     public async Task GetUserInfo(CommandContext ctx, DiscordUser user = null)

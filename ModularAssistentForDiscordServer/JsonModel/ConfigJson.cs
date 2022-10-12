@@ -15,5 +15,5 @@ internal struct ConfigJson
     public LogLevel LogLevel { get; set; }
 
     [JsonProperty("databaseConnectionString")]
-    public string ConnectionString{ get; set; }
+    public string ConnectionString { get; set; }
 }

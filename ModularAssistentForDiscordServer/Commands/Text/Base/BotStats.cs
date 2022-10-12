@@ -12,8 +12,8 @@ namespace MADS.Commands.Text.Base;
 
 public class BotStats : BaseCommandModule
 {
-    public MadsServiceProvider            CommandService { get; set; }
-    public IDbContextFactory<MadsContext> DbFactory      { get; set; }
+    public MadsServiceProvider CommandService { get; set; }
+    public IDbContextFactory<MadsContext> DbFactory { get; set; }
 
     [Command("botstats"), Aliases("bs", "stats"), Description("Get statistics about Mads")]
     public async Task GetBotStatsAsync(CommandContext ctx)

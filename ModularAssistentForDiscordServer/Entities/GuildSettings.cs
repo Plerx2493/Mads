@@ -12,7 +12,7 @@ public struct GuildSettings
         AuditChannel = 0;
         AuditLogs = false;
     }
-    
+
     public string Prefix { get; set; }
     public LogLevel LogLevel { get; set; }
     public List<string> AktivModules { get; set; }

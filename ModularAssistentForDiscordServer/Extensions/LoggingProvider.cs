@@ -10,21 +10,19 @@ namespace MADS.Extensions;
 public class LoggingProvider
 {
     //Utilities
-    private readonly string                 _dirPath = DataProvider.GetPath("Logs");
-    private readonly string                 _logPath;
-    private readonly ModularDiscordBot      _modularDiscordBot;
+    private readonly string _dirPath = DataProvider.GetPath("Logs");
+    private readonly string _logPath;
+    private readonly ModularDiscordBot _modularDiscordBot;
     private readonly List<DiscordDmChannel> _ownerChannel = new();
-
-    private readonly DateTime _startDate;
 
     internal LoggingProvider(ModularDiscordBot dBot)
     {
-        _startDate = DateTime.Now;
+        var startDate = DateTime.Now;
         _modularDiscordBot = dBot;
         Directory.CreateDirectory(_dirPath);
 
         _logPath = DataProvider.GetPath("Logs",
-            $"{_startDate.Day}-{_startDate.Month}-{_startDate.Year}_{_startDate.Hour}-{_startDate.Minute}-{_startDate.Second}.log");
+            $"{startDate.Day}-{startDate.Month}-{startDate.Year}_{startDate.Hour}-{startDate.Minute}-{startDate.Second}.log");
         File.AppendAllTextAsync(_logPath, "========== LOG START ==========\n\n", Encoding.UTF8);
     }
 

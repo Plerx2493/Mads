@@ -23,16 +23,16 @@ namespace MADS;
 
 public class ModularDiscordBot
 {
-    public DiscordClient   DiscordClient;
+    public DiscordClient DiscordClient;
     public LoggingProvider Logging;
-    public DateTime        StartTime;
+    public DateTime StartTime;
 
     private IDbContextFactory<MadsContext> _dbFactory;
-    private ConfigJson                     _config;
-    private ServiceProvider                _services;
-    private SlashCommandsExtension         _slashCommandsExtension;
-    private CommandsNextExtension          _commandsNextExtension;
-    private InteractivityExtension         _interactivityExtension;
+    private ConfigJson _config;
+    private ServiceProvider _services;
+    private SlashCommandsExtension _slashCommandsExtension;
+    private CommandsNextExtension _commandsNextExtension;
+    private InteractivityExtension _interactivityExtension;
 
 
     public ModularDiscordBot()
@@ -50,7 +50,7 @@ public class ModularDiscordBot
         }
 
         _config = DataProvider.GetConfig();
-        
+
         DiscordConfiguration discordConfig = new()
         {
             Token = _config.Token,
@@ -62,7 +62,7 @@ public class ModularDiscordBot
 
         DiscordClient = new DiscordClient(discordConfig);
         var connectionString = DataProvider.GetConfig().ConnectionString;
-        
+
         _services = new ServiceCollection()
                    .AddSingleton(new MadsServiceProvider(this))
                    .AddDbContextFactory<MadsContext>(options =>
@@ -70,7 +70,7 @@ public class ModularDiscordBot
                    .BuildServiceProvider();
 
         _dbFactory = _services.GetService<IDbContextFactory<MadsContext>>();
-        
+
         RegisterDSharpExtensions();
 
         await EnableGuildConfigs();
@@ -82,9 +82,9 @@ public class ModularDiscordBot
         DiscordActivity act = new(_config.Prefix + "help", ActivityType.Watching);
 
         var dbContext = await _dbFactory!.CreateDbContextAsync();
-        
-        Console.WriteLine(dbContext.Guilds.Any());
-        
+
+        Console.WriteLine(dbContext.Guilds.ToList().Any());
+
         //connect client
         await DiscordClient.ConnectAsync(act, UserStatus.Online);
         //keep alive
@@ -107,23 +107,24 @@ public class ModularDiscordBot
         var dbContext = await _dbFactory.CreateDbContextAsync();
         var defaultGuild = new GuildDbEntity()
         {
-            Id = 0,
-            Prefix = "!",
+            Prefix = "!!",
+            DiscordId = 0,
             Incidents = new List<IncidentDbEntity>(),
             Users = new List<GuildUserDbEntity>()
         };
-        
+
         defaultGuild.Config = new GuildConfigDbEntity()
         {
-            Guild = defaultGuild,
-            GuildId = defaultGuild.Id,
-            Prefix = "!"
+            DiscordGuildId = defaultGuild.Id,
+            Prefix = "!!"
         };
-        
+
         await dbContext.Guilds.Upsert(defaultGuild)
-                       .NoUpdate()
+                       .On(x => x.DiscordId)
                        .RunAsync();
-        
+                       
+        //dbContext.Guilds.Add(defaultGuild);
+
         await dbContext.SaveChangesAsync();
         Console.WriteLine("Guild configs loaded");
     }
@@ -172,7 +173,7 @@ public class ModularDiscordBot
     private void RegisterDSharpExtensions()
     {
         var asm = Assembly.GetExecutingAssembly();
-        
+
         //CNext
         CommandsNextConfiguration cnextConfig = new()
         {
@@ -187,49 +188,55 @@ public class ModularDiscordBot
         _commandsNextExtension = DiscordClient.UseCommandsNext(cnextConfig);
         _commandsNextExtension.RegisterCommands(asm);
         _commandsNextExtension.CommandErrored += OnCNextErrored;
-        
+
         //Slashcommands
         SlashCommandsConfiguration slashConfig = new()
         {
             Services = _services
         };
         _slashCommandsExtension = DiscordClient.UseSlashCommands(slashConfig);
-        _slashCommandsExtension.RegisterCommands(asm);
+        _slashCommandsExtension.RegisterCommands(asm, 938120155974750288);
         _slashCommandsExtension.SlashCommandErrored += OnSlashCommandErrored;
 
         //Custom buttons
         ActionDiscordButton.EnableButtonListener(DiscordClient);
-        
+
         //Interactivity
         InteractivityConfiguration interactivityConfig = new()
         {
             PollBehaviour = PollBehaviour.KeepEmojis,
-            Timeout = TimeSpan.FromSeconds(60)
+            Timeout = TimeSpan.FromSeconds(600),
+            ButtonBehavior = ButtonPaginationBehavior.DeleteButtons,
+            PaginationBehaviour = PaginationBehaviour.Ignore,
+            AckPaginationButtons = true,
+            ResponseBehavior = InteractionResponseBehavior.Ignore,
+            ResponseMessage = "invalid interaction",
+            PaginationDeletion = PaginationDeletion.DeleteEmojis
         };
         _interactivityExtension = DiscordClient.UseInteractivity(interactivityConfig);
-        
+
     }
 
     private async Task OnSlashCommandErrored(SlashCommandsExtension sender, SlashCommandErrorEventArgs e)
     {
         var typeOfException = e.Exception.GetType();
-        if (typeOfException == typeof(SlashExecutionChecksFailedException)
-            || typeOfException == typeof(ArgumentException))
+        if (typeOfException == typeof(ArgumentException)
+            || typeOfException == typeof(SlashExecutionChecksFailedException))
         {
             return;
         }
 
         DiscordEmbedBuilder discordEmbed = new()
         {
-            Title = "Error",
-            Description = "The command execution failed",
+            Title = $"{Formatter.Bold("Error")} - The command execution failed",
+            Description = (e.Exception.Message + ":\n" + e.Exception.StackTrace).Take(4096).ToString(),
             Color = DiscordColor.Red,
             Timestamp = DateTime.Now
         };
-        discordEmbed.AddField("Exception:", e.Exception.Message + "\n" + e.Exception.StackTrace);
+        
 
         await e.Context.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
-            new DiscordInteractionResponseBuilder().AddEmbed(discordEmbed));
+            new DiscordInteractionResponseBuilder().AddEmbed(discordEmbed).AsEphemeral());
     }
 
     private async Task OnCNextErrored(CommandsNextExtension sender, CommandErrorEventArgs e)
@@ -242,6 +249,14 @@ public class ModularDiscordBot
         }
 
         await e.Context.Message.RespondAsync($"OOPS your command just errored... \n {e.Exception.Message}");
+        await e.Context.Message.RespondAsync(e.Exception.InnerException?.Message ?? "no inner exception");
+        
+        var reallyLongString = e.Exception.StackTrace;
+
+        var interactivity = e.Context.Client.GetInteractivity();
+        var pages = interactivity.GeneratePagesInEmbed(reallyLongString);
+
+        await e.Context.Channel.SendPaginatedMessageAsync(e.Context.Member, pages, PaginationBehaviour.Ignore, ButtonPaginationBehavior.DeleteButtons);
     }
 
     private async Task OnZombied(DiscordClient sender, ZombiedEventArgs e)
@@ -258,12 +273,11 @@ public class ModularDiscordBot
     {
         var response = await ctx.Channel.SendMessageAsync(message);
 
-        if (!ctx.Channel.IsPrivate)
-        {
-            await Task.Delay(secondsToDelete * 1000);
-            await response.DeleteAsync();
-            await ctx.Message.DeleteAsync();
-        }
+        if (ctx.Channel.IsPrivate) return response;
+        
+        await Task.Delay(secondsToDelete * 1000);
+        await response.DeleteAsync();
+        await ctx.Message.DeleteAsync();
 
         return response;
     }
@@ -271,17 +285,19 @@ public class ModularDiscordBot
     private Task<int> GetPrefixPositionAsync(DiscordMessage msg)
     {
         var dbContext = _dbFactory.CreateDbContext();
-        var guildSettings = new GuildDbEntity();
-        
+        var guildSettings = new GuildDbEntity(){ Prefix = "!", Id = 0};
+
         if (msg.Channel.Guild is not null)
         {
             guildSettings = dbContext.Guilds.FirstOrDefault(x => x.Id == msg.Channel.GuildId) ?? guildSettings;
         }
         else
         {
-            guildSettings = dbContext.Guilds.FirstOrDefault(x => x.Id == 0) ?? guildSettings;
+            guildSettings = dbContext.Guilds.FirstOrDefault(x => x.Id == 1) ?? guildSettings;
         }
-
+        
+        dbContext.Dispose();
+        
         return Task.FromResult(msg.GetStringPrefixLength(guildSettings.Prefix));
     }
 }

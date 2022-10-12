@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MADS.Entities;
@@ -6,30 +7,37 @@ namespace MADS.Entities;
 public class GuildConfigDbEntity
 {
     [Key]
-    [Column("guild_id")]
-    public ulong GuildId { get;set; }
+    [Column("id")]
+    [DefaultValue(0)]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public ulong Id { get; init; }
+    
+    /// <summary>
+    /// Snowflake id of the guild the config is related to
+    /// </summary>
+    [Required]
+    [Column("discordId")]
+    public ulong DiscordGuildId { get; set; }
     
     [Column("prefix")]
     public string Prefix { get; set; }
     
     
-    public GuildDbEntity Guild { get; set; }
-
     public GuildConfigDbEntity(ulong guildId, string prefix, GuildDbEntity guild)
     {
-        GuildId = guildId;
+        DiscordGuildId = guildId;
         Prefix = prefix;
-        Guild = guild;
     }
-
+    
     public GuildConfigDbEntity(GuildConfigDbEntity old)
     {
-        GuildId = old.GuildId;
+        DiscordGuildId = old.DiscordGuildId;
         Prefix = old.Prefix;
-        Guild = old.Guild;
     }
-
+    
     public GuildConfigDbEntity()
     {
+        DiscordGuildId = 0;
+        Prefix = "!";
     }
-}           
+}
