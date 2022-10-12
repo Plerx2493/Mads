@@ -10,18 +10,18 @@ internal static class MainProgram
 {
     public static void Main()
     {
-        ModularDiscordBot modularDiscordBot = new();
-        modularDiscordBot.RunAsync().GetAwaiter().GetResult();
-        try
+        while (true)
         {
+            ModularDiscordBot modularDiscordBot = new();
+            modularDiscordBot.RunAsync().GetAwaiter().GetResult();
+            try
+            {
+            }
+            catch (Exception e)
+            {
+                modularDiscordBot.Logging.LogToOwner(string.Concat("**", e.GetType().ToString(), "**: ", e.Message), "core", LogLevel.Critical);
+            }
         }
-        catch (Exception e)
-        {
-            modularDiscordBot.Logging.LogToOwner(string.Concat("**", e.GetType().ToString(), "**: ", e.Message),
-                "core", LogLevel.Critical);
-        }
-
-        Main();
     }
 
     public class MadsContextFactory : IDesignTimeDbContextFactory<MadsContext>

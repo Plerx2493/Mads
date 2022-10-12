@@ -287,7 +287,7 @@ public class ModularDiscordBot
         var dbContext = _dbFactory.CreateDbContext();
         var guildSettings = new GuildDbEntity(){ Prefix = "!", Id = 0};
 
-        if (msg.Channel.Guild is not null)
+        if (msg.Channel.Guild is not null && dbContext.Guilds.Any())
         {
             guildSettings = dbContext.Guilds.FirstOrDefault(x => x.Id == msg.Channel.GuildId) ?? guildSettings;
         }

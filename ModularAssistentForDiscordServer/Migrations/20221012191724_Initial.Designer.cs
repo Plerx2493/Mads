@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MADS.Migrations
 {
     [DbContext(typeof(MadsContext))]
-    [Migration("20221012155855_Initial")]
+    [Migration("20221012191724_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -48,7 +48,7 @@ namespace MADS.Migrations
                         .HasColumnType("bigint unsigned")
                         .HasColumnName("id");
 
-                    b.Property<ulong>("ConfigId")
+                    b.Property<ulong?>("ConfigId")
                         .HasColumnType("bigint unsigned");
 
                     b.Property<ulong>("DiscordId")
@@ -140,9 +140,7 @@ namespace MADS.Migrations
                 {
                     b.HasOne("MADS.Entities.GuildConfigDbEntity", "Config")
                         .WithMany()
-                        .HasForeignKey("ConfigId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ConfigId");
 
                     b.Navigation("Config");
                 });

@@ -12,7 +12,7 @@ public class Jumppad : BaseCommandModule
     public async Task Test(CommandContext ctx, ulong originChannel, ulong targetChannel)
     {
         DiscordMessageBuilder message = new();
-        DiscordButtonComponent newButton = new(ButtonStyle.Success, "test", "Hüpf");
+        DiscordButtonComponent newButton = new(ButtonStyle.Success, "Placeholder", "Hüpf");
         var actionButton = ActionDiscordButton.Build(ActionDiscordButtonEnum.MoveVoiceChannel, newButton, originChannel,
             targetChannel);
 

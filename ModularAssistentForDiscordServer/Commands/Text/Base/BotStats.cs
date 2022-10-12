@@ -20,9 +20,9 @@ public class BotStats : BaseCommandModule
     {
         using var process = Process.GetCurrentProcess();
 
-        var members = CommandService.ModularDiscordBot.DiscordClient.Guilds.Values.Select(x => x.MemberCount).Sum();
-        var guilds = CommandService.ModularDiscordBot.DiscordClient.Guilds.Count;
-        var ping = CommandService.ModularDiscordBot.DiscordClient.Ping;
+        var members = ctx.Client.Guilds.Values.Select(x => x.MemberCount).Sum();
+        var guilds = ctx.Client.Guilds.Count;
+        var ping = ctx.Client.Ping;
         GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
         var heapMemory = $"{process.PrivateMemorySize64 / 1024 / 1024} MB";
 

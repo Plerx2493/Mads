@@ -51,7 +51,7 @@ namespace MADS.Migrations
                     discordId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
                     prefix = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    ConfigId = table.Column<ulong>(type: "bigint unsigned", nullable: false)
+                    ConfigId = table.Column<ulong>(type: "bigint unsigned", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -60,8 +60,7 @@ namespace MADS.Migrations
                         name: "FK_Guilds_GuildConfigs_ConfigId",
                         column: x => x.ConfigId,
                         principalTable: "GuildConfigs",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "id");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 

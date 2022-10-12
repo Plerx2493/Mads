@@ -46,7 +46,7 @@ namespace MADS.Migrations
                         .HasColumnType("bigint unsigned")
                         .HasColumnName("id");
 
-                    b.Property<ulong>("ConfigId")
+                    b.Property<ulong?>("ConfigId")
                         .HasColumnType("bigint unsigned");
 
                     b.Property<ulong>("DiscordId")
@@ -138,9 +138,7 @@ namespace MADS.Migrations
                 {
                     b.HasOne("MADS.Entities.GuildConfigDbEntity", "Config")
                         .WithMany()
-                        .HasForeignKey("ConfigId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ConfigId");
 
                     b.Navigation("Config");
                 });

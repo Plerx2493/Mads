@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿#nullable enable
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -19,13 +20,12 @@ public class GuildDbEntity
     [Required]
     [Column("prefix")]
     public string Prefix { get; set; }
+    
+    public GuildConfigDbEntity? Config { get; set; }
 
-    [Required]
-    public GuildConfigDbEntity Config { get; set; }
+    public List<GuildUserDbEntity>? Users { get; set; }
 
-    public List<GuildUserDbEntity> Users { get; set; }
-
-    public List<IncidentDbEntity> Incidents { get; set; }
+    public List<IncidentDbEntity>? Incidents { get; set; }
 
     public GuildDbEntity()
     {
