@@ -3,6 +3,7 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
+using DSharpPlus.SlashCommands;
 using Microsoft.Extensions.Logging;
 
 namespace MADS.Extensions;
@@ -10,9 +11,9 @@ namespace MADS.Extensions;
 public class LoggingProvider
 {
     //Utilities
-    private readonly string _dirPath = DataProvider.GetPath("Logs");
-    private readonly string _logPath;
-    private readonly ModularDiscordBot _modularDiscordBot;
+    private readonly string                 _dirPath = DataProvider.GetPath("Logs");
+    private readonly string                 _logPath;
+    private readonly ModularDiscordBot      _modularDiscordBot;
     private readonly List<DiscordDmChannel> _ownerChannel = new();
 
     internal LoggingProvider(ModularDiscordBot dBot)
@@ -159,6 +160,18 @@ public class LoggingProvider
                 $"[{DateTime.Now:dd'.'MM'.'yyyy'-'HH':'mm':'ss}] [INFO] [{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [{commandName}] [{tmp}] {timespan} milliseconds to execute";
             await File.AppendAllTextAsync(_logPath, logEntry + "\n", Encoding.UTF8);
         }
+    }
+
+    public async Task LogCommandExecutionAsync(InteractionContext ctx, DiscordMessage response)
+    {
+        var triggerTime = ctx.Interaction.CreationTimestamp.DateTime;
+        var executionTime = response.Timestamp.DateTime;
+        var timespan = (executionTime - triggerTime).TotalMilliseconds;
+        var commandName = ctx.CommandName;
+   
+        var logEntry =
+            $"[{DateTime.Now:dd'.'MM'.'yyyy'-'HH':'mm':'ss}] [INFO] [{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [{commandName}] {timespan} milliseconds to execute";
+        await File.AppendAllTextAsync(_logPath, logEntry + "\n", Encoding.UTF8);
     }
 
     public async Task<List<DiscordMessage>> LogToOwner(string message, string sender, LogLevel logLevel)

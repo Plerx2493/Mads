@@ -15,16 +15,21 @@ public class Prefix : BaseCommandModule
     public async Task GetPrefix(CommandContext ctx)
     {
         var dbContext = await DbFactory.CreateDbContextAsync();
-        GuildConfigDbEntity config;
-
-        if (dbContext.Guilds.Any(x => x.Id == ctx.Guild.Id))
+        GuildConfigDbEntity config = new();
+        
+        if (dbContext.Guilds.Any())
         {
-            config = dbContext.Guilds.First(x => x.Id == ctx.Guild.Id).Config;
+            if (dbContext.Guilds.Any(x => x.Id == ctx.Guild.Id))
+            {
+                config = dbContext.Guilds.First(x => x.Id == ctx.Guild.Id).Config ?? config;
+            }
+            else
+            {
+                config = dbContext.Guilds.First(x => x.Id == 0).Config ?? config;
+            }
         }
-        else
-        {
-            config = dbContext.Guilds.First(x => x.Id == 0).Config;
-        }
+        
+        
 
         await ctx.RespondAsync("Current prefix is: `" + config.Prefix + "`");
 

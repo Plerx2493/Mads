@@ -1,24 +1,19 @@
 ﻿using DSharpPlus;
-using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using DSharpPlus.SlashCommands;
 using Humanizer;
-using MADS.Entities;
-using Microsoft.EntityFrameworkCore;
 
-namespace MADS.Commands.Text.Base;
+namespace MADS.Commands.Slash;
 
-public class About : BaseCommandModule
+public class About : ApplicationCommandModule
 {
-    public MadsServiceProvider CommandService { get; set; }
-    public IDbContextFactory<MadsContext> DbFactory { get; set; }
+   public MadsServiceProvider            CommandService { get; set; }
 
-    [Command("about"), Aliases("info"), Description("Displays a little information about this bot"),
-     Cooldown(1, 30, CooldownBucketType.Channel)]
-    public async Task AboutCommand(CommandContext ctx)
+   [SlashCommand("about", "Infos about the bot")]
+    public async Task AboutCommand(InteractionContext ctx)
     {
         var discordEmbedBuilder = CommandUtility.GetDiscordEmbed();
-        var discordMessageBuilder = new DiscordMessageBuilder();
+        var discordMessageBuilder = new DiscordInteractionResponseBuilder();
         var inviteUri = ctx.Client.CurrentApplication.GenerateOAuthUri(null, Permissions.Administrator, OAuthScope.Bot,
             OAuthScope.ApplicationsCommands);
         var addMe = $"[Click here!]({inviteUri.Replace(" ", "%20")})";
@@ -44,7 +39,8 @@ public class About : BaseCommandModule
         discordMessageBuilder.AddComponents(new DiscordButtonComponent(ButtonStyle.Success, "feedback-button",
             "Feedback"));
 
-        var response = await ctx.RespondAsync(discordMessageBuilder);
+        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, discordMessageBuilder);
+        var response = await ctx.GetOriginalResponseAsync();
         await CommandService.ModularDiscordBot.Logging.LogCommandExecutionAsync(ctx, response);
-    }
+    } 
 }

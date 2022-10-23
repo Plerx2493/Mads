@@ -23,7 +23,7 @@ public class GuildConfigDbEntity
     public string Prefix { get; set; }
     
     
-    public GuildConfigDbEntity(ulong guildId, string prefix, GuildDbEntity guild)
+    public GuildConfigDbEntity(ulong guildId, string prefix)
     {
         DiscordGuildId = guildId;
         Prefix = prefix;

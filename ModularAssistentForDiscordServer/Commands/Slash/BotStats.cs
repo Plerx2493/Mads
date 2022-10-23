@@ -1,22 +1,15 @@
 ﻿using System.Diagnostics;
-using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using DSharpPlus.SlashCommands;
 using Humanizer;
 using Humanizer.Localisation;
-using MADS.Entities;
-using Microsoft.EntityFrameworkCore;
 
+namespace MADS.Commands.Slash;
 
-namespace MADS.Commands.Text.Base;
-
-public class BotStats : BaseCommandModule
+public class BotStats : ApplicationCommandModule
 {
-    public MadsServiceProvider CommandService { get; set; }
-    public IDbContextFactory<MadsContext> DbFactory { get; set; }
-
-    [Command("botstats"), Aliases("bs", "stats"), Description("Get statistics about Mads")]
-    public async Task GetBotStatsAsync(CommandContext ctx)
+    [SlashCommand("botstats", "Get statistics about the bot")]
+    public async Task GetBotStatsAsync(InteractionContext ctx)
     {
         using var process = Process.GetCurrentProcess();
 
@@ -39,6 +32,6 @@ public class BotStats : BaseCommandModule
                 $"{DateTimeOffset.UtcNow.Subtract(process.StartTime).Humanize(2, minUnit: TimeUnit.Millisecond, maxUnit: TimeUnit.Day)}",
                 true);
 
-        await ctx.RespondAsync(embed);
+        await ctx.CreateResponseAsync(embed, true);
     }
 }
