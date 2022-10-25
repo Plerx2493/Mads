@@ -159,7 +159,7 @@ public class ModularDiscordBot
             LogLevel = LogLevel.Debug,
         };
         JsonProvider.ParseJson(configPath, newConfig);
-
+    
         Console.WriteLine("Please insert your token in the config file and restart");
         Console.WriteLine("Filepath: " + configPath);
         Console.WriteLine("Press key to continue");
