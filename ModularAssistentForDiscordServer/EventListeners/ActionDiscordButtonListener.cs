@@ -12,7 +12,9 @@ public static partial class EventListener
     {
         client.ComponentInteractionCreated += async (_, e) =>
         {
-            if (!Regex.IsMatch(e.Id, @"^CMD:\d{4}(?::\d{1,20}){0,3}$"))
+            Console.WriteLine(e.Id);
+            
+            if (!Regex.IsMatch(e.Id, @"^CMD:\d{1,4}(?::\d{1,20}){0,3}$"))
             {
                 return;
             }
@@ -51,12 +53,16 @@ public static partial class EventListener
                     MoveVoiceChannelUser(e, substring);
                     break;
             }
+            
+            Console.WriteLine("CommandButton triggered");
         };
     }
     
     private static async void MoveVoiceChannelUser(ComponentInteractionCreateEventArgs e,
         IReadOnlyList<string> substring)
     {
+        Console.WriteLine("CommandButton triggered");
+        
         var member = await e.Guild.GetMemberAsync(e.User.Id);
         if (!member.Permissions.HasPermission(Permissions.MoveMembers)) { return; }
         var originChannel = e.Guild.GetChannel(ulong.Parse(substring[1]));
@@ -66,6 +72,9 @@ public static partial class EventListener
         {
             await targetChannel.PlaceMemberAsync(voiceMember);
         }
+        
+        Console.WriteLine("Test");
+        
         await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource);
     }
 

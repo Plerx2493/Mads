@@ -4,7 +4,7 @@ namespace MADS.Commands.Slash;
 
 public class Ping : ApplicationCommandModule
 {
-    private MadsServiceProvider CommandService { get; set; }
+    public MadsServiceProvider CommandService { get; set; }
     
     [SlashCommand("ping", "Get the bot's ping")]
     public async Task PingCommand(InteractionContext ctx)
@@ -19,9 +19,12 @@ public class Ping : ApplicationCommandModule
             .AddField("Uptime", date)
             .AddField("Websocket ping", $"{ctx.Client.Ping} ms");
 
-        await ctx.CreateResponseAsync(discordEmbedBuilder);
+        await ctx.CreateResponseAsync(discordEmbedBuilder, true);
 
         var response = await ctx.GetOriginalResponseAsync();
         await CommandService.ModularDiscordBot.Logging.LogCommandExecutionAsync(ctx, response);
+        await Task.Delay(10_000);
+        
+        await ctx.DeleteResponseAsync();
     }
 }

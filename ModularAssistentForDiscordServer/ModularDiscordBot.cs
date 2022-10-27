@@ -84,7 +84,16 @@ public class ModularDiscordBot
         Console.WriteLine(dbContext.Guilds.ToList().Any());
 
         //connect client
-        await DiscordClient.ConnectAsync(act, UserStatus.Online);
+        try
+        {
+            await DiscordClient.ConnectAsync(act, UserStatus.Online);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+        
         //keep alive
         await Task.Delay(-1);
         //

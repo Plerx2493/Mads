@@ -12,7 +12,7 @@ public class Jumppad : ApplicationCommandModule
     public async Task Test(InteractionContext ctx,
         [Option("originChannel", "Channel where the users will be moved out"), ChannelTypes(ChannelType.Voice)] 
         DiscordChannel originChannel,
-        [Option("originChannel", "Channel where the users will be put in"), ChannelTypes(ChannelType.Voice)]
+        [Option("targetChannel", "Channel where the users will be put in"), ChannelTypes(ChannelType.Voice)]
         DiscordChannel targetChannel
         )
     {
