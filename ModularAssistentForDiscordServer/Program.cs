@@ -10,16 +10,24 @@ internal static class MainProgram
 {
     public static void Main()
     {
-        while (true)
+        var cancellationSource = new CancellationTokenSource();
+        Console.CancelKeyPress += (sender, args) =>
+        {
+            args.Cancel = true;
+            cancellationSource.Cancel();
+        };
+        
+        while (!cancellationSource.IsCancellationRequested)
         {
             ModularDiscordBot modularDiscordBot = new();
-            modularDiscordBot.RunAsync().GetAwaiter().GetResult();
+            
             try
             {
+                modularDiscordBot.RunAsync(cancellationSource.Token).GetAwaiter().GetResult();
             }
             catch (Exception e)
             {
-                modularDiscordBot.Logging.LogToOwner(string.Concat("**", e.GetType().ToString(), "**: ", e.Message), "core", LogLevel.Critical);
+                //modularDiscordBot.Logging.LogToOwner(string.Concat("**", e.GetType().ToString(), "**: ", e.Message), "core", LogLevel.Critical);
             }
         }
     }

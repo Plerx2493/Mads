@@ -39,12 +39,12 @@ public class ModularDiscordBot
         Logging = new LoggingProvider(this);
     }
 
-    public async Task RunAsync()
+    public async Task<bool> RunAsync(CancellationToken token)
     {
         if (!ValidateConfig())
         {
             CreateConfig();
-            return;
+            return false;
         }
 
         _config = DataProvider.GetConfig();
@@ -95,10 +95,11 @@ public class ModularDiscordBot
         }
         
         //keep alive
-        await Task.Delay(-1);
+        await Task.Delay(-1, token);
         //
         //DEADZONE
         //
+        return true;
     }
 
     private Task OnGuildDownloadCompleted(DiscordClient sender, GuildDownloadCompletedEventArgs e)
@@ -249,6 +250,7 @@ public class ModularDiscordBot
 
     private Task<int> GetPrefixPositionAsync(DiscordMessage msg)
     {
+        return Task.FromResult(-1);
         var dbContext = _dbFactory.CreateDbContext();
         var guildSettings = new GuildDbEntity{ Prefix = "!", Id = 0};
 
