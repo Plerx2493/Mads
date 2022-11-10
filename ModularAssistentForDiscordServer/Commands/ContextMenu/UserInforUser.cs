@@ -1,22 +1,26 @@
-﻿using DSharpPlus;
-using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Attributes;
-using DSharpPlus.Entities;
-using DSharpPlus.Exceptions;
+﻿using DSharpPlus.Exceptions;
+using DSharpPlus.SlashCommands;
 using Humanizer;
-using MADS.Entities;
+
+namespace MADS.Commands.ContextMenu;
+using DSharpPlus;
+using DSharpPlus.Entities;
+using Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace MADS.Commands.Text.Base;
-
-public class UserInfo : BaseCommandModule
+public class UserInforUser : ApplicationCommandModule
 {
     public MadsServiceProvider CommandService { get; set; }
     public IDbContextFactory<MadsContext> DbFactory { get; set; }
 
-    [Command("user"), Aliases("userinfo", "stalking")]
-    public async Task GetUserInfo(CommandContext ctx, DiscordUser user = null)
+    [ContextMenu(ApplicationCommandType.UserContextMenu, "Info")]
+    public async Task GetUserInfo(ContextMenuContext ctx)
     {
+        
+        //await ctx.CreateResponseAsync("Test", true);
+        
+        var user = ctx.TargetUser;
+        
         DiscordMember member = null;
 
         user ??= ctx.User;
@@ -37,8 +41,10 @@ public class UserInfo : BaseCommandModule
 
         DiscordEmbedBuilder embed = new();
 
+        string userUrl = "https://discordapp.com/users/" + user.Id;
+        
         embed
-            .WithAuthor($"{user.Username}#{user.Discriminator}", null, user.AvatarUrl)
+            .WithAuthor($"{user.Username}#{user.Discriminator}", userUrl, user.AvatarUrl)
             .WithColor(new DiscordColor(0, 255, 194))
             .AddField("Creation:",
                 $"{user.CreationTimestamp.Humanize()} {Formatter.Timestamp(user.CreationTimestamp, TimestampFormat.ShortDate)}",
@@ -55,15 +61,19 @@ public class UserInfo : BaseCommandModule
                 embed.AddField("2FA:", member.MfaEnabled.ToString());
             }
 
-            embed
-                .AddField("Permissions:", member.Permissions.Humanize())
-                .AddField("Hierarchy:", member.Hierarchy.ToString(), true);
+            embed.AddField("Permissions:", member.Permissions.Humanize());
+
+            embed.AddField("Hierarchy:",
+                member.Hierarchy != int.MaxValue ? member.Hierarchy.ToString() : "Server owner", true);
+
+
             if (member.Roles.Any())
             {
                 embed.AddField("Roles", member.Roles.Select(x => x.Name).Humanize());
             }
         }
 
-        await ctx.RespondAsync(embed.Build());
+        await ctx.CreateResponseAsync(embed.Build(), true);
+
     }
 }

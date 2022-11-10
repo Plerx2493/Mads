@@ -11,7 +11,7 @@ internal static class MainProgram
     public static void Main()
     {
         var cancellationSource = new CancellationTokenSource();
-        Console.CancelKeyPress += (sender, args) =>
+        Console.CancelKeyPress += (_, args) =>
         {
             args.Cancel = true;
             cancellationSource.Cancel();
