@@ -7,7 +7,7 @@
         <Nullable>disable</Nullable>
         <StartupObject>MADS.MainProgram</StartupObject>
         <RootNamespace>MADS</RootNamespace>
-        <LangVersion>11</LangVersion>
+        <LangVersion>10</LangVersion>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
