@@ -24,8 +24,7 @@ public class ModularDiscordBot
     public DiscordClient DiscordClient;
     public LoggingProvider Logging;
     public DateTime StartTime;
-
-    private IDbContextFactory<MadsContext> _dbFactory;
+    
     private ConfigJson _config;
     private ServiceProvider _services;
     private SlashCommandsExtension _slashCommandsExtension;
@@ -39,15 +38,10 @@ public class ModularDiscordBot
         Logging = new LoggingProvider(this);
     }
 
-    public async Task<bool> RunAsync(CancellationToken token)
+    public async Task<bool> RunAsync(ConfigJson pConfig, CancellationToken token)
     {
-        if (!ValidateConfig())
-        {
-            CreateConfig();
-            return false;
-        }
-
-        _config = DataProvider.GetConfig();
+        
+        _config = pConfig;
 
         DiscordConfiguration discordConfig = new()
         {
@@ -59,29 +53,21 @@ public class ModularDiscordBot
         };
 
         DiscordClient = new DiscordClient(discordConfig);
-        var connectionString = DataProvider.GetConfig().ConnectionString;
 
         _services = new ServiceCollection()
-                   .AddSingleton(new MadsServiceProvider(this))
-                   .AddDbContextFactory<MadsContext>(options =>
-                       options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)))
-                   .BuildServiceProvider();
+                    .AddSingleton(new MadsServiceProvider(this))
+                    .BuildServiceProvider();
 
-        _dbFactory = _services.GetService<IDbContextFactory<MadsContext>>();
 
         RegisterDSharpExtensions();
 
-        await EnableGuildConfigs();
 
         DiscordClient.Ready += OnClientReady;
         DiscordClient.Zombied += OnZombied;
         DiscordClient.GuildDownloadCompleted += OnGuildDownloadCompleted;
 
         DiscordActivity act = new(_config.Prefix + "help", ActivityType.Watching);
-
-        var dbContext = await _dbFactory!.CreateDbContextAsync();
-
-        Console.WriteLine(dbContext.Guilds.ToList().Any());
+        
 
         //connect client
         try
@@ -106,74 +92,6 @@ public class ModularDiscordBot
     {
         Logging.Setup();
         return Task.CompletedTask;
-    }
-
-    private async Task EnableGuildConfigs()
-    {
-        Console.WriteLine("Loading guild configs");
-
-        var dbContext = await _dbFactory.CreateDbContextAsync();
-        var defaultGuild = new GuildDbEntity()
-        {
-            Prefix = "!!",
-            DiscordId = 0,
-            Incidents = new List<IncidentDbEntity>(),
-            Users = new List<GuildUserDbEntity>()
-        };
-
-        defaultGuild.Config = new GuildConfigDbEntity()
-        {
-            DiscordGuildId = defaultGuild.Id,
-            Prefix = "!!"
-        };
-
-        await dbContext.Guilds.Upsert(defaultGuild)
-                       .On(x => x.DiscordId)
-                       //.WhenMatched(x => defaultGuild)
-                       .RunAsync();
-                       
-        dbContext.Guilds.Add(defaultGuild);
-
-        await dbContext.SaveChangesAsync();
-        Console.WriteLine("Guild configs loaded");
-    }
-
-    private static bool ValidateConfig()
-    {
-        var configPath = DataProvider.GetPath("config.json");
-
-        if (!File.Exists(configPath)) { return false; }
-
-        var lConfig = DataProvider.GetConfig();
-
-        if (lConfig.Token is null or "" or "<Your Token here>") { return false; }
-        if (lConfig.Prefix is null or "") { lConfig.Prefix = "!"; }
-        if (lConfig.ConnectionString is null or "") return false;
-
-        DataProvider.SetConfig(lConfig);
-
-        return true;
-    }
-
-    private static void CreateConfig()
-    {
-        var configPath = DataProvider.GetPath("config.json");
-
-        var fileStream = File.Create(configPath);
-        fileStream.Close();
-
-        ConfigJson newConfig = new()
-        {
-            Token = "<Your Token here>",
-            Prefix = "!",
-            LogLevel = LogLevel.Debug,
-        };
-        JsonProvider.ParseJson(configPath, newConfig);
-    
-        Console.WriteLine("Please insert your token in the config file and restart");
-        Console.WriteLine("Filepath: " + configPath);
-        Console.WriteLine("Press key to continue");
-        Console.Read();
     }
 
     /// <summary>
@@ -251,22 +169,5 @@ public class ModularDiscordBot
     private Task<int> GetPrefixPositionAsync(DiscordMessage msg)
     {
         return Task.FromResult(-1);
-        var dbContext = _dbFactory.CreateDbContext();
-        var guildSettings = new GuildDbEntity{ Prefix = "!", Id = 0};
-
-        
-        if (msg.Channel.Guild is not null && dbContext.Guilds.Any())
-        {
-            guildSettings = dbContext.Guilds.FirstOrDefault(x => x.DiscordId == msg.Channel.GuildId) ?? guildSettings;
-        }
-        else
-        {
-            guildSettings = dbContext.Guilds.FirstOrDefault(x => x.DiscordId == 0) ?? guildSettings;
-        }
-        
-        
-        dbContext.Dispose();
-        
-        return Task.FromResult(msg.GetStringPrefixLength(guildSettings.Prefix));
     }
 }

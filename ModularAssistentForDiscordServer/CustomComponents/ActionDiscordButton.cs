@@ -1,7 +1,4 @@
-﻿using System.Text.RegularExpressions;
-using DSharpPlus;
-using DSharpPlus.Entities;
-using DSharpPlus.EventArgs;
+﻿using DSharpPlus.Entities;
 
 namespace MADS.CustomComponents;
 

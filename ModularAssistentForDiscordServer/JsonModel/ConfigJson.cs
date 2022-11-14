@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace MADS.JsonModel;
 
-internal struct ConfigJson
+public struct ConfigJson
 {
     [JsonProperty("token")]
     public string Token { get; set; }
@@ -13,7 +13,10 @@ internal struct ConfigJson
 
     [JsonProperty("minmumloglvl")]
     public LogLevel LogLevel { get; set; }
-
-    [JsonProperty("databaseConnectionString")]
-    public string ConnectionString { get; set; }
+    
+    //[JsonProperty("databaseConnectionString")]
+    //public string ConnectionString { get; set; }
+    
+    [JsonProperty("discordWebhook")]
+    public string DiscordWebhook { get; set; }
 }
