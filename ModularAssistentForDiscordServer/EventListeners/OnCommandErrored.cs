@@ -2,6 +2,7 @@
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.Entities;
+using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
@@ -27,10 +28,17 @@ public static partial class EventListener
             Color = DiscordColor.Red,
             Timestamp = DateTime.Now
         };
-        
 
-        await e.Context.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
-            new DiscordInteractionResponseBuilder().AddEmbed(discordEmbed).AsEphemeral());
+        try
+        {
+            await e.Context.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                new DiscordInteractionResponseBuilder().AddEmbed(discordEmbed).AsEphemeral());
+        }
+        catch(BadRequestException)
+        {
+            await e.Context.Channel.SendMessageAsync(discordEmbed);
+        }
+       
     }
 
     public static async Task OnCNextErrored(CommandsNextExtension sender, CommandErrorEventArgs e)
