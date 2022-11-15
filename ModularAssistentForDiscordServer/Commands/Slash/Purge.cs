@@ -16,24 +16,29 @@ public class Purge : ApplicationCommandModule
     {
         if (amount > 100)
         {
-            await ctx.CreateResponseAsync("You cannot purge more than 100 messages at once");
+            await ctx.CreateResponseAsync("You cannot purge more than 100 messages at once",true);
             return;
         }
         
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder());
-
+        var response = await ctx.GetOriginalResponseAsync();
+        
         var messagesApi = await ctx.Channel.GetMessagesAsync((int) amount);
         List<DiscordMessage> messages = new();
         messages.AddRange(messagesApi);
 
         messages.RemoveAll(x => (DateTime.UtcNow - x.Timestamp).TotalDays >= 14);
-
+        messages.Remove(response);
+        
         await ctx.Channel.DeleteMessagesAsync(messages);
-        //TODO Fix Enumerable Bug
-        await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Messages deleted"));
+        await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent($"{messages.Count} messages deleted"));
 
-        var response = await ctx.GetOriginalResponseAsync();
+        
+        
         await CommandService.ModularDiscordBot.Logging.LogCommandExecutionAsync(ctx, response);
+       
+        
+        
         await Task.Delay(10_000);
         
         await ctx.DeleteResponseAsync();

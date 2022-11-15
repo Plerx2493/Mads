@@ -8,7 +8,7 @@ using DSharpPlus.Entities;
 using Entities;
 using Microsoft.EntityFrameworkCore;
 
-public class UserInforUser : ApplicationCommandModule
+public class UserInfoUser : ApplicationCommandModule
 {
     public MadsServiceProvider CommandService { get; set; }
     public IDbContextFactory<MadsContext> DbFactory { get; set; }

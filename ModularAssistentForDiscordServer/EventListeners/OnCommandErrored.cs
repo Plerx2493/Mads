@@ -7,6 +7,7 @@ using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.EventArgs;
+using Humanizer;
 
 namespace MADS.EventListeners;
 
@@ -21,10 +22,12 @@ public static partial class EventListener
             return;
         }
 
+        var embedDescription = new string((e.Exception.Message + ":\n" + e.Exception.StackTrace).Take(4096).ToArray());
+        
         DiscordEmbedBuilder discordEmbed = new()
         {
-            Title = $"{Formatter.Bold("Error")} - The command execution failed",
-            Description = (e.Exception.Message + ":\n" + e.Exception.StackTrace).Take(4096).ToString(),
+            Title = $"{Formatter.Bold(e.Exception.GetType().ToString())} - The command execution failed",
+            Description = Formatter.BlockCode(embedDescription, "cs"),
             Color = DiscordColor.Red,
             Timestamp = DateTime.Now
         };

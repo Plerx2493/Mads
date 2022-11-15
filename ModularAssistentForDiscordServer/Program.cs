@@ -23,7 +23,7 @@ internal static class MainProgram
         };
         
         
-        //Valodate the config.json and create a new one when its not present/valid
+        //Validate the config.json and create a new one when its not present/valid
         if (!ValidateConfig())
         {
             CreateConfig();
