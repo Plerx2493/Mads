@@ -1,35 +1,44 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>disable</Nullable>
-    <StartupObject>MADS.MainProgram</StartupObject>
-    <RootNamespace>MADS</RootNamespace>
-  </PropertyGroup>
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net7.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>disable</Nullable>
+        <StartupObject>MADS.MainProgram</StartupObject>
+        <RootNamespace>MADS</RootNamespace>
+        <LangVersion>11</LangVersion>
+    </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DebugType>embedded</DebugType>
-  </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+        <DebugType>embedded</DebugType>
+    </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DebugType>embedded</DebugType>
-  </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+        <DebugType>embedded</DebugType>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <None Include="..\.editorconfig" Link=".editorconfig" />
-  </ItemGroup>
+    <ItemGroup>
+        <None Include="..\.editorconfig" Link=".editorconfig" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="DSharpPlus" Version="4.3.0-nightly-01169" />
-    <PackageReference Include="DSharpPlus.CommandsNext" Version="4.3.0-nightly-01169" />
-    <PackageReference Include="DSharpPlus.Interactivity" Version="4.3.0-nightly-01169" />
-    <PackageReference Include="DSharpPlus.Rest" Version="4.3.0-nightly-01169" />
-    <PackageReference Include="DSharpPlus.SlashCommands" Version="4.3.0-nightly-01169" />
-    <PackageReference Include="DSharpPlus.VoiceNext" Version="4.3.0-nightly-01169" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.4.0-1.final" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.4.0-1.final" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="DSharpPlus" Version="4.3.0-nightly-01185" />
+        <PackageReference Include="DSharpPlus.CommandsNext" Version="4.3.0-nightly-01185" />
+        <PackageReference Include="DSharpPlus.Interactivity" Version="4.3.0-nightly-01185" />
+        <PackageReference Include="DSharpPlus.Rest" Version="4.3.0-nightly-01185" />
+        <PackageReference Include="DSharpPlus.SlashCommands" Version="4.3.0-nightly-01185" />
+        <PackageReference Include="DSharpPlus.VoiceNext" Version="4.3.0-nightly-01185" />
+        <PackageReference Include="EntityFramework" Version="6.4.4" />
+        <PackageReference Include="FlexLabs.EntityFrameworkCore.Upsert" Version="6.0.1" />
+        <PackageReference Include="Humanizer.Core" Version="2.14.1" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.4.0-4.final" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.4.0-4.final" />
+        <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="6.0.2" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Migrations" />
+    </ItemGroup>
 
 </Project>
