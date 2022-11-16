@@ -1,14 +1,16 @@
-﻿using DSharpPlus;
+﻿using System.ComponentModel.DataAnnotations;
+using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
+using DSharpPlus.SlashCommands.Attributes;
 
 namespace MADS.Commands.Slash;
 
 public class RoleSelection : ApplicationCommandModule
 {
     [SlashCommand("RoleSelection",
-        "Use this command in the channel the message should be posted")]
+        "Use this command in the channel the message should be posted"), SlashRequirePermissions(Permissions.Administrator)]
     public async Task RoleSelectionCreation(InteractionContext ctx)
     {
         //shows we are processing
@@ -34,6 +36,7 @@ public class RoleSelection : ApplicationCommandModule
         
         //remove all roles from bots etc
         roles.RemoveAll(x => x.IsManaged);
+        roles.RemoveAll(x => x.Position >= ctx.Guild.GetMemberAsync(ctx.Client.CurrentUser.Id).Result.Hierarchy);
         options = roles    
                   .Select(discordRole => new DiscordSelectComponentOption(discordRole.Name, discordRole.Id.ToString()))
                   .Aggregate(options, (current, option) => current.Append(option))

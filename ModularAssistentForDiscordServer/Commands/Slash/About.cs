@@ -38,6 +38,7 @@ public class About : ApplicationCommandModule
         discordMessageBuilder.AddEmbed(discordEmbedBuilder.Build());
         discordMessageBuilder.AddComponents(new DiscordButtonComponent(ButtonStyle.Success, "feedback-button",
             "Feedback"));
+        discordMessageBuilder.AsEphemeral();
 
         await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, discordMessageBuilder);
         var response = await ctx.GetOriginalResponseAsync();

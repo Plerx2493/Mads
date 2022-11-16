@@ -4,6 +4,7 @@ using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
+using DSharpPlus.SlashCommands.Attributes;
 
 namespace MADS.Commands.Slash;
 
@@ -11,7 +12,7 @@ public class MoveEmoji : ApplicationCommandModule
 {
     private const string EmojiRegex = @"<a?:(.+?):(\d+)>";
     
-    [SlashCommand("MoveEmoji", "Move emoji to your guild")]
+    [SlashCommand("MoveEmoji", "Move emoji to your guild"), SlashRequirePermissions(Permissions.ManageEmojis)]
     public async Task MoveEmojiAsync(InteractionContext ctx, [Option("Emoji", "Emoji which should be moved")] string pEmoji)
     {
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder().AsEphemeral());

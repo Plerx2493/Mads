@@ -122,11 +122,12 @@ public class ModularDiscordBot
             Services = _services
         };
         _slashCommandsExtension = DiscordClient.UseSlashCommands(slashConfig);
-        _slashCommandsExtension.RegisterCommands(asm, 938120155974750288);
+        _slashCommandsExtension.RegisterCommands(asm);
         _slashCommandsExtension.SlashCommandErrored += EventListener.OnSlashCommandErrored;
 
         //Custom buttons
         EventListener.EnableButtonListener(DiscordClient);
+        EventListener.EnableRoleSelectionListener(DiscordClient);
 
         //Interactivity
         InteractivityConfiguration interactivityConfig = new()

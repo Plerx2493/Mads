@@ -10,19 +10,19 @@ public static partial class EventListener
 {
     public static void EnableButtonListener(DiscordClient client)
     {
-        client.ComponentInteractionCreated += async (_, e) =>
+        client.ComponentInteractionCreated += Task (_, e) =>
         {
             Console.WriteLine(e.Id);
             
             if (!Regex.IsMatch(e.Id, @"^CMD:\d{1,4}(?::\d{1,20}){0,3}$"))
             {
-                return;
+                return Task.CompletedTask;
             }
 
             var substring = e.Id.Split(':');
             if (!int.TryParse(substring[1], out var actionCode))
             {
-                return;
+                return Task.CompletedTask;
             }
 
             substring = substring.Skip(1).ToArray();
@@ -54,7 +54,7 @@ public static partial class EventListener
                     break;
             }
             
-            Console.WriteLine("CommandButton triggered");
+            return Task.CompletedTask;
         };
     }
     

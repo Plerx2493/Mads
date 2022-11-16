@@ -12,7 +12,7 @@ public class Eval : BaseCommandModule
 {
     public MadsServiceProvider CommandService { get; set; }
 
-    [Command("eval"), Description("Evaluate the result of c# code")]
+    [Command("eval"), Description("Evaluate the result of c# code"), Hidden]
     public async Task EvalCommand(CommandContext ctx, [RemainingText] string code)
     {
         var codeStart = code.IndexOf("```", StringComparison.Ordinal) + 3;
