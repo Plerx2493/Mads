@@ -32,11 +32,11 @@ public class Purge : ApplicationCommandModule
         
         await ctx.Channel.DeleteMessagesAsync(messages);
         await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent($"{messages.Count} messages deleted"));
-
+        
         
         
         await CommandService.ModularDiscordBot.Logging.LogCommandExecutionAsync(ctx, response);
-       
+        
         
         
         await Task.Delay(10_000);

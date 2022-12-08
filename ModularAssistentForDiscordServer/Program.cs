@@ -1,11 +1,7 @@
-﻿using System.Security.Policy;
-using DSharpPlus;
+﻿using DSharpPlus;
 using DSharpPlus.Entities;
-using MADS.Entities;
 using MADS.Extensions;
 using MADS.JsonModel;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Logging;
 
 namespace MADS;
@@ -81,8 +77,8 @@ internal static class MainProgram
 
         if (lConfig.Token is null or "" or "<Your Token here>") { return false; }
         if (lConfig.Prefix is null or "") { lConfig.Prefix = "!"; }
-        //if (lConfig.ConnectionString is null or "") return false;
         if (lConfig.DiscordWebhook is null or "") return false;
+        lConfig.DmProxyChannelId ??= 0;
 
         DataProvider.SetConfig(lConfig);
 
@@ -101,6 +97,7 @@ internal static class MainProgram
             Token = "<Your Token here>",
             Prefix = "!",
             LogLevel = LogLevel.Debug,
+            DmProxyChannelId = 0
         };
         JsonProvider.ParseJson(configPath, newConfig);
     
@@ -109,18 +106,4 @@ internal static class MainProgram
         Console.WriteLine("Press key to continue");
         Console.Read();
     }
-    
-    /*
-    public class MadsContextFactory : IDesignTimeDbContextFactory<MadsContext>
-    {
-        public MadsContext CreateDbContext(string[] args)
-        {
-            var optionsBuilder = new DbContextOptionsBuilder<MadsContext>();
-            var connectionString = DataProvider.GetConfig().ConnectionString;
-            optionsBuilder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
-
-            return new MadsContext(optionsBuilder.Options);
-        }
-    }
-    */
 }

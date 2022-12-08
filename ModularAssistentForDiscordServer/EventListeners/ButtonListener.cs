@@ -6,9 +6,9 @@ using MADS.CustomComponents;
 
 namespace MADS.EventListeners;
 
-public static partial class EventListener
+internal static partial class EventListener
 {
-    public static void EnableButtonListener(DiscordClient client)
+    internal static void EnableButtonListener(DiscordClient client)
     {
         client.ComponentInteractionCreated += Task (_, e) =>
         {
@@ -52,17 +52,26 @@ public static partial class EventListener
                 case (int)ActionDiscordButtonEnum.MoveVoiceChannel:
                     MoveVoiceChannelUser(e, substring);
                     break;
+                case (int)ActionDiscordButtonEnum.AnswerDmChannel:
+                    AnswerDmAsync(e, substring);
+                    break;
             }
             
             return Task.CompletedTask;
         };
     }
-    
+
+    private static async void AnswerDmAsync(ComponentInteractionCreateEventArgs componentInteractionCreateEventArgs, string[] substring)
+    {
+        ulong channelID;
+        ulong messageID;
+        
+        
+    }
+
     private static async void MoveVoiceChannelUser(ComponentInteractionCreateEventArgs e,
         IReadOnlyList<string> substring)
     {
-        Console.WriteLine("CommandButton triggered");
-        
         var member = await e.Guild.GetMemberAsync(e.User.Id);
         if (!member.Permissions.HasPermission(Permissions.MoveMembers)) { return; }
         var originChannel = e.Guild.GetChannel(ulong.Parse(substring[1]));
@@ -72,8 +81,6 @@ public static partial class EventListener
         {
             await targetChannel.PlaceMemberAsync(voiceMember);
         }
-        
-        Console.WriteLine("Test");
         
         await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource);
     }

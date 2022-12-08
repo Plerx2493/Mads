@@ -19,4 +19,7 @@ public struct ConfigJson
     
     [JsonProperty("discordWebhook")]
     public string DiscordWebhook { get; set; }
+    
+    [JsonProperty("DmProxyChannelId")]
+    public ulong? DmProxyChannelId { get; set; }
 }

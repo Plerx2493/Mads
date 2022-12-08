@@ -4,9 +4,9 @@ using Microsoft.Extensions.Logging;
 
 namespace MADS.EventListeners;
 
-public static partial class EventListener 
+internal static partial class EventListener 
 {
-    public static void EnableRoleSelectionListener(DiscordClient client)
+    internal static void EnableRoleSelectionListener(DiscordClient client)
     {
         client.ComponentInteractionCreated += async Task (_, e) =>
         {
