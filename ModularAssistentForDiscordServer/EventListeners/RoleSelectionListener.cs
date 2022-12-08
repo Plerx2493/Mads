@@ -16,6 +16,8 @@ internal static partial class EventListener
             
             client.Logger.LogDebug(new EventId(420, "MADS"), $"Roleselection triggered: [{e.Id}]");
 
+            
+            //TODO Test if "await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);" is possible
             await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Roles granted/revoked").AsEphemeral());
             
             var member = await e.Guild.GetMemberAsync(e.User.Id);

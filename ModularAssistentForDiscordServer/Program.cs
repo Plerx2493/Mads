@@ -1,4 +1,5 @@
-﻿using DSharpPlus;
+﻿using System.Runtime.InteropServices.JavaScript;
+using DSharpPlus;
 using DSharpPlus.Entities;
 using MADS.Extensions;
 using MADS.JsonModel;
@@ -18,6 +19,11 @@ internal static class MainProgram
             cancellationSource.Cancel();
         };
         
+        /*AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
+        {
+            args.ExceptionObject
+        };
+        */
         
         //Validate the config.json and create a new one when its not present/valid
         if (!ValidateConfig())

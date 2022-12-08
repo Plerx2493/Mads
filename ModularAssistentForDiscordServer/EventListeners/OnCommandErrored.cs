@@ -1,27 +1,30 @@
 ﻿using DSharpPlus;
 using DSharpPlus.CommandsNext;
+using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
+using DSharpPlus.SlashCommands.Attributes;
 using DSharpPlus.SlashCommands.EventArgs;
 using Humanizer;
 
 namespace MADS.EventListeners;
 
-public static partial class EventListener 
+internal static partial class EventListener 
 {
-    public static async Task OnSlashCommandErrored(SlashCommandsExtension sender, SlashCommandErrorEventArgs e)
+    internal static async Task OnSlashCommandErrored(SlashCommandsExtension sender, SlashCommandErrorEventArgs e)
     {
         var typeOfException = e.Exception.GetType();
-        if (typeOfException == typeof(ArgumentException)
-            || typeOfException == typeof(SlashExecutionChecksFailedException))
+        if (typeOfException == typeof(ArgumentException))
         {
             return;
         }
 
+        if(typeOfException == typeof(SlashExecutionChecksFailedException)) await CooldownReset(sender, e);
+        
         var embedDescription = new string((e.Exception.Message + ":\n" + e.Exception.StackTrace).Take(4096).ToArray());
         
         DiscordEmbedBuilder discordEmbed = new()
@@ -44,7 +47,24 @@ public static partial class EventListener
        
     }
 
-    public static async Task OnCNextErrored(CommandsNextExtension sender, CommandErrorEventArgs e)
+    private static async Task CooldownReset(SlashCommandsExtension sender, SlashCommandErrorEventArgs e)
+    {
+        /*
+        var exception = (SlashExecutionChecksFailedException) e.Exception;
+        if(!exception.FailedChecks.Any(x => x.GetType() == typeof(CooldownAttribute)))
+        {
+            return;
+        }
+        
+        var cooldownAttribute = (SlashCooldownAttribute?) exception.FailedChecks.FirstOrDefault(x => x.GetType() == typeof(CooldownAttribute));
+        
+        if (cooldownAttribute is null) return;
+        
+        cooldownAttribute.GetBucket(e.Context).ResetsAt = DateTimeOffset.Now;
+        */
+    }
+
+    internal static async Task OnCNextErrored(CommandsNextExtension sender, CommandErrorEventArgs e)
     {
         var typeOfException = e.Exception.GetType();
         if (typeOfException == typeof(ChecksFailedException) || typeOfException == typeof(ArgumentException)
