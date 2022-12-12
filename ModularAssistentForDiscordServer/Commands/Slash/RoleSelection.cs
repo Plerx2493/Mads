@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using DSharpPlus;
+﻿using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
@@ -9,14 +8,17 @@ namespace MADS.Commands.Slash;
 
 public class RoleSelection : ApplicationCommandModule
 {
-    [SlashCommand("RoleSelection",
-        "Use this command in the channel the message should be posted"), SlashRequirePermissions(Permissions.Administrator)]
-    public async Task RoleSelectionCreation(InteractionContext ctx)
+    [SlashCommand("RoleSelection", "Use this command in the channel the message should be posted"),
+     SlashRequirePermissions(Permissions.ManageRoles),
+    SlashRequireGuild]
+    public async Task RoleSelectionCreation(InteractionContext ctx,
+        [Option("MessageContent", "Message which should be above the menu")]
+        string messageContent = "")
     {
-        //shows we are processing
+        //show we are processing
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource, new DiscordInteractionResponseBuilder().AsEphemeral());
 
-        //check if the command was triggered in a guild and if so abort
+        //check if the command was not triggered in a guild and if so abort
         if (ctx.Guild is null)
         {
             await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Only possible in guilds"));
@@ -37,6 +39,7 @@ public class RoleSelection : ApplicationCommandModule
         //remove all roles from bots etc
         roles.RemoveAll(x => x.IsManaged);
         roles.RemoveAll(x => x.Position >= ctx.Guild.GetMemberAsync(ctx.Client.CurrentUser.Id).Result.Hierarchy);
+        roles.RemoveAll(x => x.Position >= ctx.Member.Hierarchy);
         options = roles    
                   .Select(discordRole => new DiscordSelectComponentOption(discordRole.Name, discordRole.Id.ToString()))
                   .Aggregate(options, (current, option) => current.Append(option))
@@ -54,12 +57,12 @@ public class RoleSelection : ApplicationCommandModule
         //Notify the user when the interaction times out and abort
         if (selectResponse.TimedOut)
         {
-            await ctx.EditResponseAsync(new DiscordWebhookBuilder() { Content = "Timed out" });
+            await ctx.EditResponseAsync(new DiscordWebhookBuilder() { Content = "Timed out (60 seconds)" });
             return;
         }
 
         //acknowledge interaction and edit first response to delete the select menu
-        await selectResponse.Result.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Success").AsEphemeral());
+        await selectResponse.Result.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
         await ctx.EditResponseAsync(new DiscordWebhookBuilder() { Content = "Submitted" });
 
         /*

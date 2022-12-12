@@ -1,17 +1,15 @@
 ﻿using DSharpPlus.Exceptions;
 using DSharpPlus.SlashCommands;
 using Humanizer;
-
-namespace MADS.Commands.ContextMenu;
 using DSharpPlus;
 using DSharpPlus.Entities;
-using Entities;
-using Microsoft.EntityFrameworkCore;
+
+namespace MADS.Commands.ContextMenu;
+
 
 public class UserInfoUser : ApplicationCommandModule
 {
     public MadsServiceProvider CommandService { get; set; }
-    public IDbContextFactory<MadsContext> DbFactory { get; set; }
 
     [ContextMenu(ApplicationCommandType.UserContextMenu, "Info")]
     public async Task GetUserInfo(ContextMenuContext ctx)
