@@ -23,21 +23,20 @@ internal static class MainProgram
         };
         
         
+        
+        //TODO Fix linux bug
         //Validate the config.json and create a new one when its not present/valid
+        /*
         if (!ValidateConfig())
         {
             CreateConfig();
             return;
         }
+        */
         
         //retrieves the config.json
         var config = DataProvider.GetConfig();
-        
-        //Create a discordWebhookClient and add the debug webhook from the config.json
-        var webhookClient = new DiscordWebhookClient();
-        var webhookUrl = new Uri(config.DiscordWebhook);
-        webhookClient.AddWebhookAsync(webhookUrl).GetAwaiter().GetResult();
-        
+
         //loop while the bot shouldn't be canceled
         while (!cancellationSource.IsCancellationRequested)
         {
@@ -53,24 +52,38 @@ internal static class MainProgram
             {
                 if(e is TaskCanceledException) return;
                 
-                var exceptionEmbed = new DiscordEmbedBuilder()
-                                     .WithAuthor("Mads-Debug")
-                                     .WithColor(new DiscordColor(0,255,194))
-                                     .WithTimestamp(DateTime.UtcNow)
-                                     .WithTitle($"Ooopsie...  {e.GetType()}")
-                                     .WithDescription(e.Message);
-                
-                var webhookBuilder = new DiscordWebhookBuilder()
-                                     .WithUsername("Mads-Debug")
-                                     .AddEmbed(exceptionEmbed);
-                
-                webhookClient.BroadcastMessageAsync(webhookBuilder).GetAwaiter().GetResult();
+                LogToWebhookAsync(e);
             }
             
             Task.Delay(10_000, cancellationSource.Token).GetAwaiter().GetResult();
         }
     }
-    
+
+    public static async Task LogToWebhookAsync(Exception e)
+    {
+        //retrieves the config.json
+        var config = DataProvider.GetConfig();
+        
+        //Create a discordWebhookClient and add the debug webhook from the config.json
+        var webhookClient = new DiscordWebhookClient();
+        var webhookUrl = new Uri(config.DiscordWebhook);
+        webhookClient.AddWebhookAsync(webhookUrl).GetAwaiter().GetResult();
+        
+        
+        var exceptionEmbed = new DiscordEmbedBuilder()
+                             .WithAuthor("Mads-Debug")
+                             .WithColor(new DiscordColor(0,255,194))
+                             .WithTimestamp(DateTime.UtcNow)
+                             .WithTitle($"Ooopsie...  {e.GetType()}")
+                             .WithDescription(e.Message);
+                
+        var webhookBuilder = new DiscordWebhookBuilder()
+                             .WithUsername("Mads-Debug")
+                             .AddEmbed(exceptionEmbed);
+                
+        await webhookClient.BroadcastMessageAsync(webhookBuilder);
+    }
+
     private static bool ValidateConfig()
     {
         var configPath = DataProvider.GetPath("config.json");

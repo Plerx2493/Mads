@@ -10,50 +10,56 @@ public static partial class EventListener
 {
     public static void EnableButtonListener(DiscordClient client)
     {
-        client.ComponentInteractionCreated += Task (_, e) =>
+        client.ComponentInteractionCreated +=  Task (_, e) =>
         {
-            Console.WriteLine(e.Id);
+            try
+            {
+                Console.WriteLine(e.Id);
             
-            if (!Regex.IsMatch(e.Id, @"^CMD:\d{1,4}(?::\d{1,20}){0,3}$"))
-            {
-                return Task.CompletedTask;
+                if (!Regex.IsMatch(e.Id, @"^CMD:\d{1,4}(?::\d{1,20}){0,3}$"))
+                {
+                    return Task.CompletedTask;
+                }
+
+                var substring = e.Id.Split(':');
+                if (!int.TryParse(substring[1], out var actionCode))
+                {
+                    return Task.CompletedTask;
+                }
+
+                substring = substring.Skip(1).ToArray();
+
+                switch (actionCode)
+                {
+                    case (int)ActionDiscordButtonEnum.BanUser:
+                        BanUser(e, substring);
+                        break;
+
+                    case (int)ActionDiscordButtonEnum.KickUser:
+                        KickUser(e, substring);
+                        break;
+
+                    case (int)ActionDiscordButtonEnum.GetIdUser:
+                        GetUserId(e, substring);
+                        break;
+
+                    case (int)ActionDiscordButtonEnum.GetIdGuild:
+                        GetGuildId(e, substring);
+                        break;
+
+                    case (int)ActionDiscordButtonEnum.GetIdChannel:
+                        GetChannelId(e, substring);
+                        break;
+
+                    case (int)ActionDiscordButtonEnum.MoveVoiceChannel:
+                        MoveVoiceChannelUser(e, substring);
+                        break;
+                }
             }
-
-            var substring = e.Id.Split(':');
-            if (!int.TryParse(substring[1], out var actionCode))
+            catch (Exception exception)
             {
-                return Task.CompletedTask;
+                MainProgram.LogToWebhookAsync(exception);
             }
-
-            substring = substring.Skip(1).ToArray();
-
-            switch (actionCode)
-            {
-                case (int)ActionDiscordButtonEnum.BanUser:
-                    BanUser(e, substring);
-                    break;
-
-                case (int)ActionDiscordButtonEnum.KickUser:
-                    KickUser(e, substring);
-                    break;
-
-                case (int)ActionDiscordButtonEnum.GetIdUser:
-                    GetUserId(e, substring);
-                    break;
-
-                case (int)ActionDiscordButtonEnum.GetIdGuild:
-                    GetGuildId(e, substring);
-                    break;
-
-                case (int)ActionDiscordButtonEnum.GetIdChannel:
-                    GetChannelId(e, substring);
-                    break;
-
-                case (int)ActionDiscordButtonEnum.MoveVoiceChannel:
-                    MoveVoiceChannelUser(e, substring);
-                    break;
-            }
-            
             return Task.CompletedTask;
         };
     }
