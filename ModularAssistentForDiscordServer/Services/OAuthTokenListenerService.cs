@@ -9,16 +9,19 @@ public class TokenListener
     Task                        listenTask;
     private static HttpListener listener;
     private static string       url;
-    private static string pageData = 
-        "<!DOCTYPE>" +
-        "<html>" +
-        "  <head>" +
-        "    <title>HttpListener Example</title>" +
-        "  </head>" +
-        " <body onload=\"myFunction()\"> </body>" +
-        "<script type=\"application/javascript\"> function myFunction(){ window.close() }</script>" +
-        "</html>";
-
+    
+    // lang=html
+    private const string pageData = 
+            """
+            <!DOCTYPE>
+            <html lang="en">
+                <head>
+                    <title>HttpListener Example</title>
+                </head>
+                <body onload = "myFunction()"> </body>
+                <script type= "application/javascript"> function myFunction(){ window.close() }</script>
+            </html >
+            """;
 
     private static async Task HandleIncomingConnections(CancellationToken token)
     {
