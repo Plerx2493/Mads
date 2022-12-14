@@ -81,7 +81,7 @@ public static partial class EventListener
         
         Console.WriteLine("Test");
         
-        await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource);
+        await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
     }
 
     private static async void BanUser(ComponentInteractionCreateEventArgs e, IReadOnlyList<string> substring)
@@ -91,7 +91,7 @@ public static partial class EventListener
 
         var userId = ulong.Parse(substring[1]);
         await e.Guild.BanMemberAsync(userId);
-        await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource);
+        await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
     }
 
     private static async void KickUser(ComponentInteractionCreateEventArgs e, IReadOnlyList<string> substring)
@@ -101,7 +101,7 @@ public static partial class EventListener
 
         var userId = ulong.Parse(substring[1]);
         await e.Guild.BanMemberAsync(userId);
-        await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource);
+        await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
     }
 
     private static async void GetUserId(InteractionCreateEventArgs e, IReadOnlyList<string> substring)
