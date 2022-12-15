@@ -1,14 +1,13 @@
 ﻿using System.Text;
 using System.Net;
-using Microsoft.Extensions.Hosting;
 
 namespace MADS.Services;
 
 public class TokenListener
 {
-    Task                        listenTask;
-    private static HttpListener listener;
-    private static string       url;
+    private Task                _listenTask;
+    private static HttpListener _listener;
+    private static string       _url;
     
     // lang=html
     private const string pageData = 
@@ -28,11 +27,11 @@ public class TokenListener
         while (!token.IsCancellationRequested)
         {
             // Will wait here until we hear from a connection
-            HttpListenerContext ctx = await listener.GetContextAsync();
+            var ctx = await _listener.GetContextAsync();
 
             // Peel out the requests and response objects
-            HttpListenerRequest req = ctx.Request;
-            HttpListenerResponse resp = ctx.Response;
+            var req = ctx.Request;
+            var resp = ctx.Response;
             
             //TODO add token saving
             //var userToken = req.QueryString.Get("code");
@@ -53,24 +52,24 @@ public class TokenListener
 
     public TokenListener(string port, string path = "/")
     {
-        url = $"http://localhost:{port}{path}";
-        listener = new HttpListener();
-        listener.Prefixes.Add(url);
+        _url = $"http://localhost:{port}{path}";
+        _listener = new HttpListener();
+        _listener.Prefixes.Add(_url);
     }
     
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        listener.Start();
-        Console.WriteLine("Listening for connections on {0}", url);
+        _listener.Start();
+        Console.WriteLine("Listening for connections on {0}", _url);
         
-        listenTask = HandleIncomingConnections(cancellationToken);
+        _listenTask = HandleIncomingConnections(cancellationToken);
         return Task.CompletedTask;
     }
     
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        listener.Abort();
-        listenTask.Dispose();
+        _listener.Abort();
+        _listenTask.Dispose();
         return Task.CompletedTask;
     }
 }
