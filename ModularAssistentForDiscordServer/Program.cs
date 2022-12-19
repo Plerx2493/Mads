@@ -44,7 +44,6 @@ internal static class MainProgram
         {
             //Create a new instance of the bot
             ModularDiscordBot modularDiscordBot = new();
-
             //execute the bot and catch uncaught exceptions
             try
             {

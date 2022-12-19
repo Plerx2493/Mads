@@ -36,7 +36,6 @@ internal static partial class EventListener
             {
                 await member.GrantRoleAsync(role);
             }
-
             foreach (var role in oldRoles)
             {
                 await member.RevokeRoleAsync(role);

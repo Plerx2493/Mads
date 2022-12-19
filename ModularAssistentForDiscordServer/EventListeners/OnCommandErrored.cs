@@ -71,7 +71,6 @@ internal static partial class EventListener
 
         await e.Context.Message.RespondAsync($"OOPS your command just errored... \n {e.Exception.Message}");
         await e.Context.Message.RespondAsync(e.Exception.InnerException?.Message ?? "no inner exception");
-
         var reallyLongString = e.Exception.StackTrace;
 
         var interactivity = e.Context.Client.GetInteractivity();

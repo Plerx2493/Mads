@@ -87,6 +87,14 @@ public class ModularDiscordBot
             Console.WriteLine(e);
             throw;
         }
+        
+        //keep alive
+        await Task.Delay(-1, token);
+        //
+        //DEADZONE
+        //
+        return true;
+    }
 
         //keep alive
         await Task.Delay(-1, token);

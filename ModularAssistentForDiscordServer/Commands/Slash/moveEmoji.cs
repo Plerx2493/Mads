@@ -27,7 +27,6 @@ public class MoveEmoji : MadsBaseApplicationCommand
             await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("There are no emojis in your input"));
             return;
         }
-
         List<DiscordGuild> guilds = new();
 
         foreach (var guild in ctx.Client.Guilds.Values)
