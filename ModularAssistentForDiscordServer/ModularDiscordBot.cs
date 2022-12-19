@@ -96,14 +96,6 @@ public class ModularDiscordBot
         return true;
     }
 
-        //keep alive
-        await Task.Delay(-1, token);
-        //
-        //DEADZONE
-        //
-        return true;
-    }
-
     private Task OnGuildDownloadCompleted(DiscordClient sender, GuildDownloadCompletedEventArgs e)
     {
         Logging.Setup();

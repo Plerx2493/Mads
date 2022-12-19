@@ -52,19 +52,8 @@ internal static class MainProgram
             catch (Exception e)
             {
                 if (e is TaskCanceledException) return;
-
-                var exceptionEmbed = new DiscordEmbedBuilder()
-                                     .WithAuthor("Mads-Debug")
-                                     .WithColor(new DiscordColor(0, 255, 194))
-                                     .WithTimestamp(DateTime.UtcNow)
-                                     .WithTitle($"Ooopsie...  {e.GetType()}")
-                                     .WithDescription(e.Message);
-
-                var webhookBuilder = new DiscordWebhookBuilder()
-                                     .WithUsername("Mads-Debug")
-                                     .AddEmbed(exceptionEmbed);
-
-                webhookClient.BroadcastMessageAsync(webhookBuilder).GetAwaiter().GetResult();
+                
+                LogToWebhookAsync(e);
             }
 
             Task.Delay(10_000, cancellationSource.Token).GetAwaiter().GetResult();
@@ -110,4 +99,31 @@ internal static class MainProgram
         Console.WriteLine("Press key to continue");
         Console.Read();
     }
+    
+    public static async Task LogToWebhookAsync(Exception e)
+    {
+        //retrieves the config.json
+        var config = DataProvider.GetConfig();
+
+        //Create a discordWebhookClient and add the debug webhook from the config.json
+        var webhookClient = new DiscordWebhookClient();
+        var webhookUrl = new Uri(config.DiscordWebhook);
+        webhookClient.AddWebhookAsync(webhookUrl).GetAwaiter().GetResult();
+
+
+        var exceptionEmbed = new DiscordEmbedBuilder()
+                             .WithAuthor("Mads-Debug")
+                             .WithColor(new DiscordColor(0,255,194))
+                             .WithTimestamp(DateTime.UtcNow)
+                             .WithTitle($"Ooopsie...  {e.GetType()}")
+                             .WithDescription(e.Message);
+
+        var webhookBuilder = new DiscordWebhookBuilder()
+                             .WithUsername("Mads-Debug")
+                             .AddEmbed(exceptionEmbed);
+
+        await webhookClient.BroadcastMessageAsync(webhookBuilder);
+    }
+
+
 }

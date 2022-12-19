@@ -6,16 +6,16 @@ using MADS.CustomComponents;
 
 namespace MADS.EventListeners;
 
-public static partial class EventListener
+internal static partial class EventListener
 {
     public static void EnableButtonListener(DiscordClient client)
     {
-        client.ComponentInteractionCreated +=  Task (_, e) =>
+        client.ComponentInteractionCreated += Task(_, e) =>
         {
             try
             {
                 Console.WriteLine(e.Id);
-            
+
                 if (!Regex.IsMatch(e.Id, @"^CMD:\d{1,4}(?::\d{1,20}){0,3}$"))
                 {
                     return Task.CompletedTask;
@@ -63,7 +63,7 @@ public static partial class EventListener
             return Task.CompletedTask;
         };
     }
-    
+
     private static async void MoveVoiceChannelUser(ComponentInteractionCreateEventArgs e,
         IReadOnlyList<string> substring)
     {
