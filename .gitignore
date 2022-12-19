@@ -368,3 +368,6 @@ FodyWeavers.xsd
 
 # Config
 *.json
+
+# Sql Source gen
+*.sql

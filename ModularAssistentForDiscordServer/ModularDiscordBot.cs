@@ -9,29 +9,29 @@ using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
 using MADS.Commands;
-using MADS.Entities;
 using MADS.EventListeners;
 using MADS.Extensions;
 using MADS.JsonModel;
-using Microsoft.EntityFrameworkCore;
+using MADS.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace MADS;
 
 public class ModularDiscordBot
 {
-    public DiscordClient DiscordClient;
-    public LoggingProvider Logging;
-    public DateTime StartTime;
-    
-    private ConfigJson _config;
-    private ServiceProvider _services;
-    private SlashCommandsExtension _slashCommandsExtension;
     private CommandsNextExtension _commandsNextExtension;
+
+    private ConfigJson             _config;
     private InteractivityExtension _interactivityExtension;
-    
-    
+    private ServiceProvider        _services;
+    private SlashCommandsExtension _slashCommandsExtension;
+    private TokenListener          _tokenListener;
+    public  CancellationToken      CancellationToken;
+    public  DiscordClient          DiscordClient;
+    public  LoggingProvider        Logging;
+    public  DateTime               StartTime;
+
+
     public ModularDiscordBot()
     {
         StartTime = DateTime.Now;
@@ -40,7 +40,7 @@ public class ModularDiscordBot
 
     public async Task<bool> RunAsync(ConfigJson pConfig, CancellationToken token)
     {
-        
+        CancellationToken = token;
         _config = pConfig;
 
         DiscordConfiguration discordConfig = new()
@@ -53,21 +53,29 @@ public class ModularDiscordBot
         };
 
         DiscordClient = new DiscordClient(discordConfig);
+        _tokenListener = new TokenListener("51151", "/api/v1/mads/token/");
+        
+#pragma warning disable CS4014
+        _tokenListener.StartAsync(CancellationToken);
+#pragma warning restore CS4014
 
         _services = new ServiceCollection()
                     .AddSingleton(new MadsServiceProvider(this))
+                    .AddSingleton(new VolatileMemoryService())
+                    .AddSingleton(_tokenListener)
                     .BuildServiceProvider();
 
 
         RegisterDSharpExtensions();
 
 
-        DiscordClient.Ready += OnClientReady;
-        DiscordClient.Zombied += OnZombied;
+        await EventListener.VoiceTrollListener(DiscordClient, _services.GetService<VolatileMemoryService>());
+        DiscordClient.Zombied += EventListener.OnZombied;
         DiscordClient.GuildDownloadCompleted += OnGuildDownloadCompleted;
+        DiscordClient.MessageCreated += EventListener.DmHandler;
 
         DiscordActivity act = new(_config.Prefix + "help", ActivityType.Watching);
-        
+
 
         //connect client
         try
@@ -95,7 +103,7 @@ public class ModularDiscordBot
     }
 
     /// <summary>
-    /// Registers all DSharp+ extensions (CNext, SlashCommands, Interactivity), the commands and event handlers for errors
+    ///     Registers all DSharp+ extensions (CNext, SlashCommands, Interactivity), the commands and event handlers for errors
     /// </summary>
     private void RegisterDSharpExtensions()
     {
@@ -122,7 +130,7 @@ public class ModularDiscordBot
             Services = _services
         };
         _slashCommandsExtension = DiscordClient.UseSlashCommands(slashConfig);
-        _slashCommandsExtension.RegisterCommands(asm);
+        _slashCommandsExtension.RegisterCommands(asm, 938120155974750288);
         _slashCommandsExtension.SlashCommandErrored += EventListener.OnSlashCommandErrored;
 
         //Custom buttons
@@ -144,22 +152,18 @@ public class ModularDiscordBot
         _interactivityExtension = DiscordClient.UseInteractivity(interactivityConfig);
     }
 
-    private static async Task OnZombied(DiscordClient sender, ZombiedEventArgs e)
-    {
-        await sender.ReconnectAsync(true);
-    }
 
-    private static async Task OnClientReady(DiscordClient sender, ReadyEventArgs e)
-    {
-    }
-
-    public static async Task<DiscordMessage> AnswerWithDelete(CommandContext ctx, DiscordEmbed message,
-        int secondsToDelete = 20)
+    public static async Task<DiscordMessage> AnswerWithDelete
+    (
+        CommandContext ctx,
+        DiscordEmbed message,
+        int secondsToDelete = 20
+    )
     {
         var response = await ctx.Channel.SendMessageAsync(message);
 
         if (ctx.Channel.IsPrivate) return response;
-        
+
         await Task.Delay(secondsToDelete * 1000);
         await response.DeleteAsync();
         await ctx.Message.DeleteAsync();

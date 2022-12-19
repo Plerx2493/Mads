@@ -11,10 +11,12 @@ namespace MADS.Extensions;
 public class LoggingProvider
 {
     //Utilities
-    private readonly string                 _dirPath = DataProvider.GetPath("Logs");
+    private readonly string                 _dirPath              = DataProvider.GetPath("Logs");
+    private readonly DiscordWebhookClient   _discordWebhookClient = new();
     private readonly string                 _logPath;
     private readonly ModularDiscordBot      _modularDiscordBot;
     private readonly List<DiscordDmChannel> _ownerChannel = new();
+    private          DiscordRestClient      _discordRestClient;
 
     internal LoggingProvider(ModularDiscordBot dBot)
     {
@@ -25,47 +27,53 @@ public class LoggingProvider
         _logPath = DataProvider.GetPath("Logs",
             $"{startDate.Day}-{startDate.Month}-{startDate.Year}_{startDate.Hour}-{startDate.Minute}-{startDate.Second}.log");
         File.AppendAllTextAsync(_logPath, "========== LOG START ==========\n\n", Encoding.UTF8);
+        
+        Console.WriteLine(_logPath);
     }
 
     public async void Setup()
     {
-        PopulateOwnerChannel();
+        AddRestClient();
+        AddOwnerChannels();
         SetupFeedback();
+        SetupWebhookLogging();
     }
 
-    private async void PopulateOwnerChannel()
+    private void AddRestClient()
+    {
+        var config = DataProvider.GetConfig();
+
+        var discordConfig = new DiscordConfiguration
+        {
+            Token = config.Token
+        };
+
+        _discordRestClient = new DiscordRestClient(discordConfig);
+    }
+
+    private async void AddOwnerChannels()
     {
         var application = _modularDiscordBot.DiscordClient.CurrentApplication;
         var owners = application.Owners.ToArray();
-        var guilds = _modularDiscordBot.DiscordClient.Guilds.Values.ToArray();
 
         foreach (var owner in owners)
         {
-            DiscordMember member = null;
+            DiscordDmChannel ownerChannel;
 
-            foreach (var guild in guilds)
+            try
             {
-                try
-                {
-                    member = await guild.GetMemberAsync(owner.Id);
-                }
-                catch (DiscordException)
-                {
-                    continue;
-                }
-                break;
+                ownerChannel = await _discordRestClient.CreateDmAsync(owner.Id);
             }
-
-            if (member is null)
+            catch (DiscordException)
             {
                 continue;
             }
 
-            var channel = await member.CreateDmChannelAsync();
-            _ownerChannel.Add(channel);
+            _ownerChannel.Add(ownerChannel);
         }
 
-        Console.WriteLine($"Found {_ownerChannel.Count} dm Channel for {owners.Length} application owner");
+        _modularDiscordBot.DiscordClient.Logger.LogInformation("Found {1} dm Channel for {2} application owner",
+            _ownerChannel.Count, owners.Length);
     }
 
     private void SetupFeedback()
@@ -128,11 +136,15 @@ public class LoggingProvider
                 }
             };
 
-            foreach (var channel in _ownerChannel)
-            {
-                await channel.SendMessageAsync(discordEmbed);
-            }
+            await _discordWebhookClient.BroadcastMessageAsync(new DiscordWebhookBuilder().AddEmbed(discordEmbed));
         };
+    }
+
+    private void SetupWebhookLogging()
+    {
+        var config = DataProvider.GetConfig();
+        var webhookUrl = new Uri(config.DiscordWebhook);
+        _discordWebhookClient.AddWebhookAsync(webhookUrl).GetAwaiter().GetResult();
     }
 
     public Task LogEvent(string message, string sender, LogLevel lvl)
@@ -142,35 +154,28 @@ public class LoggingProvider
         return Task.CompletedTask;
     }
 
-    public async Task LogCommandExecutionAsync(CommandContext ctx, DiscordMessage response)
+    public async Task LogCommandExecutionAsync(CommandContext ctx, TimeSpan timespan)
     {
-        var triggerTime = ctx.Message.Timestamp.DateTime;
-        var executionTime = response.Timestamp.DateTime;
-        var timespan = (executionTime - triggerTime).TotalMilliseconds;
         if (ctx.Command != null)
         {
             var commandName = ctx.Command.Name;
-            var commandArgs = ctx.RawArguments;
-
-            var tmp = commandArgs.Aggregate("", (current, arg) => current + arg.ToString() + ", ");
-
-            tmp = tmp.Remove(tmp.Length - 2);
-
             var logEntry =
-                $"[{DateTime.Now:dd'.'MM'.'yyyy'-'HH':'mm':'ss}] [INFO] [{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [{commandName}] [{tmp}] {timespan} milliseconds to execute";
+                $"[{DateTime.Now:dd'.'MM'.'yyyy'-'HH':'mm':'ss}] [INFO] [{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [{commandName}]{timespan.Microseconds} milliseconds to execute";
             await File.AppendAllTextAsync(_logPath, logEntry + "\n", Encoding.UTF8);
         }
     }
 
-    public async Task LogCommandExecutionAsync(InteractionContext ctx, DiscordMessage response)
+    public async Task LogCommandExecutionAsync(InteractionContext ctx, TimeSpan timespan)
     {
-        var triggerTime = ctx.Interaction.CreationTimestamp.DateTime;
-        var executionTime = response.Timestamp.DateTime;
-        var timespan = (executionTime - triggerTime).TotalMilliseconds;
-        var commandName = ctx.CommandName;
-   
         var logEntry =
-            $"[{DateTime.Now:dd'.'MM'.'yyyy'-'HH':'mm':'ss}] [INFO] [{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [{commandName}] {timespan} milliseconds to execute";
+            $"[{DateTime.Now:dd'.'MM'.'yyyy'-'HH':'mm':'ss}] [INFO] [{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [/{ctx.CommandName}] {timespan.Microseconds} milliseconds to execute";
+        await File.AppendAllTextAsync(_logPath, logEntry + "\n", Encoding.UTF8);
+    }
+    
+    public async Task LogCommandExecutionAsync(ContextMenuContext ctx, TimeSpan timespan)
+    {
+        var logEntry =
+            $"[{DateTime.Now:dd'.'MM'.'yyyy'-'HH':'mm':'ss}] [INFO] [{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [/{ctx.CommandName}] {timespan.Microseconds} milliseconds to execute";
         await File.AppendAllTextAsync(_logPath, logEntry + "\n", Encoding.UTF8);
     }
 

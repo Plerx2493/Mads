@@ -1,26 +1,22 @@
-﻿using DSharpPlus.Exceptions;
+﻿using DSharpPlus;
+using DSharpPlus.Entities;
+using DSharpPlus.Exceptions;
 using DSharpPlus.SlashCommands;
 using Humanizer;
 
 namespace MADS.Commands.ContextMenu;
-using DSharpPlus;
-using DSharpPlus.Entities;
-using Entities;
-using Microsoft.EntityFrameworkCore;
 
 public class UserInfoUser : ApplicationCommandModule
 {
     public MadsServiceProvider CommandService { get; set; }
-    public IDbContextFactory<MadsContext> DbFactory { get; set; }
 
     [ContextMenu(ApplicationCommandType.UserContextMenu, "Info")]
     public async Task GetUserInfo(ContextMenuContext ctx)
     {
-        
         //await ctx.CreateResponseAsync("Test", true);
-        
+
         var user = ctx.TargetUser;
-        
+
         DiscordMember member = null;
 
         user ??= ctx.User;
@@ -41,8 +37,8 @@ public class UserInfoUser : ApplicationCommandModule
 
         DiscordEmbedBuilder embed = new();
 
-        string userUrl = "https://discordapp.com/users/" + user.Id;
-        
+        var userUrl = "https://discordapp.com/users/" + user.Id;
+
         embed
             .WithAuthor($"{user.Username}#{user.Discriminator}", userUrl, user.AvatarUrl)
             .WithColor(new DiscordColor(0, 255, 194))
@@ -74,6 +70,5 @@ public class UserInfoUser : ApplicationCommandModule
         }
 
         await ctx.CreateResponseAsync(embed.Build(), true);
-
     }
 }

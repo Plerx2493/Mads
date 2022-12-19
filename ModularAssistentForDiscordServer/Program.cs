@@ -1,11 +1,7 @@
-﻿using System.Security.Policy;
-using DSharpPlus;
+﻿using DSharpPlus;
 using DSharpPlus.Entities;
-using MADS.Entities;
 using MADS.Extensions;
 using MADS.JsonModel;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Logging;
 
 namespace MADS;
@@ -21,28 +17,33 @@ internal static class MainProgram
             args.Cancel = true;
             cancellationSource.Cancel();
         };
-        
-        
-        
-        //TODO Fix linux bug
+
+        /*AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
+        {
+            args.ExceptionObject
+        };
+        */
+
         //Validate the config.json and create a new one when its not present/valid
-        /*
         if (!ValidateConfig())
         {
             CreateConfig();
             return;
         }
-        */
-        
+
         //retrieves the config.json
         var config = DataProvider.GetConfig();
+
+        //Create a discordWebhookClient and add the debug webhook from the config.json
+        var webhookClient = new DiscordWebhookClient();
+        var webhookUrl = new Uri(config.DiscordWebhook);
+        webhookClient.AddWebhookAsync(webhookUrl).GetAwaiter().GetResult();
 
         //loop while the bot shouldn't be canceled
         while (!cancellationSource.IsCancellationRequested)
         {
             //Create a new instance of the bot
             ModularDiscordBot modularDiscordBot = new();
-            
             //execute the bot and catch uncaught exceptions
             try
             {
@@ -50,38 +51,13 @@ internal static class MainProgram
             }
             catch (Exception e)
             {
-                if(e is TaskCanceledException) return;
+                if (e is TaskCanceledException) return;
                 
                 LogToWebhookAsync(e);
             }
-            
+
             Task.Delay(10_000, cancellationSource.Token).GetAwaiter().GetResult();
         }
-    }
-
-    public static async Task LogToWebhookAsync(Exception e)
-    {
-        //retrieves the config.json
-        var config = DataProvider.GetConfig();
-        
-        //Create a discordWebhookClient and add the debug webhook from the config.json
-        var webhookClient = new DiscordWebhookClient();
-        var webhookUrl = new Uri(config.DiscordWebhook);
-        webhookClient.AddWebhookAsync(webhookUrl).GetAwaiter().GetResult();
-        
-        
-        var exceptionEmbed = new DiscordEmbedBuilder()
-                             .WithAuthor("Mads-Debug")
-                             .WithColor(new DiscordColor(0,255,194))
-                             .WithTimestamp(DateTime.UtcNow)
-                             .WithTitle($"Ooopsie...  {e.GetType()}")
-                             .WithDescription(e.Message);
-                
-        var webhookBuilder = new DiscordWebhookBuilder()
-                             .WithUsername("Mads-Debug")
-                             .AddEmbed(exceptionEmbed);
-                
-        await webhookClient.BroadcastMessageAsync(webhookBuilder);
     }
 
     private static bool ValidateConfig()
@@ -94,8 +70,8 @@ internal static class MainProgram
 
         if (lConfig.Token is null or "" or "<Your Token here>") { return false; }
         if (lConfig.Prefix is null or "") { lConfig.Prefix = "!"; }
-        //if (lConfig.ConnectionString is null or "") return false;
         if (lConfig.DiscordWebhook is null or "") return false;
+        lConfig.DmProxyChannelId ??= 0;
 
         DataProvider.SetConfig(lConfig);
 
@@ -114,26 +90,40 @@ internal static class MainProgram
             Token = "<Your Token here>",
             Prefix = "!",
             LogLevel = LogLevel.Debug,
+            DmProxyChannelId = 0
         };
         JsonProvider.ParseJson(configPath, newConfig);
-    
+
         Console.WriteLine("Please insert your token in the config file and restart");
         Console.WriteLine("Filepath: " + configPath);
         Console.WriteLine("Press key to continue");
         Console.Read();
     }
     
-    /*
-    public class MadsContextFactory : IDesignTimeDbContextFactory<MadsContext>
+    public static async Task LogToWebhookAsync(Exception e)
     {
-        public MadsContext CreateDbContext(string[] args)
-        {
-            var optionsBuilder = new DbContextOptionsBuilder<MadsContext>();
-            var connectionString = DataProvider.GetConfig().ConnectionString;
-            optionsBuilder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+        //retrieves the config.json
+        var config = DataProvider.GetConfig();
 
-            return new MadsContext(optionsBuilder.Options);
-        }
+        //Create a discordWebhookClient and add the debug webhook from the config.json
+        var webhookClient = new DiscordWebhookClient();
+        var webhookUrl = new Uri(config.DiscordWebhook);
+        webhookClient.AddWebhookAsync(webhookUrl).GetAwaiter().GetResult();
+
+
+        var exceptionEmbed = new DiscordEmbedBuilder()
+                             .WithAuthor("Mads-Debug")
+                             .WithColor(new DiscordColor(0,255,194))
+                             .WithTimestamp(DateTime.UtcNow)
+                             .WithTitle($"Ooopsie...  {e.GetType()}")
+                             .WithDescription(e.Message);
+
+        var webhookBuilder = new DiscordWebhookBuilder()
+                             .WithUsername("Mads-Debug")
+                             .AddEmbed(exceptionEmbed);
+
+        await webhookClient.BroadcastMessageAsync(webhookBuilder);
     }
-    */
+
+
 }
