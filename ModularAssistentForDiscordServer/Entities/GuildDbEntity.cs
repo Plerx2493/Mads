@@ -15,13 +15,9 @@ public class GuildDbEntity
     
     [Required]
     [Column("discordId")]
-    public ulong DiscordId { get; set; }   
-
-    [Required]
-    [Column("prefix")]
-    public string Prefix { get; set; }
+    public ulong DiscordId { get; set; }
     
-    public GuildConfigDbEntity? Config { get; set; }
+    public GuildSettings Settings { get; set; }
 
     public List<GuildUserDbEntity>? Users { get; set; }
 
@@ -30,8 +26,6 @@ public class GuildDbEntity
     public GuildDbEntity()
     {
         Id = 0;
-        Prefix = "!";
-        Config = new GuildConfigDbEntity();
         Users = new List<GuildUserDbEntity>();
         Incidents = new List<IncidentDbEntity>();
     }
@@ -39,8 +33,6 @@ public class GuildDbEntity
     public GuildDbEntity(GuildDbEntity old)
     {
         Id = old.Id;
-        Prefix = old.Prefix;
-        Config = old.Config;
         Users = old.Users;
         Incidents = old.Incidents;
     }

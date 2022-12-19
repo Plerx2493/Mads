@@ -14,7 +14,9 @@ public class LoggingProvider
     private readonly string                 _dirPath = DataProvider.GetPath("Logs");
     private readonly string                 _logPath;
     private readonly ModularDiscordBot      _modularDiscordBot;
-    private readonly List<DiscordDmChannel> _ownerChannel = new();
+    private readonly List<DiscordDmChannel> _ownerChannel         = new();
+    private readonly DiscordWebhookClient   _discordWebhookClient = new();
+    private          DiscordRestClient      _discordRestClient;    
 
     internal LoggingProvider(ModularDiscordBot dBot)
     {
@@ -29,8 +31,22 @@ public class LoggingProvider
 
     public async void Setup()
     {
+        AddRestClient();
         PopulateOwnerChannel();
         SetupFeedback();
+        SetupWebhookLogging();
+    }
+
+    private void AddRestClient()
+    {
+        var config = DataProvider.GetConfig();
+        
+        var discordConfig = new DiscordConfiguration()
+        {
+            Token = config.Token
+        };
+
+        _discordRestClient = new DiscordRestClient(discordConfig);
     }
 
     private async void PopulateOwnerChannel()
@@ -41,28 +57,18 @@ public class LoggingProvider
 
         foreach (var owner in owners)
         {
-            DiscordMember member = null;
-
-            foreach (var guild in guilds)
+            DiscordDmChannel ownerChannel;
+            
+            try
             {
-                try
-                {
-                    member = await guild.GetMemberAsync(owner.Id);
-                }
-                catch (DiscordException)
-                {
-                    continue;
-                }
-                break;
+                ownerChannel = await _discordRestClient.CreateDmAsync(owner.Id);
             }
-
-            if (member is null)
+            catch (DiscordException)
             {
                 continue;
             }
-
-            var channel = await member.CreateDmChannelAsync();
-            _ownerChannel.Add(channel);
+            
+            _ownerChannel.Add(ownerChannel);
         }
 
         Console.WriteLine($"Found {_ownerChannel.Count} dm Channel for {owners.Length} application owner");
@@ -133,6 +139,13 @@ public class LoggingProvider
                 await channel.SendMessageAsync(discordEmbed);
             }
         };
+    }
+
+    private void SetupWebhookLogging()
+    {
+        var config = DataProvider.GetConfig();
+        var webhookUrl = new Uri(config.DiscordWebhook);
+        _discordWebhookClient.AddWebhookAsync(webhookUrl).GetAwaiter().GetResult();
     }
 
     public Task LogEvent(string message, string sender, LogLevel lvl)
