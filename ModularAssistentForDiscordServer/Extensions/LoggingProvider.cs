@@ -160,7 +160,7 @@ public class LoggingProvider
         {
             var commandName = ctx.Command.Name;
             var logEntry =
-                $"[{DateTime.Now:dd'.'MM'.'yyyy'-'HH':'mm':'ss}] [INFO] [{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [{commandName}]{timespan.Microseconds} milliseconds to execute";
+                $"[{DateTime.Now:dd'.'MM'.'yyyy'-'HH':'mm':'ss}] [INFO] [{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [{commandName}]{timespan.TotalMilliseconds} milliseconds to execute";
             await File.AppendAllTextAsync(_logPath, logEntry + "\n", Encoding.UTF8);
         }
     }
@@ -168,14 +168,14 @@ public class LoggingProvider
     public async Task LogCommandExecutionAsync(InteractionContext ctx, TimeSpan timespan)
     {
         var logEntry =
-            $"[{DateTime.Now:dd'.'MM'.'yyyy'-'HH':'mm':'ss}] [INFO] [{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [/{ctx.CommandName}] {timespan.Microseconds} milliseconds to execute";
+            $"[{DateTime.Now:dd'.'MM'.'yyyy'-'HH':'mm':'ss}] [INFO] [{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [/{ctx.CommandName}] {timespan.TotalMilliseconds} milliseconds to execute";
         await File.AppendAllTextAsync(_logPath, logEntry + "\n", Encoding.UTF8);
     }
     
     public async Task LogCommandExecutionAsync(ContextMenuContext ctx, TimeSpan timespan)
     {
         var logEntry =
-            $"[{DateTime.Now:dd'.'MM'.'yyyy'-'HH':'mm':'ss}] [INFO] [{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [/{ctx.CommandName}] {timespan.Microseconds} milliseconds to execute";
+            $"[{DateTime.Now:dd'.'MM'.'yyyy'-'HH':'mm':'ss}] [INFO] [{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [/{ctx.CommandName}] {timespan.TotalMilliseconds} milliseconds to execute";
         await File.AppendAllTextAsync(_logPath, logEntry + "\n", Encoding.UTF8);
     }
 
