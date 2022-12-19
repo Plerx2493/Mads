@@ -130,7 +130,11 @@ public class ModularDiscordBot
             Services = _services
         };
         _slashCommandsExtension = DiscordClient.UseSlashCommands(slashConfig);
+#if DEBUG
         _slashCommandsExtension.RegisterCommands(asm, 938120155974750288);
+#else
+        _slashCommandsExtension.RegisterCommands(asm);
+#endif
         _slashCommandsExtension.SlashCommandErrored += EventListener.OnSlashCommandErrored;
 
         //Custom buttons
