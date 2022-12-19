@@ -11,7 +11,7 @@ public struct GuildSettings
         AuditChannel = 0;
     }
 
-    public string   Prefix   { get; set; }
-    public LogLevel LogLevel { get; set; }
-    public ulong? AuditChannel { get; set; }
+    public string   Prefix       { get; set; }
+    public LogLevel LogLevel     { get; set; }
+    public ulong?   AuditChannel { get; set; }
 }

@@ -4,8 +4,12 @@ namespace MADS.CustomComponents;
 
 public static class ActionDiscordButton
 {
-    public static DiscordButtonComponent Build(ActionDiscordButtonEnum action, DiscordButtonComponent button,
-        params object[] args)
+    public static DiscordButtonComponent Build
+    (
+        ActionDiscordButtonEnum action,
+        DiscordButtonComponent button,
+        params object[] args
+    )
     {
         int actionCode;
 
@@ -104,6 +108,4 @@ public static class ActionDiscordButton
 
         return commandButton;
     }
-
-    
 }

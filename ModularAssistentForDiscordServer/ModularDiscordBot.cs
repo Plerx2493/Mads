@@ -19,19 +19,19 @@ namespace MADS;
 
 public class ModularDiscordBot
 {
-    public DiscordClient DiscordClient;
-    public LoggingProvider Logging;
-    public DateTime StartTime;
-    public CancellationToken CancellationToken;
-    
-    private ConfigJson _config;
-    private ServiceProvider _services;
-    private SlashCommandsExtension _slashCommandsExtension;
     private CommandsNextExtension _commandsNextExtension;
+
+    private ConfigJson             _config;
     private InteractivityExtension _interactivityExtension;
-    private TokenListener _tokenListener;
-    
-    
+    private ServiceProvider        _services;
+    private SlashCommandsExtension _slashCommandsExtension;
+    private TokenListener          _tokenListener;
+    public  CancellationToken      CancellationToken;
+    public  DiscordClient          DiscordClient;
+    public  LoggingProvider        Logging;
+    public  DateTime               StartTime;
+
+
     public ModularDiscordBot()
     {
         StartTime = DateTime.Now;
@@ -72,7 +72,7 @@ public class ModularDiscordBot
         DiscordClient.MessageCreated += EventListener.DmHandler;
 
         DiscordActivity act = new(_config.Prefix + "help", ActivityType.Watching);
-        
+
 
         //connect client
         try
@@ -84,7 +84,7 @@ public class ModularDiscordBot
             Console.WriteLine(e);
             throw;
         }
-        
+
         //keep alive
         await Task.Delay(-1, token);
         //
@@ -98,9 +98,9 @@ public class ModularDiscordBot
         Logging.Setup();
         return Task.CompletedTask;
     }
-    
+
     /// <summary>
-    /// Registers all DSharp+ extensions (CNext, SlashCommands, Interactivity), the commands and event handlers for errors
+    ///     Registers all DSharp+ extensions (CNext, SlashCommands, Interactivity), the commands and event handlers for errors
     /// </summary>
     private void RegisterDSharpExtensions()
     {
@@ -150,14 +150,17 @@ public class ModularDiscordBot
     }
 
 
-
-    public static async Task<DiscordMessage> AnswerWithDelete(CommandContext ctx, DiscordEmbed message,
-        int secondsToDelete = 20)
+    public static async Task<DiscordMessage> AnswerWithDelete
+    (
+        CommandContext ctx,
+        DiscordEmbed message,
+        int secondsToDelete = 20
+    )
     {
         var response = await ctx.Channel.SendMessageAsync(message);
 
         if (ctx.Channel.IsPrivate) return response;
-        
+
         await Task.Delay(secondsToDelete * 1000);
         await response.DeleteAsync();
         await ctx.Message.DeleteAsync();

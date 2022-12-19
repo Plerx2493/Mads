@@ -6,9 +6,9 @@ public class CommandUtility
 {
     public static DiscordEmbedBuilder GetDiscordEmbed()
     {
-        var standardEmbed = new DiscordEmbedBuilder()
+        var standardEmbed = new DiscordEmbedBuilder
         {
-            Color = new Optional<DiscordColor>(new DiscordColor(0, 255, 194)),
+            Color = new Optional<DiscordColor>(new DiscordColor(0, 255, 194))
         };
         return standardEmbed;
     }

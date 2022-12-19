@@ -1,19 +1,16 @@
 ﻿using DSharpPlus;
 using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
-using DSharpPlus.SlashCommands.Attributes;
 using DSharpPlus.SlashCommands.EventArgs;
-using Humanizer;
 
 namespace MADS.EventListeners;
 
-internal static partial class EventListener 
+internal static partial class EventListener
 {
     internal static async Task OnSlashCommandErrored(SlashCommandsExtension sender, SlashCommandErrorEventArgs e)
     {
@@ -23,10 +20,10 @@ internal static partial class EventListener
             return;
         }
 
-        if(typeOfException == typeof(SlashExecutionChecksFailedException)) await CooldownReset(sender, e);
-        
+        if (typeOfException == typeof(SlashExecutionChecksFailedException)) await CooldownReset(sender, e);
+
         var embedDescription = new string((e.Exception.Message + ":\n" + e.Exception.StackTrace).Take(4096).ToArray());
-        
+
         DiscordEmbedBuilder discordEmbed = new()
         {
             Title = $"{Formatter.Bold(e.Exception.GetType().ToString())} - The command execution failed",
@@ -40,11 +37,10 @@ internal static partial class EventListener
             await e.Context.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
                 new DiscordInteractionResponseBuilder().AddEmbed(discordEmbed).AsEphemeral());
         }
-        catch(BadRequestException)
+        catch (BadRequestException)
         {
             await e.Context.Channel.SendMessageAsync(discordEmbed);
         }
-       
     }
 
     private static async Task CooldownReset(SlashCommandsExtension sender, SlashCommandErrorEventArgs e)
@@ -75,12 +71,13 @@ internal static partial class EventListener
 
         await e.Context.Message.RespondAsync($"OOPS your command just errored... \n {e.Exception.Message}");
         await e.Context.Message.RespondAsync(e.Exception.InnerException?.Message ?? "no inner exception");
-        
+
         var reallyLongString = e.Exception.StackTrace;
 
         var interactivity = e.Context.Client.GetInteractivity();
         var pages = interactivity.GeneratePagesInEmbed(reallyLongString);
 
-        await e.Context.Channel.SendPaginatedMessageAsync(e.Context.Member, pages, PaginationBehaviour.Ignore, ButtonPaginationBehavior.DeleteButtons);
+        await e.Context.Channel.SendPaginatedMessageAsync(e.Context.Member, pages, PaginationBehaviour.Ignore,
+            ButtonPaginationBehavior.DeleteButtons);
     }
 }

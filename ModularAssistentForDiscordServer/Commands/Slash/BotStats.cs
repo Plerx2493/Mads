@@ -3,10 +3,11 @@ using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using Humanizer;
 using Humanizer.Localisation;
+using MADS.Extensions;
 
 namespace MADS.Commands.Slash;
 
-public class BotStats : ApplicationCommandModule
+public class BotStats : MadsBaseApplicationCommand
 {
     [SlashCommand("botstats", "Get statistics about the bot")]
     public async Task GetBotStatsAsync(InteractionContext ctx)

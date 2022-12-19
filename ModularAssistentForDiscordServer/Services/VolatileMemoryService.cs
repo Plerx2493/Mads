@@ -4,7 +4,7 @@ namespace MADS.Services;
 
 public class VolatileMemoryService
 {
-    private List<ulong> _voiceTrollUser;
+    private readonly List<ulong> _voiceTrollUser;
 
     public VolatileMemoryService(List<ulong> voiceTrollUsers)
     {
@@ -16,7 +16,7 @@ public class VolatileMemoryService
         _voiceTrollUser = new List<ulong>();
     }
 
-    public void AddVoiceTrollUser(DiscordUser user) 
+    public void AddVoiceTrollUser(DiscordUser user)
     {
         if (!_voiceTrollUser.Contains(user.Id)) _voiceTrollUser.Add(user.Id);
     }

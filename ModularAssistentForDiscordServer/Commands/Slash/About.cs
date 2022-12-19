@@ -2,14 +2,13 @@
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using Humanizer;
+using MADS.Extensions;
 
 namespace MADS.Commands.Slash;
 
-public class About : ApplicationCommandModule
+public class About : MadsBaseApplicationCommand
 {
-   public MadsServiceProvider            CommandService { get; set; }
-
-   [SlashCommand("about", "Infos about the bot")]
+    [SlashCommand("about", "Infos about the bot")]
     public async Task AboutCommand(InteractionContext ctx)
     {
         var discordEmbedBuilder = CommandUtility.GetDiscordEmbed();
@@ -41,7 +40,5 @@ public class About : ApplicationCommandModule
         discordMessageBuilder.AsEphemeral();
 
         await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, discordMessageBuilder);
-        var response = await ctx.GetOriginalResponseAsync();
-        await CommandService.ModularDiscordBot.Logging.LogCommandExecutionAsync(ctx, response);
-    } 
+    }
 }

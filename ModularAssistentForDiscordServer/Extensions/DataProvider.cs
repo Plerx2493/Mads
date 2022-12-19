@@ -1,5 +1,4 @@
 ﻿using MADS.JsonModel;
-using Microsoft.CodeAnalysis;
 
 namespace MADS.Extensions;
 
@@ -28,20 +27,20 @@ internal static class DataProvider
     public static bool TryGetOAuthTokenByUser(ulong userId, out string token)
     {
         var file = JsonProvider.ReadFile<OAuthTokenJson>(GetPath("oauthtoken.json"));
-        
+
         return file.Token.TryGetValue(userId, out token);
     }
 
     public static bool TryInsertUserToken(ulong userId, string token)
     {
         var file = JsonProvider.ReadFile<OAuthTokenJson>(GetPath("oauthtoken.json"));
-        
+
         var success = file.Token.TryAdd(userId, token);
-        
+
         file.TokenCount++;
-        
+
         JsonProvider.ParseJson(GetPath("config.json"), file);
-        
+
         return success;
     }
 }

@@ -9,15 +9,15 @@ namespace MADS.Commands.ContextMenu;
 public class StealEmojiMessage : ApplicationCommandModule
 {
     private const string EmojiRegex = @"<a?:(.+?):(\d+)>";
-    
+
     [ContextMenu(ApplicationCommandType.MessageContextMenu, "Steal emoji"),
-    SlashRequirePermissions(Permissions.ManageEmojis)]
+     SlashRequirePermissions(Permissions.ManageEmojis)]
     public async Task YoinkAsync(ContextMenuContext ctx)
     {
         await ctx.DeferAsync(true);
-        
+
         var matches = Regex.Matches(ctx.TargetMessage.Content, EmojiRegex);
-        
+
         if (matches.Count < 1)
         {
             await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("⚠️ Emoji not found!"));
@@ -43,17 +43,19 @@ public class StealEmojiMessage : ApplicationCommandModule
     private static async Task<bool> CopyEmoji(ContextMenuContext ctx, string name, ulong id, bool animated)
     {
         using HttpClient httpClient = new();
-        var downloadedEmoji = await httpClient.GetStreamAsync($"https://cdn.discordapp.com/emojis/{id}.{(animated ? "gif" : "png")}");
-        
+        var downloadedEmoji =
+            await httpClient.GetStreamAsync($"https://cdn.discordapp.com/emojis/{id}.{(animated ? "gif" : "png")}");
+
         MemoryStream memory = new();
-        
+
         await downloadedEmoji.CopyToAsync(memory);
-        
+
         await downloadedEmoji.DisposeAsync();
         var newEmoji = await ctx.Guild.CreateEmojiAsync(name, memory);
-            
-        var discordWebhook = new DiscordWebhookBuilder().AddEmbed(new DiscordEmbedBuilder().WithTitle($"✅ Yoink! This emoji has been added to your server: {newEmoji}"));
-        
+
+        var discordWebhook = new DiscordWebhookBuilder().AddEmbed(
+            new DiscordEmbedBuilder().WithTitle($"✅ Yoink! This emoji has been added to your server: {newEmoji}"));
+
         await ctx.EditResponseAsync(discordWebhook);
         return true;
     }

@@ -7,22 +7,6 @@ namespace MADS.Entities;
 
 public class GuildDbEntity
 {
-    [Key]
-    [Column("id")]
-    [DefaultValue(0)]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public ulong Id { get; init; }
-    
-    [Required]
-    [Column("discordId")]
-    public ulong DiscordId { get; set; }
-    
-    public GuildSettings Settings { get; set; }
-
-    public List<GuildUserDbEntity>? Users { get; set; }
-
-    public List<IncidentDbEntity>? Incidents { get; set; }
-
     public GuildDbEntity()
     {
         Id = 0;
@@ -36,4 +20,16 @@ public class GuildDbEntity
         Users = old.Users;
         Incidents = old.Incidents;
     }
+
+    [Key, Column("id"), DefaultValue(0), DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public ulong Id { get; init; }
+
+    [Required, Column("discordId")]
+    public ulong DiscordId { get; set; }
+
+    public GuildSettings Settings { get; set; }
+
+    public List<GuildUserDbEntity>? Users { get; set; }
+
+    public List<IncidentDbEntity>? Incidents { get; set; }
 }
