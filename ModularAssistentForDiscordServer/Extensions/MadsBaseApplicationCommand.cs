@@ -21,7 +21,7 @@ public class MadsBaseApplicationCommand : ApplicationCommandModule
     {
         _executionTimer.Stop();
 
-        //Do logging stuff here
+        CommandService.ModularDiscordBot.Logging.LogCommandExecutionAsync(ctx, _executionTimer.Elapsed);
 
 
         return Task.FromResult(true);
@@ -38,7 +38,7 @@ public class MadsBaseApplicationCommand : ApplicationCommandModule
     {
         _executionTimer.Stop();
 
-        //Do logging stuff here
+        CommandService.ModularDiscordBot.Logging.LogCommandExecutionAsync(ctx, _executionTimer.Elapsed);
 
         return Task.FromResult(true);
     }

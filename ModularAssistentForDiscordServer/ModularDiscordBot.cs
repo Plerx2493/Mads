@@ -54,7 +54,10 @@ public class ModularDiscordBot
 
         DiscordClient = new DiscordClient(discordConfig);
         _tokenListener = new TokenListener("51151", "/api/v1/mads/token/");
+        
+#pragma warning disable CS4014
         _tokenListener.StartAsync(CancellationToken);
+#pragma warning restore CS4014
 
         _services = new ServiceCollection()
                     .AddSingleton(new MadsServiceProvider(this))
