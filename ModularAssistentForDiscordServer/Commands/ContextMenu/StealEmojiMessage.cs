@@ -3,10 +3,11 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.Attributes;
+using MADS.Extensions;
 
 namespace MADS.Commands.ContextMenu;
 
-public class StealEmojiMessage : ApplicationCommandModule
+public class StealEmojiMessage : MadsBaseApplicationCommand
 {
     private const string EmojiRegex = @"<a?:(.+?):(\d+)>";
 

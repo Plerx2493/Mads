@@ -3,12 +3,12 @@ using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 using DSharpPlus.SlashCommands;
 using Humanizer;
+using MADS.Extensions;
 
 namespace MADS.Commands.ContextMenu;
 
-public class UserInfoUser : ApplicationCommandModule
+public class UserInfoUser : MadsBaseApplicationCommand
 {
-    public MadsServiceProvider CommandService { get; set; }
 
     [ContextMenu(ApplicationCommandType.UserContextMenu, "Info")]
     public async Task GetUserInfo(ContextMenuContext ctx)

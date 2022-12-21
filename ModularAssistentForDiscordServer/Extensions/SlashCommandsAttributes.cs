@@ -2,7 +2,7 @@
 
 namespace MADS.Extensions;
 
-public sealed class RequireOwnerAttribute : SlashCheckBaseAttribute
+public sealed class SlashRequireOwnerAttribute : SlashCheckBaseAttribute
 {
     public override Task<bool> ExecuteChecksAsync(InteractionContext ctx)
     {

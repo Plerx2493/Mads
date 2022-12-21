@@ -2,15 +2,15 @@
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using MADS.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 
 namespace MADS.Commands.Text.Base;
 
 [RequireOwner, Hidden]
-public class Eval : BaseCommandModule
+public class Eval : MadsBaseCommand
 {
-    public MadsServiceProvider CommandService { get; set; }
 
     [Command("eval"), Description("Evaluate the result of c# code"), Hidden]
     public async Task EvalCommand(CommandContext ctx, [RemainingText] string code)
