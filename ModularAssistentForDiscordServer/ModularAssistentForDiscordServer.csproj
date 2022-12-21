@@ -27,7 +27,7 @@
         <PackageReference Include="DSharpPlus.CommandsNext" Version="4.3.0-nightly-01223" />
         <PackageReference Include="DSharpPlus.Interactivity" Version="4.3.0-nightly-01223" />
         <PackageReference Include="DSharpPlus.Rest" Version="4.3.0-nightly-01223" />
-        <PackageReference Include="DSharpPlus.SlashCommands" Version="4.3.0-nightly-01223" />
+        <PackageReference Include="DSharpPlus.SlashCommands" Version="4.3.0" />
         <PackageReference Include="DSharpPlus.VoiceNext" Version="4.3.0-nightly-01223" />
         <PackageReference Include="EntityFramework" Version="6.4.4" />
         <PackageReference Include="FlexLabs.EntityFrameworkCore.Upsert" Version="6.0.1" />
