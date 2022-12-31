@@ -1,32 +1,70 @@
-﻿using DSharpPlus.Entities;
+﻿using System.Collections.Concurrent;
+using DSharpPlus.Entities;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace MADS.Services;
 
 public class VolatileMemoryService
 {
-    private readonly List<ulong> _voiceTrollUser;
-
-    public VolatileMemoryService(List<ulong> voiceTrollUsers)
+    public MessageSnipe MessageSnipe;
+    public VoiceTroll VoiceTroll;
+    
+    public VolatileMemoryService()
     {
-        _voiceTrollUser = voiceTrollUsers;
+        VoiceTroll = new VoiceTroll();
+        MessageSnipe = new MessageSnipe();
+    }
+    
+}
+
+public class MessageSnipe
+{
+    private MemoryCache _cachedMessages;
+
+    public MessageSnipe()
+    {
+        var options = new MemoryCacheOptions()
+        {
+            ExpirationScanFrequency = TimeSpan.FromMinutes(5)
+        };
+        _cachedMessages = new(options);
     }
 
-    public VolatileMemoryService()
+    public void AddMessage(DiscordMessage message)
+    {
+        
+    }
+    
+    public void DeleteMessage(DiscordMessage message)
+    {
+        
+    }
+    
+    public void DeleteMessageFromChannel(ulong message)
+    {
+        
+    }
+}
+
+public class VoiceTroll
+{
+    private readonly List<ulong> _voiceTrollUser;
+
+    public VoiceTroll()
     {
         _voiceTrollUser = new List<ulong>();
     }
-
-    public void AddVoiceTrollUser(DiscordUser user)
+    public void Add(DiscordUser user)
     {
         if (!_voiceTrollUser.Contains(user.Id)) _voiceTrollUser.Add(user.Id);
     }
 
-    public void DeleteVoiceTrollUser(DiscordUser user)
+    public void Delete(DiscordUser user)
     {
         _voiceTrollUser.RemoveAll(x => user.Id == x);
     }
 
-    public bool IsVoiceTrollUser(DiscordUser user)
+    public bool Active(DiscordUser user)
     {
         return _voiceTrollUser.Contains(user.Id);
     }

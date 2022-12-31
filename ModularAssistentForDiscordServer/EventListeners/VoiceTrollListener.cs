@@ -11,7 +11,7 @@ internal static partial class EventListener
         client.VoiceStateUpdated += async Task(s, e) =>
         {
             if (e.After is null || e.Before is not null) return;
-            if (!memory.IsVoiceTrollUser(e.User)) return;
+            if (!memory.VoiceTroll.Active(e.User)) return;
             Task.Run(() => TrollUser(s, e));
         };
     }
