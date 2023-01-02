@@ -33,7 +33,7 @@ public class Eval : MadsBaseCommand
 
         try
         {
-            TestVariables globalVariables = new(ctx.Message, ctx.Client, ctx, CommandService.ModularDiscordBot);
+            TestVariables globalVariables = new(ctx.Message, ctx.Client, ctx, CommandService);
 
             var scriptOptions = ScriptOptions.Default;
             scriptOptions = scriptOptions.WithImports("System", "System.Collections.Generic", "System.Linq",

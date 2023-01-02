@@ -8,5 +8,6 @@ public enum ActionDiscordButtonEnum : byte
     GetIdChannel,
     GetIdGuild,
     MoveVoiceChannel,
-    AnswerDmChannel
+    AnswerDmChannel,
+    DeleteOneUserOnly
 }

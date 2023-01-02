@@ -10,7 +10,7 @@ public class Ping : MadsBaseApplicationCommand
     [SlashCommand("ping", "Get the bot's ping"), SlashCooldown(1, 60, SlashCooldownBucketType.User)]
     public async Task PingCommand(InteractionContext ctx)
     {
-        var diff = DateTime.Now - CommandService.ModularDiscordBot.StartTime;
+        var diff = DateTime.Now - CommandService.StartTime;
         var date = TimeSpanHumanizeExtensions
             .Humanize(diff); //$"{diff.Days} days {diff.Hours} hours {diff.Minutes} minutes";
 

@@ -54,6 +54,10 @@ internal static partial class EventListener
                     case (int)ActionDiscordButtonEnum.MoveVoiceChannel:
                         MoveVoiceChannelUser(e, substring);
                         break;
+                    
+                    case (int)ActionDiscordButtonEnum.DeleteOneUserOnly: 
+                        DeleteOneUserOnly(e, substring);
+                        break;
                 }
             }
             catch (Exception exception)
@@ -64,11 +68,17 @@ internal static partial class EventListener
         };
     }
 
+    private static async void DeleteOneUserOnly(ComponentInteractionCreateEventArgs e, IReadOnlyList<string> substring)
+    {
+        if (e.User.Id.ToString() != substring[1]) return;
+        await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+        await e.Message.DeleteAsync();
+    }
+
     private static async void MoveVoiceChannelUser(ComponentInteractionCreateEventArgs e,
         IReadOnlyList<string> substring)
     {
-        Console.WriteLine("CommandButton triggered");
-        
+
         var member = await e.Guild.GetMemberAsync(e.User.Id);
         if (!member.Permissions.HasPermission(Permissions.MoveMembers)) { return; }
         var originChannel = e.Guild.GetChannel(ulong.Parse(substring[1]));
@@ -78,9 +88,7 @@ internal static partial class EventListener
         {
             await targetChannel.PlaceMemberAsync(voiceMember);
         }
-        
-        Console.WriteLine("Test");
-        
+
         await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
     }
 

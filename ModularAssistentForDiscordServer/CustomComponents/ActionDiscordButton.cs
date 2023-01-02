@@ -97,6 +97,18 @@ public static class ActionDiscordButton
                 actionCode = (int)ActionDiscordButtonEnum.MoveVoiceChannel;
                 customId += actionCode + ":" + args[0] + ":" + args[1];
                 break;
+            case ActionDiscordButtonEnum.DeleteOneUserOnly:
+                if (args.Length != 1)
+                {
+                    throw new ArgumentException("Only 1 id possible");
+                }
+                if (args[0].GetType() != typeof(ulong))
+                {
+                    throw new ArgumentException("Please provide 1 id (ulong)");
+                }
+                actionCode = (int)ActionDiscordButtonEnum.DeleteOneUserOnly;
+                customId += actionCode + ":" + args[0]; //+ ":" + args[1];
+                break;
 
             default:
                 throw new NotImplementedException("Action code not implemented");

@@ -1,6 +1,6 @@
-﻿using System.Collections.Concurrent;
-using DSharpPlus.Entities;
+﻿using DSharpPlus.Entities;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.Services;
 
@@ -23,26 +23,57 @@ public class MessageSnipe
 
     public MessageSnipe()
     {
-        var options = new MemoryCacheOptions()
+        var options = new MemoryCacheOptions
         {
             ExpirationScanFrequency = TimeSpan.FromMinutes(5)
         };
-        _cachedMessages = new(options);
+        _cachedMessages = new MemoryCache(options);
     }
 
     public void AddMessage(DiscordMessage message)
     {
-        
+        var id = CreateSnipedGuid(message.ChannelId);
+        _cachedMessages.Set(id, message, TimeSpan.FromHours(12));
     }
     
-    public void DeleteMessage(DiscordMessage message)
+    public void DeleteMessage(ulong channel)
     {
-        
+        var id = CreateSnipedGuid(channel);
+        _cachedMessages.Remove(id);
     }
     
-    public void DeleteMessageFromChannel(ulong message)
+    public void AddEditedMessage(DiscordMessage message)
     {
-        
+        var id = CreateSnipedEditedGuid(message.ChannelId);
+        _cachedMessages.Set(id, message, TimeSpan.FromHours(12));
+    }
+
+    public void DeleteEditedMessage(ulong channel)
+    {
+        var id = CreateSnipedEditedGuid(channel);
+        _cachedMessages.Remove(id);
+    }
+
+    public bool TryGetMessage(ulong channelId, out DiscordMessage message)
+    {
+        var id = CreateSnipedGuid(channelId);
+        return _cachedMessages.TryGetValue(id, out message);
+    }
+    
+    public bool TryGetEditedMessage(ulong channelId, out DiscordMessage message)
+    {
+        var id = CreateSnipedEditedGuid(channelId);
+        return _cachedMessages.TryGetValue(id, out message);
+    }
+
+    private static string CreateSnipedGuid(ulong channelId)
+    {
+        return $"snipedMessage_{channelId}";
+    }
+    
+    private static string CreateSnipedEditedGuid(ulong channelId)
+    {
+        return $"snipedMessage_edit_{channelId}";
     }
 }
 

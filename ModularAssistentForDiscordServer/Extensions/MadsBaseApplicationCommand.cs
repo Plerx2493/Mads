@@ -8,7 +8,7 @@ namespace MADS.Extensions;
 public class MadsBaseApplicationCommand : ApplicationCommandModule
 {
     private readonly Stopwatch           _executionTimer = new();
-    public           MadsServiceProvider CommandService { get; set; }
+    public           ModularDiscordBot CommandService { get; set; }
 
     public override Task<bool> BeforeSlashExecutionAsync(InteractionContext ctx)
     {
@@ -21,7 +21,7 @@ public class MadsBaseApplicationCommand : ApplicationCommandModule
     {
         _executionTimer.Stop();
 
-        CommandService.ModularDiscordBot.Logging.LogCommandExecutionAsync(ctx, _executionTimer.Elapsed);
+        CommandService.Logging.LogCommandExecutionAsync(ctx, _executionTimer.Elapsed);
 
 
         return Task.FromResult(true);
@@ -38,7 +38,7 @@ public class MadsBaseApplicationCommand : ApplicationCommandModule
     {
         _executionTimer.Stop();
 
-        CommandService.ModularDiscordBot.Logging.LogCommandExecutionAsync(ctx, _executionTimer.Elapsed);
+        CommandService.Logging.LogCommandExecutionAsync(ctx, _executionTimer.Elapsed);
 
         return Task.FromResult(true);
     }
