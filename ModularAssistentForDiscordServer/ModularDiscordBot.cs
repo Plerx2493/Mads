@@ -21,15 +21,15 @@ public class ModularDiscordBot
 {
     private CommandsNextExtension _commandsNextExtension;
 
-    private ConfigJson             _config;
-    private InteractivityExtension _interactivityExtension;
-    private ServiceProvider        _services;
-    private SlashCommandsExtension _slashCommandsExtension;
-    private TokenListener          _tokenListener;
-    public  CancellationToken      CancellationToken;
-    public  DiscordClient          DiscordClient;
-    public  LoggingProvider        Logging;
-    public  DateTime               StartTime;
+    private         ConfigJson             _config;
+    private         InteractivityExtension _interactivityExtension;
+    private         ServiceProvider        _services;
+    private         SlashCommandsExtension _slashCommandsExtension;
+    private         TokenListener          _tokenListener;
+    public          CancellationToken      CancellationToken;
+    public          DiscordClient          DiscordClient;
+    public readonly LoggingProvider        Logging;
+    public          DateTime               StartTime;
 
 
     public ModularDiscordBot()
@@ -60,7 +60,7 @@ public class ModularDiscordBot
 #pragma warning restore CS4014
 
         _services = new ServiceCollection()
-                    .AddSingleton(new MadsServiceProvider(this))
+                    .AddSingleton(this)
                     .AddSingleton(new VolatileMemoryService())
                     .AddSingleton(_tokenListener)
                     .BuildServiceProvider();
@@ -68,13 +68,13 @@ public class ModularDiscordBot
 
         RegisterDSharpExtensions();
 
-
+        EventListener.EnableMessageSniper(DiscordClient,_services.GetService<VolatileMemoryService>());
         await EventListener.VoiceTrollListener(DiscordClient, _services.GetService<VolatileMemoryService>());
         DiscordClient.Zombied += EventListener.OnZombied;
         DiscordClient.GuildDownloadCompleted += OnGuildDownloadCompleted;
         DiscordClient.MessageCreated += EventListener.DmHandler;
 
-        DiscordActivity act = new(_config.Prefix + "help", ActivityType.Watching);
+        DiscordActivity act = new("over some Servers", ActivityType.Watching);
 
 
         //connect client

@@ -17,7 +17,7 @@ public class About : MadsBaseApplicationCommand
             OAuthScope.ApplicationsCommands);
         var addMe = $"[Click here!]({inviteUri.Replace(" ", "%20")})";
 
-        var diff = DateTime.Now - CommandService.ModularDiscordBot.StartTime;
+        var diff = DateTime.Now - CommandService.StartTime;
         var date = $"{diff.Days} days {diff.Hours} hours {diff.Minutes} minutes";
 
         discordEmbedBuilder
