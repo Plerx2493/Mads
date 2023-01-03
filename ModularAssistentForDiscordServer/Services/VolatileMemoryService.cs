@@ -53,13 +53,17 @@ public class MessageSnipe
     public bool TryGetMessage(ulong channelId, out DiscordMessage message)
     {
         var id = CreateSnipedGuid(channelId);
-        return _cachedMessages.TryGetValue(id, out message);
+        var result = _cachedMessages.TryGetValue(id, out message);
+        if (result) _cachedMessages.Remove(id);
+        return result;
     }
     
     public bool TryGetEditedMessage(ulong channelId, out DiscordMessage message)
     {
         var id = CreateSnipedEditedGuid(channelId);
-        return _cachedMessages.TryGetValue(id, out message);
+        var result = _cachedMessages.TryGetValue(id, out message);
+        if(result) _cachedMessages.Remove(id);
+        return result;
     }
 
     private static string CreateSnipedGuid(ulong channelId)
