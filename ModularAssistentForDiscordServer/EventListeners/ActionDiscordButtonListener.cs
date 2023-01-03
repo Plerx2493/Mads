@@ -3,6 +3,7 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using MADS.CustomComponents;
+using Microsoft.Extensions.Logging;
 
 namespace MADS.EventListeners;
 
@@ -10,11 +11,11 @@ internal static partial class EventListener
 {
     public static void EnableButtonListener(DiscordClient client)
     {
-        client.ComponentInteractionCreated += Task(_, e) =>
+        client.ComponentInteractionCreated += Task(sender, e) =>
         {
             try
             {
-                Console.WriteLine(e.Id);
+                sender.Logger.LogTrace(e?.Id);
 
                 if (!Regex.IsMatch(e.Id, @"^CMD:\d{1,4}(?::\d{1,20}){0,3}$"))
                 {
@@ -62,7 +63,7 @@ internal static partial class EventListener
             }
             catch (Exception exception)
             {
-                MainProgram.LogToWebhookAsync(exception);
+                var _ = MainProgram.LogToWebhookAsync(exception);
             }
             return Task.CompletedTask;
         };

@@ -9,25 +9,25 @@ public class VolatileMemoryService
     public MessageSnipe MessageSnipe;
     public VoiceTroll VoiceTroll;
     
-    public VolatileMemoryService()
+    public VolatileMemoryService(IMemoryCache memoryCache)
     {
         VoiceTroll = new VoiceTroll();
-        MessageSnipe = new MessageSnipe();
+        MessageSnipe = new MessageSnipe(memoryCache);
     }
     
 }
 
 public class MessageSnipe
 {
-    private MemoryCache _cachedMessages;
+    private IMemoryCache _cachedMessages;
 
-    public MessageSnipe()
+    public MessageSnipe(IMemoryCache memoryCache)
     {
         var options = new MemoryCacheOptions
         {
             ExpirationScanFrequency = TimeSpan.FromMinutes(5)
         };
-        _cachedMessages = new MemoryCache(options);
+        _cachedMessages = memoryCache;
     }
 
     public void AddMessage(DiscordMessage message)

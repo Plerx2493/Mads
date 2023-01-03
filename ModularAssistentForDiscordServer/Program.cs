@@ -54,9 +54,16 @@ internal static class MainProgram
                 if (e is TaskCanceledException) return;
                 
                 LogToWebhookAsync(e);
+                modularDiscordBot.Dispose();
             }
 
-            Task.Delay(10_000, cancellationSource.Token).GetAwaiter().GetResult();
+            try
+            {
+                Task.Delay(10_000, cancellationSource.Token).GetAwaiter().GetResult();
+            }
+            catch (TaskCanceledException e)
+            {
+            }
         }
     }
 
