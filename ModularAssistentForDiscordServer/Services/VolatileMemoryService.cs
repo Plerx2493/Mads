@@ -23,10 +23,6 @@ public class MessageSnipe
 
     public MessageSnipe(IMemoryCache memoryCache)
     {
-        var options = new MemoryCacheOptions
-        {
-            ExpirationScanFrequency = TimeSpan.FromMinutes(5)
-        };
         _cachedMessages = memoryCache;
     }
 
