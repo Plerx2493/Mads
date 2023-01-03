@@ -1,6 +1,8 @@
 ﻿using DSharpPlus;
 using DSharpPlus.EventArgs;
 using MADS.Services;
+using Microsoft.Extensions.Logging;
+
 
 namespace MADS.EventListeners;
 
@@ -29,7 +31,8 @@ internal static partial class EventListener
         {
             memory.MessageSnipe.AddMessage(e.Message);
             
-            Console.WriteLine("Added to cache");
+           sender.Logger.LogDebug("Message added to cache");
+
         }
     }
     
@@ -44,6 +47,6 @@ internal static partial class EventListener
         
         memory.MessageSnipe.AddEditedMessage(e.MessageBefore);
             
-        Console.WriteLine("Added to cache (edited)");
+        sender.Logger.LogDebug("Message edit added to cache");
     }
 }

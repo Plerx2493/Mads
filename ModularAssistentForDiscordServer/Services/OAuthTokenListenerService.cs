@@ -3,7 +3,7 @@ using System.Text;
 
 namespace MADS.Services;
 
-public class TokenListener
+public class TokenListener : IDisposable
 {
     // lang=html
     private const string pageData =
@@ -71,5 +71,11 @@ public class TokenListener
         _listener.Abort();
         _listenTask.Dispose();
         return Task.CompletedTask;
+    }
+
+    public void Dispose()
+    {
+        _listener.Abort();
+        //_listenTask?.Dispose();
     }
 }

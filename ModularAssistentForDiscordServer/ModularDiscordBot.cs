@@ -17,7 +17,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS;
 
-public class ModularDiscordBot
+public class ModularDiscordBot : IDisposable
 {
     private CommandsNextExtension _commandsNextExtension;
 
@@ -61,7 +61,8 @@ public class ModularDiscordBot
 
         _services = new ServiceCollection()
                     .AddSingleton(this)
-                    .AddSingleton(new VolatileMemoryService())
+                    .AddMemoryCache(options => options.ExpirationScanFrequency = TimeSpan.FromMinutes(10))
+                    .AddSingleton<VolatileMemoryService>()
                     .AddSingleton(_tokenListener)
                     .BuildServiceProvider();
 
@@ -178,5 +179,13 @@ public class ModularDiscordBot
     private Task<int> GetPrefixPositionAsync(DiscordMessage msg)
     {
         return Task.FromResult(-1);
+    }
+
+    public void Dispose()
+    {
+        _commandsNextExtension?.Dispose();
+        _services?.Dispose();
+        DiscordClient?.Dispose();
+        _tokenListener.Dispose();
     }
 }
