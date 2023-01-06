@@ -14,8 +14,8 @@ public struct ConfigJson
     [JsonProperty("minmumloglvl")]
     public LogLevel LogLevel { get; set; }
 
-    //[JsonProperty("databaseConnectionString")]
-    //public string ConnectionString { get; set; }
+    [JsonProperty("databaseConnectionString")]
+    public string ConnectionString { get; set; }
 
     [JsonProperty("discordWebhook")]
     public string DiscordWebhook { get; set; }

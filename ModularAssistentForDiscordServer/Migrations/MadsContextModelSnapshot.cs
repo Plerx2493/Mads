@@ -16,7 +16,7 @@ namespace MADS.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "6.0.9")
+                .HasAnnotation("ProductVersion", "7.0.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("MADS.Entities.GuildConfigDbEntity", b =>
@@ -36,7 +36,7 @@ namespace MADS.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("GuildConfigs");
+                    b.ToTable("GuildConfigDbEntity");
                 });
 
             modelBuilder.Entity("MADS.Entities.GuildDbEntity", b =>
@@ -46,21 +46,11 @@ namespace MADS.Migrations
                         .HasColumnType("bigint unsigned")
                         .HasColumnName("id");
 
-                    b.Property<ulong?>("ConfigId")
-                        .HasColumnType("bigint unsigned");
-
                     b.Property<ulong>("DiscordId")
                         .HasColumnType("bigint unsigned")
                         .HasColumnName("discordId");
 
-                    b.Property<string>("Prefix")
-                        .IsRequired()
-                        .HasColumnType("longtext")
-                        .HasColumnName("prefix");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("ConfigId");
 
                     b.ToTable("Guilds");
                 });
@@ -136,11 +126,13 @@ namespace MADS.Migrations
 
             modelBuilder.Entity("MADS.Entities.GuildDbEntity", b =>
                 {
-                    b.HasOne("MADS.Entities.GuildConfigDbEntity", "Config")
-                        .WithMany()
-                        .HasForeignKey("ConfigId");
+                    b.HasOne("MADS.Entities.GuildConfigDbEntity", "Settings")
+                        .WithOne("Guild")
+                        .HasForeignKey("MADS.Entities.GuildDbEntity", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Navigation("Config");
+                    b.Navigation("Settings");
                 });
 
             modelBuilder.Entity("MADS.Entities.GuildUserDbEntity", b =>
@@ -175,6 +167,11 @@ namespace MADS.Migrations
                     b.Navigation("Guild");
 
                     b.Navigation("TargetUser");
+                });
+
+            modelBuilder.Entity("MADS.Entities.GuildConfigDbEntity", b =>
+                {
+                    b.Navigation("Guild");
                 });
 
             modelBuilder.Entity("MADS.Entities.GuildDbEntity", b =>

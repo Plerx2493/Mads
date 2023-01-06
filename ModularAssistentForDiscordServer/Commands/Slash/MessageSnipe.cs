@@ -1,4 +1,5 @@
-﻿using DSharpPlus;
+﻿using System.Security.Policy;
+using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using MADS.CustomComponents;
@@ -83,6 +84,12 @@ public class MessageSnipe : MadsBaseApplicationCommand
         btn = ActionDiscordButton.Build(ActionDiscordButtonEnum.DeleteOneUserOnly, btn, message.Author.Id);
         
         response.AddComponents(btn);
+        
+        if (edit)
+        {
+            var btn1 = new DiscordLinkButtonComponent(message.JumpLink.ToString(), "Go to message");
+            response.AddComponents(btn1);
+        }
 
         await ctx.CreateResponseAsync(response);
     }

@@ -22,6 +22,8 @@ public class GuildConfigDbEntity
     [Column("prefix")]
     public string Prefix { get; set; }
     
+    public GuildDbEntity Guild { get; set; }
+    
     
     public GuildConfigDbEntity(ulong guildId, string prefix)
     {

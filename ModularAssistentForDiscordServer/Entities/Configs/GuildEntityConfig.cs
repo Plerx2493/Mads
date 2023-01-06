@@ -10,5 +10,9 @@ public class GuildEntityConfig : IEntityTypeConfiguration<GuildDbEntity>
         builder.HasMany(u => u.Incidents)
                .WithOne(i => i.Guild)
                .HasForeignKey(i => i.Id);
+        builder.HasOne(x => x.Settings);
+        builder.HasOne(a => a.Settings)
+               .WithOne(b => b.Guild)
+               .HasForeignKey<GuildDbEntity>(b => b.Id);
     }
 }
