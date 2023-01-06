@@ -27,7 +27,7 @@ public class GuildDbEntity
     [Required, Column("discordId")]
     public ulong DiscordId { get; set; }
 
-    public GuildSettings Settings { get; set; }
+    public GuildConfigDbEntity Settings { get; set; }
 
     public List<GuildUserDbEntity>? Users { get; set; }
 

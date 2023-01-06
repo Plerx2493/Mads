@@ -6,15 +6,17 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace MADS.Migrations
 {
-    public partial class Initial : Migration
+    /// <inheritdoc />
+    public partial class CreateDatabase : Migration
     {
+        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterDatabase()
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "GuildConfigs",
+                name: "GuildConfigDbEntity",
                 columns: table => new
                 {
                     id = table.Column<ulong>(type: "bigint unsigned", nullable: false)
@@ -25,7 +27,7 @@ namespace MADS.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_GuildConfigs", x => x.id);
+                    table.PrimaryKey("PK_GuildConfigDbEntity", x => x.id);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -46,21 +48,18 @@ namespace MADS.Migrations
                 name: "Guilds",
                 columns: table => new
                 {
-                    id = table.Column<ulong>(type: "bigint unsigned", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    discordId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    prefix = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    ConfigId = table.Column<ulong>(type: "bigint unsigned", nullable: true)
+                    id = table.Column<ulong>(type: "bigint unsigned", nullable: false),
+                    discordId = table.Column<ulong>(type: "bigint unsigned", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Guilds", x => x.id);
                     table.ForeignKey(
-                        name: "FK_Guilds_GuildConfigs_ConfigId",
-                        column: x => x.ConfigId,
-                        principalTable: "GuildConfigs",
-                        principalColumn: "id");
+                        name: "FK_Guilds_GuildConfigDbEntity_id",
+                        column: x => x.id,
+                        principalTable: "GuildConfigDbEntity",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -96,8 +95,8 @@ namespace MADS.Migrations
                 columns: table => new
                 {
                     Id = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    target_id = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    moderator_id = table.Column<ulong>(type: "bigint unsigned", nullable: false),
+                    targetid = table.Column<ulong>(name: "target_id", type: "bigint unsigned", nullable: false),
+                    moderatorid = table.Column<ulong>(name: "moderator_id", type: "bigint unsigned", nullable: false),
                     reason = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     TargetUserId = table.Column<ulong>(type: "bigint unsigned", nullable: true),
@@ -121,11 +120,6 @@ namespace MADS.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Guilds_ConfigId",
-                table: "Guilds",
-                column: "ConfigId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_GuildUsers_guildId",
                 table: "GuildUsers",
                 column: "guildId");
@@ -141,6 +135,7 @@ namespace MADS.Migrations
                 column: "TargetUserId");
         }
 
+        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
@@ -156,7 +151,7 @@ namespace MADS.Migrations
                 name: "Users");
 
             migrationBuilder.DropTable(
-                name: "GuildConfigs");
+                name: "GuildConfigDbEntity");
         }
     }
 }

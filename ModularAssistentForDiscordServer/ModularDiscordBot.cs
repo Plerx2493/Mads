@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Configuration;
+using System.Reflection;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Executors;
@@ -9,11 +10,14 @@ using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
 using MADS.Commands;
+using MADS.Entities;
 using MADS.EventListeners;
 using MADS.Extensions;
 using MADS.JsonModel;
 using MADS.Services;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 
 namespace MADS;
 
@@ -21,15 +25,16 @@ public class ModularDiscordBot : IDisposable
 {
     private CommandsNextExtension _commandsNextExtension;
 
-    private         ConfigJson             _config;
-    private         InteractivityExtension _interactivityExtension;
-    private         ServiceProvider        _services;
-    private         SlashCommandsExtension _slashCommandsExtension;
-    private         TokenListener          _tokenListener;
-    public          CancellationToken      CancellationToken;
-    public          DiscordClient          DiscordClient;
-    public readonly LoggingProvider        Logging;
-    public          DateTime               StartTime;
+    private         ConfigJson                     _config;
+    private         InteractivityExtension         _interactivityExtension;
+    private         ServiceProvider                _services;
+    private         SlashCommandsExtension         _slashCommandsExtension;
+    private         TokenListener                  _tokenListener;
+    public          CancellationToken              CancellationToken;
+    public          DiscordClient                  DiscordClient;
+    public readonly LoggingProvider                Logging;
+    public          DateTime                       StartTime;
+    private         IDbContextFactory<MadsContext> _contextProvider;
 
 
     public ModularDiscordBot()
@@ -61,6 +66,10 @@ public class ModularDiscordBot : IDisposable
 
         _services = new ServiceCollection()
                     .AddSingleton(this)
+                    .AddEntityFrameworkMySql()
+                    .AddDbContextFactory<MadsContext>(
+                        options => options.UseMySql(_config.ConnectionString, ServerVersion.AutoDetect(_config.ConnectionString))
+                        )
                     .AddMemoryCache(options => options.ExpirationScanFrequency = TimeSpan.FromMinutes(10))
                     .AddSingleton<VolatileMemoryService>()
                     .AddSingleton(_tokenListener)
@@ -68,7 +77,12 @@ public class ModularDiscordBot : IDisposable
 
 
         RegisterDSharpExtensions();
-
+        
+        //Update database to latest version
+        _contextProvider = _services.GetService<IDbContextFactory<MadsContext>>();
+        var context = await _contextProvider.CreateDbContextAsync(CancellationToken);
+        await context.Database.MigrateAsync(CancellationToken);
+        
         EventListener.EnableMessageSniper(DiscordClient,_services.GetService<VolatileMemoryService>());
         await EventListener.VoiceTrollListener(DiscordClient, _services.GetService<VolatileMemoryService>());
         DiscordClient.Zombied += EventListener.OnZombied;
@@ -183,7 +197,7 @@ public class ModularDiscordBot : IDisposable
 
     public void Dispose()
     {
-        _commandsNextExtension?.Dispose();
+        //_commandsNextExtension?.Dispose();
         _services?.Dispose();
         DiscordClient?.Dispose();
         _tokenListener.Dispose();
