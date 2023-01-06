@@ -8,7 +8,6 @@ using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
-using MADS.Commands;
 using MADS.EventListeners;
 using MADS.Extensions;
 using MADS.JsonModel;
@@ -19,17 +18,17 @@ namespace MADS;
 
 public class ModularDiscordBot : IDisposable
 {
-    private CommandsNextExtension _commandsNextExtension;
+    public readonly LoggingProvider       Logging;
+    private         CancellationToken     _cancellationToken;
+    private         CommandsNextExtension _commandsNextExtension;
 
-    private         ConfigJson             _config;
-    private         InteractivityExtension _interactivityExtension;
-    private         ServiceProvider        _services;
-    private         SlashCommandsExtension _slashCommandsExtension;
-    private         TokenListener          _tokenListener;
-    public          CancellationToken      CancellationToken;
-    public          DiscordClient          DiscordClient;
-    public readonly LoggingProvider        Logging;
-    public          DateTime               StartTime;
+    private ConfigJson             _config;
+    private InteractivityExtension _interactivityExtension;
+    private ServiceProvider        _services;
+    private SlashCommandsExtension _slashCommandsExtension;
+    private TokenListener          _tokenListener;
+    public  DiscordClient          DiscordClient;
+    public  DateTime               StartTime;
 
 
     public ModularDiscordBot()
@@ -38,9 +37,17 @@ public class ModularDiscordBot : IDisposable
         Logging = new LoggingProvider(this);
     }
 
+    public void Dispose()
+    {
+        _commandsNextExtension?.Dispose();
+        _services?.Dispose();
+        DiscordClient?.Dispose();
+        _tokenListener.Dispose();
+    }
+
     public async Task<bool> RunAsync(ConfigJson pConfig, CancellationToken token)
     {
-        CancellationToken = token;
+        _cancellationToken = token;
         _config = pConfig;
 
         DiscordConfiguration discordConfig = new()
@@ -54,9 +61,9 @@ public class ModularDiscordBot : IDisposable
 
         DiscordClient = new DiscordClient(discordConfig);
         _tokenListener = new TokenListener("51151", "/api/v1/mads/token/");
-        
+
 #pragma warning disable CS4014
-        _tokenListener.StartAsync(CancellationToken);
+        _tokenListener.StartAsync(_cancellationToken);
 #pragma warning restore CS4014
 
         _services = new ServiceCollection()
@@ -69,7 +76,7 @@ public class ModularDiscordBot : IDisposable
 
         RegisterDSharpExtensions();
 
-        EventListener.EnableMessageSniper(DiscordClient,_services.GetService<VolatileMemoryService>());
+        EventListener.EnableMessageSniper(DiscordClient, _services.GetService<VolatileMemoryService>());
         await EventListener.VoiceTrollListener(DiscordClient, _services.GetService<VolatileMemoryService>());
         DiscordClient.Zombied += EventListener.OnZombied;
         DiscordClient.GuildDownloadCompleted += OnGuildDownloadCompleted;
@@ -88,7 +95,7 @@ public class ModularDiscordBot : IDisposable
             Console.WriteLine(e);
             throw;
         }
-        
+
         //keep alive
         await Task.Delay(-1, token);
         //
@@ -179,13 +186,5 @@ public class ModularDiscordBot : IDisposable
     private Task<int> GetPrefixPositionAsync(DiscordMessage msg)
     {
         return Task.FromResult(-1);
-    }
-
-    public void Dispose()
-    {
-        _commandsNextExtension?.Dispose();
-        _services?.Dispose();
-        DiscordClient?.Dispose();
-        _tokenListener.Dispose();
     }
 }

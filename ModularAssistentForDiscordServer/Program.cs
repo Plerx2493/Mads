@@ -52,8 +52,8 @@ internal static class MainProgram
             catch (Exception e)
             {
                 if (e is TaskCanceledException) return;
-                
-                LogToWebhookAsync(e);
+
+                var _ = LogToWebhookAsync(e);
                 modularDiscordBot.Dispose();
             }
 
@@ -106,7 +106,7 @@ internal static class MainProgram
         Console.WriteLine("Press key to continue");
         Console.Read();
     }
-    
+
     public static async Task LogToWebhookAsync(Exception e)
     {
         //retrieves the config.json
@@ -120,7 +120,7 @@ internal static class MainProgram
 
         var exceptionEmbed = new DiscordEmbedBuilder()
                              .WithAuthor("Mads-Debug")
-                             .WithColor(new DiscordColor(0,255,194))
+                             .WithColor(new DiscordColor(0, 255, 194))
                              .WithTimestamp(DateTime.UtcNow)
                              .WithTitle($"Ooopsie...  {e.GetType()}")
                              .WithDescription(e.Message);
@@ -131,6 +131,4 @@ internal static class MainProgram
 
         await webhookClient.BroadcastMessageAsync(webhookBuilder);
     }
-
-
 }

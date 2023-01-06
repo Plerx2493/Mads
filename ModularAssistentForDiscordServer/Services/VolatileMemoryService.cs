@@ -1,25 +1,23 @@
 ﻿using DSharpPlus.Entities;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.Services;
 
 public class VolatileMemoryService
 {
-    public MessageSnipe MessageSnipe;
-    public VoiceTroll VoiceTroll;
-    
+    public readonly MessageSnipe MessageSnipe;
+    public readonly VoiceTroll   VoiceTroll;
+
     public VolatileMemoryService(IMemoryCache memoryCache)
     {
         VoiceTroll = new VoiceTroll();
         MessageSnipe = new MessageSnipe(memoryCache);
     }
-    
 }
 
 public class MessageSnipe
 {
-    private IMemoryCache _cachedMessages;
+    private readonly IMemoryCache _cachedMessages;
 
     public MessageSnipe(IMemoryCache memoryCache)
     {
@@ -31,13 +29,13 @@ public class MessageSnipe
         var id = CreateSnipedGuid(message.ChannelId);
         _cachedMessages.Set(id, message, TimeSpan.FromHours(12));
     }
-    
+
     public void DeleteMessage(ulong channel)
     {
         var id = CreateSnipedGuid(channel);
         _cachedMessages.Remove(id);
     }
-    
+
     public void AddEditedMessage(DiscordMessage message)
     {
         var id = CreateSnipedEditedGuid(message.ChannelId);
@@ -57,12 +55,12 @@ public class MessageSnipe
         if (result) _cachedMessages.Remove(id);
         return result;
     }
-    
+
     public bool TryGetEditedMessage(ulong channelId, out DiscordMessage message)
     {
         var id = CreateSnipedEditedGuid(channelId);
         var result = _cachedMessages.TryGetValue(id, out message);
-        if(result) _cachedMessages.Remove(id);
+        if (result) _cachedMessages.Remove(id);
         return result;
     }
 
@@ -70,7 +68,7 @@ public class MessageSnipe
     {
         return $"snipedMessage_{channelId}";
     }
-    
+
     private static string CreateSnipedEditedGuid(ulong channelId)
     {
         return $"snipedMessage_edit_{channelId}";
@@ -85,6 +83,7 @@ public class VoiceTroll
     {
         _voiceTrollUser = new List<ulong>();
     }
+
     public void Add(DiscordUser user)
     {
         if (!_voiceTrollUser.Contains(user.Id)) _voiceTrollUser.Add(user.Id);

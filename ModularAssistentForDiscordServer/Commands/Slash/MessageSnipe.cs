@@ -9,7 +9,7 @@ namespace MADS.Commands.Slash;
 
 public class MessageSnipe : MadsBaseApplicationCommand
 {
-    public VolatileMemoryService _memoryService;
+    public VolatileMemoryService MemoryService;
 
     [SlashCommand("snipe", "Snipes the last deleted message.")]
     public Task SnipeAsync(InteractionContext ctx)
@@ -29,8 +29,8 @@ public class MessageSnipe : MadsBaseApplicationCommand
 
         var result = edit switch
         {
-            true => _memoryService.MessageSnipe.TryGetEditedMessage(ctx.Channel.Id, out message),
-            false => _memoryService.MessageSnipe.TryGetMessage(ctx.Channel.Id, out message)
+            true => MemoryService.MessageSnipe.TryGetEditedMessage(ctx.Channel.Id, out message),
+            false => MemoryService.MessageSnipe.TryGetMessage(ctx.Channel.Id, out message)
         };
 
         if (!result)
@@ -78,11 +78,18 @@ public class MessageSnipe : MadsBaseApplicationCommand
 
         var response = new DiscordInteractionResponseBuilder()
             .AddEmbeds(embeds.Prepend(embed).Select(x => x.Build()));
-        
-        DiscordButtonComponent btn = new DiscordButtonComponent(ButtonStyle.Danger, "test", "Delete (Author only)", emoji: new DiscordComponentEmoji("🗑"));
+
+        var btn = new DiscordButtonComponent(ButtonStyle.Danger, "test", "Delete (Author only)",
+            emoji: new DiscordComponentEmoji("🗑"));
         btn = ActionDiscordButton.Build(ActionDiscordButtonEnum.DeleteOneUserOnly, btn, message.Author.Id);
-        
+
         response.AddComponents(btn);
+
+        if (edit)
+        {
+            var btn1 = new DiscordLinkButtonComponent(message.JumpLink.ToString(), "Go to message");
+            response.AddComponents(btn1);
+        }
 
         await ctx.CreateResponseAsync(response);
     }

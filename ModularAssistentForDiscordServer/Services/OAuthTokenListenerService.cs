@@ -6,7 +6,7 @@ namespace MADS.Services;
 public class TokenListener : IDisposable
 {
     // lang=html
-    private const string pageData =
+    private const string PageData =
         """
             <!DOCTYPE>
             <html lang="en">
@@ -29,6 +29,12 @@ public class TokenListener : IDisposable
         _listener.Prefixes.Add(_url);
     }
 
+    public void Dispose()
+    {
+        _listener.Abort();
+        //_listenTask?.Dispose();
+    }
+
     private static async Task HandleIncomingConnections(CancellationToken token)
     {
         while (!token.IsCancellationRequested)
@@ -44,14 +50,14 @@ public class TokenListener : IDisposable
             //var userToken = req.QueryString.Get("code");
 
             // Write the response info
-            var data = Encoding.UTF8.GetBytes(pageData);
+            var data = Encoding.UTF8.GetBytes(PageData);
             resp.ContentType = "text/html";
             resp.ContentEncoding = Encoding.UTF8;
             resp.ContentLength64 = data.LongLength;
             //resp.StatusCode = 200;
 
             // Write out to the response stream (asynchronously), then close it
-            await resp.OutputStream.WriteAsync(data, 0, data.Length);
+            await resp.OutputStream.WriteAsync(data, 0, data.Length, token);
 
             resp.Close();
         }
@@ -71,11 +77,5 @@ public class TokenListener : IDisposable
         _listener.Abort();
         _listenTask.Dispose();
         return Task.CompletedTask;
-    }
-
-    public void Dispose()
-    {
-        _listener.Abort();
-        //_listenTask?.Dispose();
     }
 }

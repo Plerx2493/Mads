@@ -6,12 +6,13 @@ namespace MADS.EventListeners;
 
 internal static partial class EventListener
 {
-    internal static async Task DmHandler(DiscordClient client, MessageCreateEventArgs e)
+    internal static Task DmHandler(DiscordClient client, MessageCreateEventArgs e)
     {
-        if (!e.Channel.IsPrivate) return;
+        if (!e.Channel.IsPrivate) return Task.CompletedTask;
 
         var webhook = DataProvider.GetConfig().DiscordWebhook;
 
         //TODO Add DmHandler
+        return Task.CompletedTask;
     }
 }

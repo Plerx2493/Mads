@@ -3,50 +3,60 @@ using DSharpPlus.EventArgs;
 using MADS.Services;
 using Microsoft.Extensions.Logging;
 
-
 namespace MADS.EventListeners;
 
 internal static partial class EventListener
 {
     public static void EnableMessageSniper(DiscordClient client, VolatileMemoryService memory)
     {
-        client.MessageDeleted += async (sender, args) =>
+        client.MessageDeleted += (sender, args) =>
         {
-            MessageSniperDeleted(sender,args,memory);
+            var _ = MessageSniperDeleted(sender, args, memory);
+            return Task.CompletedTask;
         };
-        
-        client.MessageUpdated += async (sender, args) =>
+
+        client.MessageUpdated += (sender, args) =>
         {
-            MessageSniperEdited(sender,args,memory);
+            var _ = MessageSniperEdited(sender, args, memory);
+            return Task.CompletedTask;
         };
     }
 
-    private static async void MessageSniperDeleted(
-            DiscordClient sender, MessageDeleteEventArgs e, VolatileMemoryService memory)
+    private static Task MessageSniperDeleted
+    (
+        DiscordClient sender,
+        MessageDeleteEventArgs e,
+        VolatileMemoryService memory
+    )
     {
-        if (e.Message == null) return;
-        if (e.Message.WebhookMessage) return;
-        
-        if (((!string.IsNullOrEmpty(e.Message?.Content)) || e.Message?.Attachments.Count > 0) && !e.Message.Author.IsBot)
+        if (e.Message == null) return Task.CompletedTask;
+        if (e.Message.WebhookMessage) return Task.CompletedTask;
+
+        if ((!string.IsNullOrEmpty(e.Message?.Content) || e.Message?.Attachments.Count > 0) && !e.Message.Author.IsBot)
         {
             memory.MessageSnipe.AddMessage(e.Message);
-            
-           sender.Logger.LogDebug("Message added to cache");
 
+            sender.Logger.LogDebug("Message added to cache");
         }
+        return Task.CompletedTask;
     }
-    
-    private static async void MessageSniperEdited(
-        DiscordClient sender, MessageUpdateEventArgs e, VolatileMemoryService memory)
-    {
-        if (e.Message == null) return;
-        if (e.Message.WebhookMessage) return;
 
-        if (((string.IsNullOrEmpty(e.MessageBefore?.Content)) && !(e.MessageBefore?.Attachments.Count > 0))
-            || e.Message.Author.IsBot) return;
-        
+    private static Task MessageSniperEdited
+    (
+        DiscordClient sender,
+        MessageUpdateEventArgs e,
+        VolatileMemoryService memory
+    )
+    {
+        if (e.Message == null) return Task.CompletedTask;
+        if (e.Message.WebhookMessage) return Task.CompletedTask;
+
+        if (string.IsNullOrEmpty(e.MessageBefore?.Content) && !(e.MessageBefore?.Attachments.Count > 0)
+            || e.Message.Author.IsBot) return Task.CompletedTask;
+
         memory.MessageSnipe.AddEditedMessage(e.MessageBefore);
-            
+
         sender.Logger.LogDebug("Message edit added to cache");
+        return Task.CompletedTask;
     }
 }

@@ -11,7 +11,6 @@ namespace MADS.Commands.Text.Base;
 [RequireOwner, Hidden]
 public class Eval : MadsBaseCommand
 {
-
     [Command("eval"), Description("Evaluate the result of c# code"), Hidden]
     public async Task EvalCommand(CommandContext ctx, [RemainingText] string code)
     {

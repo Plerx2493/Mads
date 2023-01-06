@@ -11,8 +11,7 @@ public class Ping : MadsBaseApplicationCommand
     public async Task PingCommand(InteractionContext ctx)
     {
         var diff = DateTime.Now - CommandService.StartTime;
-        var date = TimeSpanHumanizeExtensions
-            .Humanize(diff); //$"{diff.Days} days {diff.Hours} hours {diff.Minutes} minutes";
+        var date = diff.Humanize();
 
         var discordEmbedBuilder = CommandUtility.GetDiscordEmbed();
         discordEmbedBuilder

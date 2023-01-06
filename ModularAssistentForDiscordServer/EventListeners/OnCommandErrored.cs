@@ -15,12 +15,11 @@ internal static partial class EventListener
     internal static async Task OnSlashCommandErrored(SlashCommandsExtension sender, SlashCommandErrorEventArgs e)
     {
         var typeOfException = e.Exception.GetType();
-        if (typeOfException == typeof(ArgumentException))
+        if (typeOfException == typeof(ArgumentException)
+            || typeOfException == typeof(SlashExecutionChecksFailedException))
         {
             return;
         }
-
-        if (typeOfException == typeof(SlashExecutionChecksFailedException)) await CooldownReset(sender, e);
 
         var embedDescription = new string((e.Exception.Message + ":\n" + e.Exception.StackTrace).Take(4096).ToArray());
 
@@ -43,22 +42,6 @@ internal static partial class EventListener
         }
     }
 
-    private static async Task CooldownReset(SlashCommandsExtension sender, SlashCommandErrorEventArgs e)
-    {
-        /*
-        var exception = (SlashExecutionChecksFailedException) e.Exception;
-        if(!exception.FailedChecks.Any(x => x.GetType() == typeof(CooldownAttribute)))
-        {
-            return;
-        }
-        
-        var cooldownAttribute = (SlashCooldownAttribute?) exception.FailedChecks.FirstOrDefault(x => x.GetType() == typeof(CooldownAttribute));
-        
-        if (cooldownAttribute is null) return;
-        
-        cooldownAttribute.GetBucket(e.Context).ResetsAt = DateTimeOffset.Now;
-        */
-    }
 
     internal static async Task OnCNextErrored(CommandsNextExtension sender, CommandErrorEventArgs e)
     {
