@@ -2,7 +2,7 @@
 
 namespace MADS.Entities;
 
-public struct GuildSettings
+public class GuildSettings
 {
     public GuildSettings()
     {
@@ -14,4 +14,6 @@ public struct GuildSettings
     public string   Prefix       { get; set; }
     public LogLevel LogLevel     { get; set; }
     public ulong?   AuditChannel { get; set; }
+
+    public ulong    GuildId      { get; set; }
 }

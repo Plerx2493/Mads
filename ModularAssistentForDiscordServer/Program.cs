@@ -1,7 +1,13 @@
-﻿using DSharpPlus;
+﻿using System.Diagnostics.CodeAnalysis;
+using DSharpPlus;
 using DSharpPlus.Entities;
+using MADS.Entities;
 using MADS.Extensions;
 using MADS.JsonModel;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace MADS;
@@ -17,12 +23,6 @@ internal static class MainProgram
             args.Cancel = true;
             cancellationSource.Cancel();
         };
-
-        /*AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
-        {
-            args.ExceptionObject
-        };
-        */
 
         //Validate the config.json and create a new one when its not present/valid
         if (!ValidateConfig())
@@ -130,5 +130,32 @@ internal static class MainProgram
                              .AddEmbed(exceptionEmbed);
 
         await webhookClient.BroadcastMessageAsync(webhookBuilder);
+    }
+
+    public class DbFactory : IDesignTimeDbContextFactory<MadsContext>
+    {
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "EFCore CLI tools rely on reflection.")]
+        public static IHostBuilder CreateHostBuilder(string[] args)
+        {
+            var builder = Host.CreateDefaultBuilder(args);
+            var config = DataProvider.GetConfig();
+            builder.ConfigureServices((context, services) => services.AddEntityFrameworkMySql()
+                                                                     .AddDbContextFactory<MadsContext>(
+                                                                         options => options.UseMySql(
+                                                                             config.ConnectionString,
+                                                                             ServerVersion.AutoDetect(
+                                                                                 config.ConnectionString))
+                                                                     ));
+            return builder;
+        }
+
+        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "EFCore CLI tools rely on reflection.")]
+        public MadsContext CreateDbContext(string[] args)
+        {
+            var optionsBuilder = new DbContextOptionsBuilder<MadsContext>();
+            var connectionString = DataProvider.GetConfig().ConnectionString;
+            optionsBuilder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+            return new MadsContext(optionsBuilder.Options);
+        }
     }
 }
