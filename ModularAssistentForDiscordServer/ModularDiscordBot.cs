@@ -88,8 +88,8 @@ public class ModularDiscordBot : IDisposable
         
         //Update database to latest version
         _contextProvider = _services.GetService<IDbContextFactory<MadsContext>>();
-        var context = await _contextProvider.CreateDbContextAsync(CancellationToken);
-        await context.Database.MigrateAsync(CancellationToken);
+        var context = await _contextProvider.CreateDbContextAsync(_cancellationToken);
+        await context.Database.MigrateAsync(_cancellationToken);
         
         EventListener.EnableMessageSniper(DiscordClient,_services.GetService<VolatileMemoryService>());
         await EventListener.VoiceTrollListener(DiscordClient, _services.GetService<VolatileMemoryService>());

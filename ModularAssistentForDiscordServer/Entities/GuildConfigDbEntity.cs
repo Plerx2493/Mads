@@ -35,4 +35,6 @@ public class GuildConfigDbEntity
 
     [Column("prefix")]
     public string Prefix { get; set; }
+
+    public GuildDbEntity Guild;
 }
