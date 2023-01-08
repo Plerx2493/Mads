@@ -9,6 +9,7 @@ using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
+using MADS.Entities;
 using MADS.EventListeners;
 using MADS.Extensions;
 using MADS.JsonModel;
