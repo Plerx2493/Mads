@@ -24,4 +24,13 @@ public class MadsBaseCommand : BaseCommandModule
 
         return Task.FromResult(true);
     }
+    
+    public async Task IntendedWait(int milliseconds)
+    {
+        _executionTimer.Stop();
+
+        await Task.Delay(milliseconds);
+        
+        _executionTimer.Start();
+    }
 }

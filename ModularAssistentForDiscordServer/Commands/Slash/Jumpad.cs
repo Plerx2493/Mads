@@ -20,12 +20,12 @@ public class Jumppad : MadsBaseApplicationCommand
     )
     {
         DiscordInteractionResponseBuilder message = new();
-        DiscordButtonComponent newButton = new(ButtonStyle.Success, "Placeholder", "Jump");
-        var actionButton = ActionDiscordButton.Build(ActionDiscordButtonEnum.MoveVoiceChannel, newButton,
+        DiscordButtonComponent newButton = new(ButtonStyle.Success, "Placeholder", "Jump"); 
+        newButton = newButton.BuildActionButton(ActionDiscordButtonEnum.MoveVoiceChannel,
             originChannel.Id,
             targetChannel.Id);
 
-        message.AddComponents(actionButton);
+        message.AddComponents(newButton);
         message.Content = "Jumppad";
         await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, message);
     }
