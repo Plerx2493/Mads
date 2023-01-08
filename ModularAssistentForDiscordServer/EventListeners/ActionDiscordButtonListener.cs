@@ -15,7 +15,9 @@ internal static partial class EventListener
         {
             try
             {
-                sender.Logger.LogTrace(e?.Id);
+                if (e is null) return Task.CompletedTask;
+
+                sender.Logger.LogTrace(e.Id);
 
                 if (!Regex.IsMatch(e.Id, @"^CMD:\d{1,4}(?::\d{1,20}){0,3}$"))
                 {
@@ -55,8 +57,8 @@ internal static partial class EventListener
                     case (int)ActionDiscordButtonEnum.MoveVoiceChannel:
                         MoveVoiceChannelUser(e, substring);
                         break;
-                    
-                    case (int)ActionDiscordButtonEnum.DeleteOneUserOnly: 
+
+                    case (int)ActionDiscordButtonEnum.DeleteOneUserOnly:
                         DeleteOneUserOnly(e, substring);
                         break;
                 }
@@ -76,10 +78,12 @@ internal static partial class EventListener
         await e.Message.DeleteAsync();
     }
 
-    private static async void MoveVoiceChannelUser(ComponentInteractionCreateEventArgs e,
-        IReadOnlyList<string> substring)
+    private static async void MoveVoiceChannelUser
+    (
+        ComponentInteractionCreateEventArgs e,
+        IReadOnlyList<string> substring
+    )
     {
-
         var member = await e.Guild.GetMemberAsync(e.User.Id);
         if (!member.Permissions.HasPermission(Permissions.MoveMembers)) { return; }
         var originChannel = e.Guild.GetChannel(ulong.Parse(substring[1]));

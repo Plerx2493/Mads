@@ -9,12 +9,9 @@ namespace MADS.Commands.ContextMenu;
 
 public class UserInfoUser : MadsBaseApplicationCommand
 {
-
     [ContextMenu(ApplicationCommandType.UserContextMenu, "Info")]
     public async Task GetUserInfo(ContextMenuContext ctx)
     {
-        //await ctx.CreateResponseAsync("Test", true);
-
         var user = ctx.TargetUser;
 
         DiscordMember member = null;

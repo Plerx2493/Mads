@@ -97,6 +97,7 @@ public static class ActionDiscordButton
                 actionCode = (int)ActionDiscordButtonEnum.MoveVoiceChannel;
                 customId += actionCode + ":" + args[0] + ":" + args[1];
                 break;
+
             case ActionDiscordButtonEnum.DeleteOneUserOnly:
                 if (args.Length != 1)
                 {
@@ -108,6 +109,9 @@ public static class ActionDiscordButton
                 }
                 actionCode = (int)ActionDiscordButtonEnum.DeleteOneUserOnly;
                 customId += actionCode + ":" + args[0]; //+ ":" + args[1];
+                break;
+
+            case ActionDiscordButtonEnum.AnswerDmChannel:
                 break;
 
             default:

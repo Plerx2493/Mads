@@ -27,11 +27,11 @@ public class LoggingProvider
         _logPath = DataProvider.GetPath("Logs",
             $"{startDate.Day}-{startDate.Month}-{startDate.Year}_{startDate.Hour}-{startDate.Minute}-{startDate.Second}.log");
         File.AppendAllTextAsync(_logPath, "========== LOG START ==========\n\n", Encoding.UTF8);
-        
+
         Console.WriteLine(_logPath);
     }
 
-    public async void Setup()
+    public void Setup()
     {
         AddRestClient();
         AddOwnerChannels();
@@ -79,7 +79,7 @@ public class LoggingProvider
     private void SetupFeedback()
     {
         //Button response with modal
-        _modularDiscordBot.DiscordClient.ComponentInteractionCreated += async (sender, e) =>
+        _modularDiscordBot.DiscordClient.ComponentInteractionCreated += async (_, e) =>
         {
             if (e.Id != "feedback-button")
             {
@@ -98,7 +98,7 @@ public class LoggingProvider
         };
 
         //Modal processing
-        _modularDiscordBot.DiscordClient.ModalSubmitted += async (sender, e) =>
+        _modularDiscordBot.DiscordClient.ModalSubmitted += async (_, e) =>
         {
             if (e.Interaction.Data.CustomId != "feedback-modal")
             {
@@ -171,7 +171,7 @@ public class LoggingProvider
             $"[{DateTime.Now:dd'.'MM'.'yyyy'-'HH':'mm':'ss}] [INFO] [{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [/{ctx.CommandName}] {timespan.TotalMilliseconds} milliseconds to execute";
         await File.AppendAllTextAsync(_logPath, logEntry + "\n", Encoding.UTF8);
     }
-    
+
     public async Task LogCommandExecutionAsync(ContextMenuContext ctx, TimeSpan timespan)
     {
         var logEntry =
