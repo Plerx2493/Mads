@@ -73,11 +73,16 @@ public class ModularDiscordBot : IDisposable
 
         _services = new ServiceCollection()
                     .AddSingleton(this)
+                    .AddSingleton(DiscordClient)
                     .AddEntityFrameworkMySql()
                     .AddDbContextFactory<MadsContext>(
                         options => options.UseMySql(_config.ConnectionString, ServerVersion.AutoDetect(_config.ConnectionString))
                         )
-                    .AddMemoryCache(options => options.ExpirationScanFrequency = TimeSpan.FromMinutes(10))
+                    .AddMemoryCache(options =>
+                    {
+                        options.ExpirationScanFrequency = TimeSpan.FromMinutes(10);
+                        options.SizeLimit = 1024L;
+                    })
                     .AddSingleton<VolatileMemoryService>()
                     .AddSingleton(_tokenListener)
                     .BuildServiceProvider();
@@ -96,6 +101,7 @@ public class ModularDiscordBot : IDisposable
         DiscordClient.Zombied += EventListener.OnZombied;
         DiscordClient.GuildDownloadCompleted += OnGuildDownloadCompleted;
         DiscordClient.MessageCreated += EventListener.DmHandler;
+        DiscordClient.ClientErrored += EventListener.OnClientErrored;
 
         DiscordActivity act = new("over some Servers", ActivityType.Watching);
 

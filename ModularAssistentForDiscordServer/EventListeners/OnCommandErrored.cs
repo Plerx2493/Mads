@@ -2,11 +2,13 @@
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.Entities;
+using DSharpPlus.EventArgs;
 using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.EventArgs;
+using MADS.Extensions;
 
 namespace MADS.EventListeners;
 
@@ -21,8 +23,9 @@ internal static partial class EventListener
             return;
         }
 
-        var embedDescription = new string((e.Exception.Message + ":\n" + e.Exception.StackTrace).Take(4096).ToArray());
-
+        var embedDescription = new string((e.Exception.Message + ":\n" + e.Exception.StackTrace).Take(4093).ToArray());
+        embedDescription += "...";
+        
         DiscordEmbedBuilder discordEmbed = new()
         {
             Title = $"{Formatter.Bold(e.Exception.GetType().ToString())} - The command execution failed",
@@ -35,6 +38,15 @@ internal static partial class EventListener
         {
             await e.Context.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
                 new DiscordInteractionResponseBuilder().AddEmbed(discordEmbed).AsEphemeral());
+            return;
+        }
+        catch (BadRequestException){}
+
+        try
+        {
+            await e.Context.Interaction.EditOriginalResponseAsync(
+                new DiscordWebhookBuilder(new DiscordInteractionResponseBuilder().AddEmbed(discordEmbed).AsEphemeral()));
+            return;
         }
         catch (BadRequestException)
         {
@@ -61,5 +73,30 @@ internal static partial class EventListener
 
         await e.Context.Channel.SendPaginatedMessageAsync(e.Context.Member, pages, PaginationBehaviour.Ignore,
             ButtonPaginationBehavior.DeleteButtons);
+    }
+
+    internal static async Task OnClientErrored(DiscordClient sender, ClientErrorEventArgs e)
+    {
+        //retrieves the config.json
+        var config = DataProvider.GetConfig();
+
+        //Create a discordWebhookClient and add the debug webhook from the config.json
+        var webhookClient = new DiscordWebhookClient();
+        var webhookUrl = new Uri(config.DiscordWebhook);
+        webhookClient.AddWebhookAsync(webhookUrl).GetAwaiter().GetResult();
+
+
+        var exceptionEmbed = new DiscordEmbedBuilder()
+                             .WithAuthor("Mads-Debug")
+                             .WithColor(new DiscordColor(0, 255, 194))
+                             .WithTimestamp(DateTime.UtcNow)
+                             .WithTitle($"Eventhandler exception: {e.EventName} - {e.Exception.GetType()}")
+                             .WithDescription(e.Exception.Message);
+
+        var webhookBuilder = new DiscordWebhookBuilder()
+                             .WithUsername("Mads-Debug")
+                             .AddEmbed(exceptionEmbed);
+
+        await webhookClient.BroadcastMessageAsync(webhookBuilder);
     }
 }

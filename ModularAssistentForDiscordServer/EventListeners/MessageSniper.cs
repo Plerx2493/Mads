@@ -36,7 +36,7 @@ internal static partial class EventListener
         {
             memory.MessageSnipe.AddMessage(e.Message);
 
-            sender.Logger.LogDebug("Message added to cache");
+            sender.Logger.LogTrace("Message added to cache");
         }
         return Task.CompletedTask;
     }
@@ -56,7 +56,7 @@ internal static partial class EventListener
 
         memory.MessageSnipe.AddEditedMessage(e.MessageBefore);
 
-        sender.Logger.LogDebug("Message edit added to cache");
+        sender.Logger.LogTrace("Message edit added to cache");
         return Task.CompletedTask;
     }
 }

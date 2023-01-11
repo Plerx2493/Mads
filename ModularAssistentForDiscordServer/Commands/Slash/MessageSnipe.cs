@@ -80,18 +80,12 @@ public class MessageSnipe : MadsBaseApplicationCommand
         var response = new DiscordInteractionResponseBuilder()
             .AddEmbeds(embeds.Prepend(embed).Select(x => x.Build()));
 
-        var btn = new DiscordButtonComponent(ButtonStyle.Danger, "test", "Delete (Author only)",
+        var btn = new DiscordButtonComponent(ButtonStyle.Danger, "placeholder", "Delete (Author only)",
             emoji: new DiscordComponentEmoji("🗑"));
         btn = ActionDiscordButton.Build(ActionDiscordButtonEnum.DeleteOneUserOnly, btn, message.Author.Id);
 
         response.AddComponents(btn);
         
-        if (edit)
-        {
-            var btn1 = new DiscordLinkButtonComponent(message.JumpLink.ToString(), "Go to message");
-            response.AddComponents(btn1);
-        }
-
         if (edit)
         {
             var btn1 = new DiscordLinkButtonComponent(message.JumpLink.ToString(), "Go to message");
