@@ -34,7 +34,7 @@ public class Purge : MadsBaseApplicationCommand
         await ctx.Channel.DeleteMessagesAsync(messages);
         await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent($"{messages.Count} messages deleted"));
 
-        await Task.Delay(10_000);
+        await IntendedWait(10_000);
 
         await ctx.DeleteResponseAsync();
     }
