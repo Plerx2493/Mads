@@ -82,7 +82,7 @@ public class MessageSnipe : MadsBaseApplicationCommand
 
         var btn = new DiscordButtonComponent(ButtonStyle.Danger, "placeholder", "Delete (Author only)",
             emoji: new DiscordComponentEmoji("🗑"));
-        btn = ActionDiscordButton.Build(ActionDiscordButtonEnum.DeleteOneUserOnly, btn, message.Author.Id);
+        btn = btn.AsActionButton(ActionDiscordButtonEnum.DeleteOneUserOnly, message.Author.Id);
 
         response.AddComponents(btn);
         
