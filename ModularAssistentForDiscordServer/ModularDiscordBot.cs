@@ -44,10 +44,41 @@ public class ModularDiscordBot : IDisposable
 
     public void Dispose()
     {
-        _commandsNextExtension?.Dispose();
-        _services?.Dispose();
-        DiscordClient?.Dispose();
-        _tokenListener.Dispose();
+        try
+        {
+            _commandsNextExtension?.Dispose();
+        }
+        catch (Exception)
+        {
+            // ignored
+        }
+        
+        try
+        {
+            _services?.Dispose();
+        }
+        catch (Exception)
+        {
+            // ignored
+        }
+        
+        try
+        {
+            DiscordClient?.Dispose();
+        }
+        catch (Exception)
+        {
+            // ignored
+        }
+        
+        try
+        {
+            _tokenListener.Dispose();
+        }
+        catch (Exception)
+        {
+            // ignored
+        }
     }
 
     public async Task<bool> RunAsync(ConfigJson pConfig, CancellationToken token)
@@ -162,6 +193,7 @@ public class ModularDiscordBot : IDisposable
 #if RELEASE
         _slashCommandsExtension.RegisterCommands(asm);
 #else
+        Console.WriteLine("DEBUG");
         _slashCommandsExtension.RegisterCommands(asm, 938120155974750288);
 #endif
         _slashCommandsExtension.SlashCommandErrored += EventListener.OnSlashCommandErrored;

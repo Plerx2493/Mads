@@ -131,31 +131,19 @@ internal static class MainProgram
 
         await webhookClient.BroadcastMessageAsync(webhookBuilder);
     }
-
-    public class DbFactory : IDesignTimeDbContextFactory<MadsContext>
+    
+    [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "EFCore CLI tools rely on reflection.")]
+    public static IHostBuilder CreateHostBuilder(string[] args)
     {
-        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "EFCore CLI tools rely on reflection.")]
-        public static IHostBuilder CreateHostBuilder(string[] args)
-        {
-            var builder = Host.CreateDefaultBuilder(args);
-            var config = DataProvider.GetConfig();
-            builder.ConfigureServices((context, services) => services.AddEntityFrameworkMySql()
-                                                                     .AddDbContextFactory<MadsContext>(
-                                                                         options => options.UseMySql(
-                                                                             config.ConnectionString,
-                                                                             ServerVersion.AutoDetect(
-                                                                                 config.ConnectionString))
-                                                                     ));
-            return builder;
-        }
-
-        [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "EFCore CLI tools rely on reflection.")]
-        public MadsContext CreateDbContext(string[] args)
-        {
-            var optionsBuilder = new DbContextOptionsBuilder<MadsContext>();
-            var connectionString = DataProvider.GetConfig().ConnectionString;
-            optionsBuilder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
-            return new MadsContext(optionsBuilder.Options);
-        }
+        var builder = Host.CreateDefaultBuilder(args);
+        var config = DataProvider.GetConfig();
+        builder.ConfigureServices((context, services) => services.AddEntityFrameworkMySql()
+                                                                 .AddDbContextFactory<MadsContext>(
+                                                                     options => options.UseMySql(
+                                                                         config.ConnectionString,
+                                                                         ServerVersion.AutoDetect(
+                                                                             config.ConnectionString))
+                                                                 ));
+        return builder;
     }
 }
