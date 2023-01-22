@@ -18,13 +18,14 @@ public class GuildConfigDbEntity
         Prefix = old.Prefix;
     }
 
-    public GuildConfigDbEntity()
+    public GuildConfigDbEntity(ulong guildId)
     {
-        DiscordGuildId = 0;
+        DiscordGuildId = guildId;
         Prefix = "!";
+        StarboardActive = false;
     }
 
-    [Key, Column("id"), DefaultValue(0), DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    [Key, Column("id"), DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public ulong Id { get; init; }
 
     /// <summary>
@@ -35,6 +36,18 @@ public class GuildConfigDbEntity
 
     [Column("prefix")]
     public string Prefix { get; set; }
+    
+    [Column("starboardEnabled")]
+    public bool StarboardActive { get; set; }
+    
+    [Column("starboardChannel")]
+    public ulong? StarboardChannelId { get; set; }
+    
+    [Column("starboardThreshold")]
+    public int? StarboardThreshold { get; set; }
+    
+    [Column("starboardEmojiId")]
+    public ulong? StarboardEmojiId { get; set; }
 
     public GuildDbEntity Guild;
 }

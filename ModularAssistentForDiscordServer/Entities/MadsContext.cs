@@ -8,10 +8,11 @@ public class MadsContext : DbContext
     {
     }
 
-    public DbSet<UserDbEntity>      Users      { get; set; }
-    public DbSet<GuildDbEntity>     Guilds     { get; set; }
-    public DbSet<GuildUserDbEntity> GuildUsers { get; set; }
-    public DbSet<IncidentDbEntity>  Incidents  { get; set; }
+    public DbSet<UserDbEntity>             Users      { get; set; }
+    public DbSet<GuildDbEntity>            Guilds     { get; set; }
+    public DbSet<GuildUserDbEntity>        GuildUsers { get; set; }
+    public DbSet<IncidentDbEntity>         Incidents  { get; set; }
+    public DbSet<StarboardMessageDbEntity> Starboard  { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

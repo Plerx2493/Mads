@@ -115,6 +115,7 @@ public class ModularDiscordBot : IDisposable
                         options.SizeLimit = 1024L;
                     })
                     .AddSingleton<VolatileMemoryService>()
+                    .AddHostedService<StarboardService>()
                     .AddSingleton(_tokenListener)
                     .BuildServiceProvider();
 
