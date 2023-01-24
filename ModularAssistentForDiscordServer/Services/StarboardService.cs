@@ -1,13 +1,11 @@
 ﻿#nullable enable
-using System.Runtime.CompilerServices;
 using DSharpPlus;
-using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using MADS.Entities;
-using Microsoft.EntityFrameworkCore.Internal;
-using Microsoft.EntityFrameworkCore.Query.Internal;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using CancellationToken = System.Threading.CancellationToken;
 
 namespace MADS.Services;
 
@@ -16,13 +14,14 @@ public class StarboardService : IHostedService
     private readonly DiscordClient                     _client;
     private readonly Queue<DiscordReactionUpdateEvent> _messageQueue;
     private          bool                              _active;
-    private          DbContextFactory<MadsContext>     _dbFactory;
+    private readonly IDbContextFactory<MadsContext>    _dbFactory;
 
-    public StarboardService(DiscordClient client, DbContextFactory<MadsContext> dbFactory)
+    public StarboardService(DiscordClient client, IDbContextFactory<MadsContext> dbFactory)
     {
         _client = client;
         _messageQueue = new Queue<DiscordReactionUpdateEvent>();
         _active = false;
+        _dbFactory = dbFactory;
     }
     
     public Task StartAsync(CancellationToken cancellationToken)
@@ -140,20 +139,43 @@ public class StarboardService : IHostedService
             return;
         }
 
-        if (e.Type == DiscordReactionUpdateType.ReactionAdded)
+        switch (e.Type)
         {
-            var eventArgs = (MessageReactionAddEventArgs)e.EventArgs;
-            if (eventArgs.Emoji.Id != guildSettings.StarboardEmojiId.Value) return;
-        }
-        
-        if (e.Type == DiscordReactionUpdateType.ReactionRemoved)
-        {
-            var eventArgs = (MessageReactionRemoveEventArgs)e.EventArgs;
-            if (eventArgs.Emoji.Id != guildSettings.StarboardEmojiId.Value) return;
-        }
-        
+            case DiscordReactionUpdateType.ReactionAdded:
+            {
+                var eventArgs = (MessageReactionAddEventArgs)e.EventArgs;
+                if (eventArgs.Emoji.Id != guildSettings.StarboardEmojiId.Value) return;
+                break;
+            }
 
-        
+            case DiscordReactionUpdateType.ReactionRemoved:
+            {
+                var eventArgs = (MessageReactionRemoveEventArgs)e.EventArgs;
+                if (eventArgs.Emoji.Id != guildSettings.StarboardEmojiId.Value) return;
+                break;
+            }
+
+            case DiscordReactionUpdateType.ReactionsCleard:
+                var msgs = db.Starboard.Where(x => x.DiscordMessageId == e.Message.Id && x.DiscordChannelId == e.Message.ChannelId);
+                db.Starboard.RemoveRange(msgs);
+                await db.SaveChangesAsync();
+                return;
+
+            case DiscordReactionUpdateType.ReactionEmojiRemoved:
+                MessageReactionRemoveEmojiEventArgs argss = (MessageReactionRemoveEmojiEventArgs) e.EventArgs;
+                if (argss.Emoji.Id != guildSettings.StarboardEmojiId.Value)
+                {
+                    return;
+                }
+                var msgss = db.Starboard.Where(x => x.DiscordMessageId == e.Message.Id && x.DiscordChannelId == e.Message.ChannelId);
+                db.Starboard.RemoveRange(msgss);
+                return;
+
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+
+
         StarboardMessageDbEntity? starData;
         bool isNew;
         try

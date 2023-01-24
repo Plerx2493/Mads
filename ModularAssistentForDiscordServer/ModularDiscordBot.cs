@@ -26,13 +26,12 @@ public class ModularDiscordBot : IDisposable
     private         CancellationToken     _cancellationToken;
     private         CommandsNextExtension _commandsNextExtension;
 
-    private ConfigJson             _config;
-    private InteractivityExtension _interactivityExtension;
-    private ServiceProvider        _services;
-    private SlashCommandsExtension _slashCommandsExtension;
-    private TokenListener          _tokenListener;
-    public  DiscordClient          DiscordClient;
-    public  DateTime               StartTime;
+    private ConfigJson                     _config;
+    private InteractivityExtension         _interactivityExtension;
+    private ServiceProvider                _services;
+    private SlashCommandsExtension         _slashCommandsExtension;
+    public  DiscordClient                  DiscordClient;
+    public  DateTime                       StartTime;
     private IDbContextFactory<MadsContext> _contextProvider;
 
 
@@ -42,6 +41,9 @@ public class ModularDiscordBot : IDisposable
         Logging = new LoggingProvider(this);
     }
 
+    /// <summary>
+    /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+    /// </summary>
     public void Dispose()
     {
         try
@@ -70,15 +72,6 @@ public class ModularDiscordBot : IDisposable
         {
             // ignored
         }
-        
-        try
-        {
-            _tokenListener.Dispose();
-        }
-        catch (Exception)
-        {
-            // ignored
-        }
     }
 
     public async Task<bool> RunAsync(ConfigJson pConfig, CancellationToken token)
@@ -96,11 +89,6 @@ public class ModularDiscordBot : IDisposable
         };
 
         DiscordClient = new DiscordClient(discordConfig);
-        _tokenListener = new TokenListener("51151", "/api/v1/mads/token/");
-
-#pragma warning disable CS4014
-        _tokenListener.StartAsync(_cancellationToken);
-#pragma warning restore CS4014
 
         _services = new ServiceCollection()
                     .AddSingleton(this)
@@ -108,7 +96,7 @@ public class ModularDiscordBot : IDisposable
                     .AddEntityFrameworkMySql()
                     .AddDbContextFactory<MadsContext>(
                         options => options.UseMySql(_config.ConnectionString, ServerVersion.AutoDetect(_config.ConnectionString))
-                        )
+                    )
                     .AddMemoryCache(options =>
                     {
                         options.ExpirationScanFrequency = TimeSpan.FromMinutes(10);
@@ -116,7 +104,7 @@ public class ModularDiscordBot : IDisposable
                     })
                     .AddSingleton<VolatileMemoryService>()
                     .AddHostedService<StarboardService>()
-                    .AddSingleton(_tokenListener)
+                    .AddHostedService(_ => new TokenListener("51151", "/api/v1/mads/token/"))
                     .BuildServiceProvider();
 
 
@@ -126,8 +114,11 @@ public class ModularDiscordBot : IDisposable
         //Update database to latest version
         _contextProvider = _services.GetService<IDbContextFactory<MadsContext>>();
         var context = await _contextProvider.CreateDbContextAsync(_cancellationToken);
-        await context.Database.MigrateAsync(_cancellationToken);
-        
+        if ((await context.Database.GetPendingMigrationsAsync(token)).Any())
+        {
+            await context.Database.MigrateAsync(_cancellationToken);
+        }
+
         EventListener.EnableMessageSniper(DiscordClient,_services.GetService<VolatileMemoryService>());
         await EventListener.VoiceTrollListener(DiscordClient, _services.GetService<VolatileMemoryService>());
         DiscordClient.Zombied += EventListener.OnZombied;
@@ -207,7 +198,7 @@ public class ModularDiscordBot : IDisposable
         InteractivityConfiguration interactivityConfig = new()
         {
             PollBehaviour = PollBehaviour.KeepEmojis,
-            Timeout = TimeSpan.FromSeconds(600),
+            Timeout = TimeSpan.FromMinutes(10),
             ButtonBehavior = ButtonPaginationBehavior.DeleteButtons,
             PaginationBehaviour = PaginationBehaviour.Ignore,
             AckPaginationButtons = true,
