@@ -14,6 +14,7 @@ using MADS.EventListeners;
 using MADS.Extensions;
 using MADS.JsonModel;
 using MADS.Services;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
@@ -46,15 +47,6 @@ public class ModularDiscordBot : IDisposable
     /// </summary>
     public void Dispose()
     {
-        try
-        {
-            _commandsNextExtension?.Dispose();
-        }
-        catch (Exception)
-        {
-            // ignored
-        }
-        
         try
         {
             _services?.Dispose();
@@ -94,14 +86,13 @@ public class ModularDiscordBot : IDisposable
                     .AddSingleton(this)
                     .AddSingleton(DiscordClient)
                     .AddEntityFrameworkMySql()
-                    .AddDbContextFactory<MadsContext>(
-                        options => options.UseMySql(_config.ConnectionString, ServerVersion.AutoDetect(_config.ConnectionString))
-                    )
+                    .AddDbFactoryDebugOrRelease(_config)
                     .AddMemoryCache(options =>
                     {
                         options.ExpirationScanFrequency = TimeSpan.FromMinutes(10);
                         options.SizeLimit = 1024L;
                     })
+                    .AddMediatR(typeof(ModularDiscordBot))
                     .AddSingleton<VolatileMemoryService>()
                     .AddHostedService<StarboardService>()
                     .AddHostedService(_ => new TokenListener("51151", "/api/v1/mads/token/"))

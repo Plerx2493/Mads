@@ -6,6 +6,11 @@ namespace MADS.Entities;
 
 public class GuildConfigDbEntity
 {
+    public GuildConfigDbEntity()
+    {
+        
+    }
+    
     public GuildConfigDbEntity(ulong guildId, string prefix)
     {
         DiscordGuildId = guildId;

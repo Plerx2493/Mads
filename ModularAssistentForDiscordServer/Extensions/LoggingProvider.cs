@@ -12,11 +12,12 @@ public class LoggingProvider
 {
     //Utilities
     private readonly string                 _dirPath              = DataProvider.GetPath("Logs");
-    private readonly DiscordWebhookClient   _discordWebhookClient = new();
+    private DiscordWebhookClient   _discordWebhookClient = new();
     private readonly string                 _logPath;
     private readonly ModularDiscordBot      _modularDiscordBot;
-    private readonly List<DiscordDmChannel> _ownerChannel = new();
+    private List<DiscordDmChannel> _ownerChannel = new();
     private          DiscordRestClient      _discordRestClient;
+    private          bool                   _isSetup = false;
 
     internal LoggingProvider(ModularDiscordBot dBot)
     {
@@ -33,14 +34,20 @@ public class LoggingProvider
 
     public void Setup()
     {
+        if (_isSetup) return;
+        
         AddRestClient();
         AddOwnerChannels();
         SetupFeedback();
         SetupWebhookLogging();
+
+        _isSetup = true;
     }
 
     private void AddRestClient()
     {
+        if (_discordRestClient != null) return;
+        
         var config = DataProvider.GetConfig();
 
         var discordConfig = new DiscordConfiguration
@@ -53,6 +60,8 @@ public class LoggingProvider
 
     private async void AddOwnerChannels()
     {
+        _ownerChannel = new List<DiscordDmChannel>();
+        
         var application = _modularDiscordBot.DiscordClient.CurrentApplication;
         var owners = application.Owners.ToArray();
 
@@ -142,6 +151,7 @@ public class LoggingProvider
 
     private void SetupWebhookLogging()
     {
+        _discordWebhookClient = new DiscordWebhookClient(); 
         var config = DataProvider.GetConfig();
         var webhookUrl = new Uri(config.DiscordWebhook);
         _discordWebhookClient.AddWebhookAsync(webhookUrl).GetAwaiter().GetResult();
