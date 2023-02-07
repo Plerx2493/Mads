@@ -137,7 +137,7 @@ internal static class MainProgram
     {
         var builder = Host.CreateDefaultBuilder(args);
         var config = DataProvider.GetConfig();
-        /*
+        
         builder.ConfigureServices((context, services) => services.AddEntityFrameworkMySql()
                                                                  .AddDbContextFactory<MadsContext>(
                                                                      options => options.UseMySql(
@@ -145,12 +145,6 @@ internal static class MainProgram
                                                                          ServerVersion.AutoDetect(
                                                                              config.ConnectionString))
                                                                  ));
-                                                                 
-        */
-
-        builder.ConfigureServices((context, services) => services.AddEntityFrameworkInMemoryDatabase()
-            .AddDbContextFactory<MadsContext>(
-                options => options.UseInMemoryDatabase("MadsDB")));
         return builder;
     }
 }

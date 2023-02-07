@@ -21,12 +21,12 @@ public class StarboardMessageDbEntity
     [Required, Column("starCount")]
     public int Stars { get; set; }
     
-    [Required, Column("starboardMessageId")]
+    [Required, Column("starboardMessageId"), DefaultValue(0)]
     public ulong StarboardMessageId { get; set; }
     
-    [Required, Column("starboardChannelId")]
+    [Required, Column("starboardChannelId"), DefaultValue(0)]
     public ulong StarboardChannelId { get; set; }
     
-    [Required, Column("starboardGuildId")]
+    [Required, Column("starboardGuildId"), DefaultValue(0)]
     public ulong StarboardGuildId { get; set; }
 }

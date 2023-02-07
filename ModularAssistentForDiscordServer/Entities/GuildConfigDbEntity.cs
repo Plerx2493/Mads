@@ -52,7 +52,7 @@ public class GuildConfigDbEntity
     public int? StarboardThreshold { get; set; }
     
     [Column("starboardEmojiId")]
-    public ulong? StarboardEmojiId { get; set; }
+    public string? StarboardEmojiId { get; set; }
 
     public GuildDbEntity Guild;
 }

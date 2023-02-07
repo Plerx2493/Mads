@@ -17,6 +17,7 @@ using MADS.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 
 namespace MADS;
@@ -97,8 +98,7 @@ public class ModularDiscordBot : IDisposable
                     .AddHostedService<StarboardService>()
                     .AddHostedService(_ => new TokenListener("51151", "/api/v1/mads/token/"))
                     .BuildServiceProvider();
-
-
+        
         RegisterDSharpExtensions();
 
         
@@ -110,6 +110,7 @@ public class ModularDiscordBot : IDisposable
             await context.Database.MigrateAsync(_cancellationToken);
         }
 
+        EventListener.GuildDownload(DiscordClient, _contextProvider);
         EventListener.EnableMessageSniper(DiscordClient,_services.GetService<VolatileMemoryService>());
         await EventListener.VoiceTrollListener(DiscordClient, _services.GetService<VolatileMemoryService>());
         DiscordClient.Zombied += EventListener.OnZombied;
