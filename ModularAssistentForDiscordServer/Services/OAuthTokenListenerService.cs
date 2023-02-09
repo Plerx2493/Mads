@@ -20,8 +20,8 @@ public class TokenListener : IDisposable, IHostedService
             """;
 
     private static HttpListener _listener;
-    private static string       _url;
-    private        Task         _listenTask;
+    private static string _url;
+    private Task _listenTask;
 
     public TokenListener(string port, string path = "/")
     {

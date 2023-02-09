@@ -11,48 +11,74 @@ internal static partial class EventListener
     {
         client.GuildDownloadCompleted += (sender, args) =>
         {
-            
-            var _ = Task.Run(() => GuildConfigCheck(sender, args, contextFactory));
+            _ = Task.Run(() => UpdateDb(args, contextFactory));
             return Task.CompletedTask;
         };
     }
 
-    private static async Task GuildConfigCheck
-        (DiscordClient sender, GuildDownloadCompletedEventArgs args, IDbContextFactory<MadsContext> dbFactory)
+    private static async Task UpdateDb
+        (GuildDownloadCompletedEventArgs args, IDbContextFactory<MadsContext> dbFactory)
+    {
+        await UpdateGuilds(args, dbFactory);
+        await UpdateUsersDb(args, dbFactory);
+    }
+
+    private static async Task UpdateUsersDb(GuildDownloadCompletedEventArgs args,
+        IDbContextFactory<MadsContext> dbFactory)
+    {
+        using (var db = await dbFactory.CreateDbContextAsync())
+        {
+            var newUserIds = args.Guilds.Values
+                .SelectMany(x => x.Members.Values)
+                .Select(x => x.Id)
+                .Distinct()
+                .Except(db.Users.Select(y => y.Id))
+                .ToList();
+
+            var newUserDbEntities = newUserIds.Select(userId =>
+            {
+                var user = args.Guilds.Values
+                    .SelectMany(x => x.Members.Values)
+                    .FirstOrDefault(x => x.Id == userId);
+
+                return new UserDbEntity()
+                {
+                    Id = user.Id,
+                    Username = user.Username,
+                    Discriminator = Convert.ToInt32(user.Discriminator)
+                };
+            }).ToList();
+
+            await db.Users.AddRangeAsync(newUserDbEntities);
+            await db.SaveChangesAsync();
+            await db.DisposeAsync();
+        }
+    }
+
+
+    private static async Task UpdateGuilds(GuildDownloadCompletedEventArgs args,
+        IDbContextFactory<MadsContext> dbFactory)
     {
         var db = await dbFactory.CreateDbContextAsync();
-        
-        var dbGuilds = db.Guilds.Select(x => x.DiscordId).ToList();
 
-        var newGuilds = args.Guilds.Where(x => !dbGuilds.Contains(x.Key)).Select(x => x.Value).ToList();
+        var dbGuildIds = db.Guilds.Select(x => x.DiscordId).ToList();
 
-        var newGuildEntities = new List<GuildDbEntity>();
-        var newGuildConfigEntities = new List<GuildConfigDbEntity>();
-        
-        foreach (var guild in newGuilds)
-        {
-            var settings = new GuildConfigDbEntity
+        var newGuildEntities = args.Guilds
+            .Where(x => !dbGuildIds.Contains(x.Key))
+            .Select(x => new GuildDbEntity
             {
-                DiscordGuildId = guild.Id,
-                Prefix = "",
-                StarboardActive = false
-            };
-            
-            var newConfig = new GuildDbEntity
-            {
-                Settings = settings,
-                DiscordId = guild.Id
-            };
-            
-            newGuildConfigEntities.Add(settings);
-            newGuildEntities.Add(newConfig);
-        }
-        
+                DiscordId = x.Value.Id,
+                Settings = new GuildConfigDbEntity
+                {
+                    DiscordGuildId = x.Value.Id,
+                    Prefix = "",
+                    StarboardActive = false
+                }
+            })
+            .ToList();
+
         await db.Guilds.AddRangeAsync(newGuildEntities);
         await db.SaveChangesAsync();
-        
-        Console.WriteLine(db.Guilds.Count());
-        
         await db.DisposeAsync();
     }
 }

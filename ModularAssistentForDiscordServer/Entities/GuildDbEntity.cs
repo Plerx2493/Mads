@@ -10,14 +10,12 @@ public class GuildDbEntity
     public GuildDbEntity()
     {
         Id = 0;
-        Users = new List<GuildUserDbEntity>();
         Incidents = new List<IncidentDbEntity>();
     }
 
     public GuildDbEntity(GuildDbEntity old)
     {
         Id = old.Id;
-        Users = old.Users;
         Incidents = old.Incidents;
     }
 
@@ -29,7 +27,5 @@ public class GuildDbEntity
 
     public GuildConfigDbEntity Settings { get; set; }
 
-    public List<GuildUserDbEntity>? Users { get; set; }
-
-    public List<IncidentDbEntity>? Incidents { get; set; }
+    public List<IncidentDbEntity> Incidents { get; set; }
 }
