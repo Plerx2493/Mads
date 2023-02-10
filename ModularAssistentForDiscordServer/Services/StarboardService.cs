@@ -12,10 +12,10 @@ namespace MADS.Services;
 
 public class StarboardService : IHostedService
 {
-    private readonly DiscordClient _client;
+    private readonly DiscordClient                     _client;
+    private readonly IDbContextFactory<MadsContext>    _dbFactory;
     private readonly Queue<DiscordReactionUpdateEvent> _messageQueue;
-    private bool _active;
-    private readonly IDbContextFactory<MadsContext> _dbFactory;
+    private          bool                              _active;
 
     public StarboardService(DiscordClient client, IDbContextFactory<MadsContext> dbFactory)
     {
@@ -23,7 +23,6 @@ public class StarboardService : IHostedService
         _messageQueue = new Queue<DiscordReactionUpdateEvent>();
         _active = false;
         _dbFactory = dbFactory;
-        //StartAsync(default);
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -49,6 +48,7 @@ public class StarboardService : IHostedService
 
     private Task HandleReactionAdded(DiscordClient s, MessageReactionAddEventArgs e)
     {
+        Console.WriteLine("Added");
         var msg = new DiscordReactionUpdateEvent
         {
             Message = e.Message,
@@ -57,12 +57,13 @@ public class StarboardService : IHostedService
         };
 
         _messageQueue.Enqueue(msg);
-        var _ = HandleQueue();
+        var _ = Task.Run(HandleQueue);
         return Task.CompletedTask;
     }
 
     private Task HandleReactionRemoved(DiscordClient s, MessageReactionRemoveEventArgs e)
     {
+        Console.WriteLine("Removed");
         var msg = new DiscordReactionUpdateEvent
         {
             Message = e.Message,
@@ -77,6 +78,7 @@ public class StarboardService : IHostedService
 
     private Task HandleReactionsCleared(DiscordClient s, MessageReactionsClearEventArgs e)
     {
+        Console.WriteLine("Cleared");
         var msg = new DiscordReactionUpdateEvent
         {
             Message = e.Message,
@@ -91,6 +93,7 @@ public class StarboardService : IHostedService
 
     private Task HandleReactionEmojiRemoved(DiscordClient s, MessageReactionRemoveEmojiEventArgs e)
     {
+        Console.WriteLine("EmojiRemoved");
         var msg = new DiscordReactionUpdateEvent
         {
             Message = e.Message,
@@ -108,11 +111,20 @@ public class StarboardService : IHostedService
         if (_active) return;
         _active = true;
 
+
         while (_messageQueue.Any())
         {
-            var msg = _messageQueue.Dequeue();
-            await HandleEvent(msg);
+            try
+            {
+                var msg = _messageQueue.Dequeue();
+                await HandleEvent(msg);
+            }
+            catch (Exception e)
+            {
+                await MainProgram.LogToWebhookAsync(e);
+            }
         }
+
 
         _active = false;
     }
@@ -123,7 +135,7 @@ public class StarboardService : IHostedService
 
         if (e.Type == DiscordReactionUpdateType.ReactionAdded)
         {
-            var eventArgs = (MessageReactionAddEventArgs) e.EventArgs;
+            var eventArgs = (MessageReactionAddEventArgs)e.EventArgs;
             if (eventArgs.User.IsBot) return;
         }
 
@@ -148,7 +160,7 @@ public class StarboardService : IHostedService
         {
             case DiscordReactionUpdateType.ReactionAdded:
             {
-                var eventArgs = (MessageReactionAddEventArgs) e.EventArgs;
+                var eventArgs = (MessageReactionAddEventArgs)e.EventArgs;
 
                 if (guildSettings.StarboardEmojiId != 0)
                     discordEmoji = DiscordEmoji.FromGuildEmote(_client, guildSettings.StarboardEmojiId.Value);
@@ -161,7 +173,7 @@ public class StarboardService : IHostedService
 
             case DiscordReactionUpdateType.ReactionRemoved:
             {
-                var eventArgs = (MessageReactionRemoveEventArgs) e.EventArgs;
+                var eventArgs = (MessageReactionRemoveEventArgs)e.EventArgs;
 
                 if (guildSettings.StarboardEmojiId != 0)
                     discordEmoji = DiscordEmoji.FromGuildEmote(_client, guildSettings.StarboardEmojiId.Value);
@@ -180,7 +192,7 @@ public class StarboardService : IHostedService
                 return;
 
             case DiscordReactionUpdateType.ReactionEmojiRemoved:
-                MessageReactionRemoveEmojiEventArgs argss = (MessageReactionRemoveEmojiEventArgs) e.EventArgs;
+                var argss = (MessageReactionRemoveEmojiEventArgs)e.EventArgs;
 
                 if (guildSettings.StarboardEmojiId != 0)
                     discordEmoji = DiscordEmoji.FromGuildEmote(_client, guildSettings.StarboardEmojiId.Value);
@@ -205,7 +217,11 @@ public class StarboardService : IHostedService
             starData = db.Starboard.First(
                 x => x.DiscordMessageId == e.Message.Id && x.DiscordChannelId == e.Message.ChannelId
             );
-            starData.Stars++;
+            if (e.Type is DiscordReactionUpdateType.ReactionAdded)
+                starData.Stars++;
+            else
+                starData.Stars--;
+
             isNew = false;
         }
         catch (Exception)
@@ -215,7 +231,7 @@ public class StarboardService : IHostedService
 
         if (isNew)
         {
-            starData = new StarboardMessageDbEntity()
+            starData = new StarboardMessageDbEntity
             {
                 DiscordChannelId = e.Message.ChannelId,
                 DiscordMessageId = e.Message.Id,
@@ -226,14 +242,32 @@ public class StarboardService : IHostedService
 
         if (starData is null) throw new ArgumentNullException();
 
-        if (isNew) db.Starboard.Add(starData);
+        if (isNew)
+        {
+            db.Starboard.Add(starData);
+        }
         else
         {
             db.Starboard.Update(starData);
         }
 
-        if (starData.Stars < guildSettings.StarboardThreshold) return;
+        await db.SaveChangesAsync();
 
+        if (starData.Stars <= guildSettings.StarboardThreshold && isNew) return;
+
+
+        if ((starData.Stars == 0 || starData.Stars <= guildSettings.StarboardThreshold)
+            && starData.StarboardMessageId != 0)
+        {
+            await DeleteStarboardMessage(starData);
+            if (starData.Stars == 0 && !isNew)
+            {
+                db.Starboard.Remove(starData);
+            }
+            await db.SaveChangesAsync();
+            await db.DisposeAsync();
+            return;
+        }
 
         if (starData.StarboardMessageId == 0)
         {
@@ -247,6 +281,38 @@ public class StarboardService : IHostedService
         await db.DisposeAsync();
     }
 
+    private async Task DeleteStarboardMessage(StarboardMessageDbEntity starData)
+    {
+        DiscordMessage message;
+
+        try
+        {
+            message = await _client.GetChannelAsync(starData.StarboardChannelId).Result
+                                   .GetMessageAsync(starData.StarboardMessageId);
+        }
+        catch (Exception)
+        {
+            Console.WriteLine("StarboardMessage not found");
+            throw;
+        }
+
+        await message.DeleteAsync();
+
+        var db = await _dbFactory.CreateDbContextAsync();
+
+        var starDataOld = db.Starboard.First(
+            x => x.DiscordMessageId == starData.DiscordMessageId && x.DiscordChannelId == starData.DiscordChannelId
+        );
+
+        starDataOld.StarboardMessageId = 0;
+        starDataOld.StarboardChannelId = 0;
+        starDataOld.StarboardGuildId = 0;
+
+        db.Update(starDataOld);
+        await db.SaveChangesAsync();
+        await db.DisposeAsync();
+    }
+
     private async Task UpdateStarboardMessage(StarboardMessageDbEntity starData, DiscordEmoji emoji)
     {
         DiscordMessage message;
@@ -254,7 +320,7 @@ public class StarboardService : IHostedService
         try
         {
             message = await _client.GetChannelAsync(starData.StarboardChannelId).Result
-                .GetMessageAsync(starData.StarboardMessageId);
+                                   .GetMessageAsync(starData.StarboardMessageId);
         }
         catch (Exception)
         {
@@ -265,8 +331,12 @@ public class StarboardService : IHostedService
         await message.ModifyAsync(await BuildStarboardMessage(starData, emoji));
     }
 
-    private async Task CreateStarboardMessage(StarboardMessageDbEntity starData, GuildConfigDbEntity congfig,
-        DiscordEmoji emoji)
+    private async Task CreateStarboardMessage
+    (
+        StarboardMessageDbEntity starData,
+        GuildConfigDbEntity congfig,
+        DiscordEmoji emoji
+    )
     {
         var starboardMessageBuilder = await BuildStarboardMessage(starData, emoji);
 
@@ -284,19 +354,23 @@ public class StarboardService : IHostedService
         starDataOld.StarboardChannelId = starboardMessage.ChannelId;
         starDataOld.StarboardGuildId = starboardMessage.Channel.GuildId.Value;
 
-        db.Upsert(starDataOld);
+        db.Update(starDataOld);
+        await db.SaveChangesAsync();
         await db.DisposeAsync();
     }
 
-    private async Task<DiscordMessageBuilder> BuildStarboardMessage(StarboardMessageDbEntity starData,
-        DiscordEmoji emoji)
+    private async Task<DiscordMessageBuilder> BuildStarboardMessage
+    (
+        StarboardMessageDbEntity starData,
+        DiscordEmoji emoji
+    )
     {
         DiscordMessage message;
 
         try
         {
             message = await _client.GetChannelAsync(starData.DiscordChannelId).Result
-                .GetMessageAsync(starData.DiscordMessageId);
+                                   .GetMessageAsync(starData.DiscordMessageId);
         }
         catch (Exception)
         {
@@ -306,20 +380,20 @@ public class StarboardService : IHostedService
 
 
         var embed = new DiscordEmbedBuilder()
-            .WithAuthor($"{message.Author.Username}#{message.Author.Discriminator}",
-                iconUrl: (string.IsNullOrEmpty(message.Author.AvatarHash)
-                    ? message.Author.DefaultAvatarUrl
-                    : message.Author.AvatarUrl))
-            .WithDescription(message.Content.Truncate(800, "..."))
-            .WithFooter($"ID: {message.Id}")
-            .WithTimestamp(message.Id);
+                    .WithAuthor($"{message.Author.Username}#{message.Author.Discriminator}",
+                        iconUrl: string.IsNullOrEmpty(message.Author.AvatarHash)
+                            ? message.Author.DefaultAvatarUrl
+                            : message.Author.AvatarUrl)
+                    .WithDescription(message.Content.Truncate(800, "..."))
+                    .WithFooter($"ID: {message.Id}")
+                    .WithTimestamp(message.Id);
 
         var imageAttachments = message.Attachments.Where(
-                x => x.Url.ToLower().EndsWith(".jpg") ||
-                     x.Url.ToLower().EndsWith(".png") ||
-                     x.Url.ToLower().EndsWith(".jpeg") ||
-                     x.Url.ToLower().EndsWith(".gif"))
-            .ToList();
+                                          x => x.Url.ToLower().EndsWith(".jpg") ||
+                                               x.Url.ToLower().EndsWith(".png") ||
+                                               x.Url.ToLower().EndsWith(".jpeg") ||
+                                               x.Url.ToLower().EndsWith(".gif"))
+                                      .ToList();
 
         if (imageAttachments.Any()) embed.WithImageUrl(imageAttachments.First().Url);
 
@@ -336,8 +410,8 @@ public class StarboardService : IHostedService
         }
 
         var messageBuilder = new DiscordMessageBuilder()
-            .AddEmbed(embed)
-            .WithContent($"{emoji} {starData.Stars} {emotename} in {message.Channel.Mention}");
+                             .AddEmbed(embed)
+                             .WithContent($"{emoji} {starData.Stars} {emotename} in {message.Channel.Mention}");
 
         messageBuilder.AddComponents(new DiscordLinkButtonComponent(message.JumpLink.ToString(), "Go to message"));
 
