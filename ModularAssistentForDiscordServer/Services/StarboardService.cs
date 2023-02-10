@@ -48,7 +48,6 @@ public class StarboardService : IHostedService
 
     private Task HandleReactionAdded(DiscordClient s, MessageReactionAddEventArgs e)
     {
-        Console.WriteLine("Added");
         var msg = new DiscordReactionUpdateEvent
         {
             Message = e.Message,
@@ -63,7 +62,6 @@ public class StarboardService : IHostedService
 
     private Task HandleReactionRemoved(DiscordClient s, MessageReactionRemoveEventArgs e)
     {
-        Console.WriteLine("Removed");
         var msg = new DiscordReactionUpdateEvent
         {
             Message = e.Message,
@@ -78,7 +76,6 @@ public class StarboardService : IHostedService
 
     private Task HandleReactionsCleared(DiscordClient s, MessageReactionsClearEventArgs e)
     {
-        Console.WriteLine("Cleared");
         var msg = new DiscordReactionUpdateEvent
         {
             Message = e.Message,
@@ -93,7 +90,6 @@ public class StarboardService : IHostedService
 
     private Task HandleReactionEmojiRemoved(DiscordClient s, MessageReactionRemoveEmojiEventArgs e)
     {
-        Console.WriteLine("EmojiRemoved");
         var msg = new DiscordReactionUpdateEvent
         {
             Message = e.Message,
