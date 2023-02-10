@@ -253,17 +253,24 @@ public class StarboardService : IHostedService
 
         await db.SaveChangesAsync();
 
-        if (starData.Stars <= guildSettings.StarboardThreshold && isNew) return;
+        if (starData.Stars < guildSettings.StarboardThreshold && isNew) return;
 
-
-        if ((starData.Stars == 0 || starData.Stars <= guildSettings.StarboardThreshold)
-            && starData.StarboardMessageId != 0)
+        if (isNew && starData.Stars >= guildSettings.StarboardThreshold)
         {
-            await DeleteStarboardMessage(starData);
+            await CreateStarboardMessage(starData, guildSettings, discordEmoji);
+            await db.DisposeAsync();
+            return;
+        }
+
+        if (starData.Stars == 0 || starData.Stars < guildSettings.StarboardThreshold)
+        {
+            if (starData.StarboardMessageId != 0)
+                await DeleteStarboardMessage(starData);
+            
+            
             if (starData.Stars == 0 && !isNew)
-            {
                 db.Starboard.Remove(starData);
-            }
+            
             await db.SaveChangesAsync();
             await db.DisposeAsync();
             return;
@@ -275,7 +282,6 @@ public class StarboardService : IHostedService
             await db.DisposeAsync();
             return;
         }
-
 
         await UpdateStarboardMessage(starData, discordEmoji);
         await db.DisposeAsync();
