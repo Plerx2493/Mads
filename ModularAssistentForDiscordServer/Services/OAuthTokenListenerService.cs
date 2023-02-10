@@ -1,9 +1,10 @@
 ﻿using System.Net;
 using System.Text;
+using Microsoft.Extensions.Hosting;
 
 namespace MADS.Services;
 
-public class TokenListener : IDisposable
+public class TokenListener : IDisposable, IHostedService
 {
     // lang=html
     private const string PageData =
@@ -19,8 +20,8 @@ public class TokenListener : IDisposable
             """;
 
     private static HttpListener _listener;
-    private static string       _url;
-    private        Task         _listenTask;
+    private static string _url;
+    private Task _listenTask;
 
     public TokenListener(string port, string path = "/")
     {

@@ -1,5 +1,4 @@
-﻿using System.Configuration;
-using System.Reflection;
+﻿using System.Reflection;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Executors;
@@ -14,25 +13,24 @@ using MADS.EventListeners;
 using MADS.Extensions;
 using MADS.JsonModel;
 using MADS.Services;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 
 namespace MADS;
 
 public class ModularDiscordBot : IDisposable
 {
-    public readonly LoggingProvider       Logging;
-    private         CancellationToken     _cancellationToken;
-    private         CommandsNextExtension _commandsNextExtension;
+    public readonly LoggingProvider Logging;
+    private CancellationToken _cancellationToken;
+    private CommandsNextExtension _commandsNextExtension;
 
-    private ConfigJson             _config;
+    private ConfigJson _config;
     private InteractivityExtension _interactivityExtension;
-    private ServiceProvider        _services;
+    private ServiceProvider _services;
     private SlashCommandsExtension _slashCommandsExtension;
-    private TokenListener          _tokenListener;
-    public  DiscordClient          DiscordClient;
-    public  DateTime               StartTime;
+    public DiscordClient DiscordClient;
+    public DateTime StartTime;
     private IDbContextFactory<MadsContext> _contextProvider;
 
 
@@ -42,17 +40,11 @@ public class ModularDiscordBot : IDisposable
         Logging = new LoggingProvider(this);
     }
 
+    /// <summary>
+    /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+    /// </summary>
     public void Dispose()
     {
-        try
-        {
-            _commandsNextExtension?.Dispose();
-        }
-        catch (Exception)
-        {
-            // ignored
-        }
-        
         try
         {
             _services?.Dispose();
@@ -61,19 +53,10 @@ public class ModularDiscordBot : IDisposable
         {
             // ignored
         }
-        
+
         try
         {
             DiscordClient?.Dispose();
-        }
-        catch (Exception)
-        {
-            // ignored
-        }
-        
-        try
-        {
-            _tokenListener.Dispose();
         }
         catch (Exception)
         {
@@ -96,39 +79,46 @@ public class ModularDiscordBot : IDisposable
         };
 
         DiscordClient = new DiscordClient(discordConfig);
-        _tokenListener = new TokenListener("51151", "/api/v1/mads/token/");
-
-#pragma warning disable CS4014
-        _tokenListener.StartAsync(_cancellationToken);
-#pragma warning restore CS4014
 
         _services = new ServiceCollection()
-                    .AddSingleton(this)
-                    .AddSingleton(DiscordClient)
-                    .AddEntityFrameworkMySql()
-                    .AddDbContextFactory<MadsContext>(
-                        options => options.UseMySql(_config.ConnectionString, ServerVersion.AutoDetect(_config.ConnectionString))
-                        )
-                    .AddMemoryCache(options =>
-                    {
-                        options.ExpirationScanFrequency = TimeSpan.FromMinutes(10);
-                        options.SizeLimit = 1024L;
-                    })
-                    .AddSingleton<VolatileMemoryService>()
-                    .AddSingleton(_tokenListener)
-                    .BuildServiceProvider();
-
+            .AddSingleton(this)
+            .AddSingleton(DiscordClient)
+            .AddEntityFrameworkMySql()
+            .AddDbFactoryDebugOrRelease(_config)
+            .AddMemoryCache(options =>
+            {
+                options.ExpirationScanFrequency = TimeSpan.FromMinutes(10);
+                options.SizeLimit = 1024L;
+            })
+            .AddMediatR(typeof(ModularDiscordBot))
+            .AddSingleton<VolatileMemoryService>()
+            .AddSingleton<StarboardService>()
+            .AddHostedService(s => s.GetRequiredService<StarboardService>())
+            .AddSingleton(_ => new TokenListener("51151", "/api/v1/mads/token/"))
+            .AddHostedService(s => s.GetRequiredService<TokenListener>())
+            .BuildServiceProvider();
 
         RegisterDSharpExtensions();
 
-        
+
         //Update database to latest version
         _contextProvider = _services.GetService<IDbContextFactory<MadsContext>>();
         var context = await _contextProvider.CreateDbContextAsync(_cancellationToken);
-        await context.Database.MigrateAsync(_cancellationToken);
-        
-        EventListener.EnableMessageSniper(DiscordClient,_services.GetService<VolatileMemoryService>());
+        if ((await context.Database.GetPendingMigrationsAsync(token)).Any())
+        {
+            await context.Database.MigrateAsync(_cancellationToken);
+        }
+
+        EventListener.GuildDownload(DiscordClient, _contextProvider);
+        EventListener.EnableMessageSniper(DiscordClient, _services.GetService<VolatileMemoryService>());
         await EventListener.VoiceTrollListener(DiscordClient, _services.GetService<VolatileMemoryService>());
+
+        //Make sure hosted services are running
+#pragma warning disable CS4014
+        _services.GetRequiredService<StarboardService>().StartAsync(_cancellationToken);
+        _services.GetRequiredService<TokenListener>().StartAsync(_cancellationToken);
+#pragma warning restore CS4014
+
         DiscordClient.Zombied += EventListener.OnZombied;
         DiscordClient.GuildDownloadCompleted += OnGuildDownloadCompleted;
         DiscordClient.MessageCreated += EventListener.DmHandler;
@@ -206,7 +196,7 @@ public class ModularDiscordBot : IDisposable
         InteractivityConfiguration interactivityConfig = new()
         {
             PollBehaviour = PollBehaviour.KeepEmojis,
-            Timeout = TimeSpan.FromSeconds(600),
+            Timeout = TimeSpan.FromMinutes(10),
             ButtonBehavior = ButtonPaginationBehavior.DeleteButtons,
             PaginationBehaviour = PaginationBehaviour.Ignore,
             AckPaginationButtons = true,

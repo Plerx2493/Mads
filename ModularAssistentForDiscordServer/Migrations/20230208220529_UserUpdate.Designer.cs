@@ -3,6 +3,7 @@ using System;
 using MADS.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MADS.Migrations
 {
     [DbContext(typeof(MadsContext))]
-    partial class MadsContextModelSnapshot : ModelSnapshot
+    [Migration("20230208220529_UserUpdate")]
+    partial class UserUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -42,13 +45,9 @@ namespace MADS.Migrations
                         .HasColumnType("bigint unsigned")
                         .HasColumnName("starboardChannel");
 
-                    b.Property<ulong?>("StarboardEmojiId")
-                        .HasColumnType("bigint unsigned")
-                        .HasColumnName("starboardEmojiId");
-
-                    b.Property<string>("StarboardEmojiName")
+                    b.Property<string>("StarboardEmojiId")
                         .HasColumnType("longtext")
-                        .HasColumnName("starboardEmojiName");
+                        .HasColumnName("starboardEmojiId");
 
                     b.Property<int?>("StarboardThreshold")
                         .HasColumnType("int")
@@ -56,7 +55,7 @@ namespace MADS.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Configs");
+                    b.ToTable("GuildConfigDbEntity");
                 });
 
             modelBuilder.Entity("MADS.Entities.GuildDbEntity", b =>
@@ -73,6 +72,33 @@ namespace MADS.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Guilds");
+                });
+
+            modelBuilder.Entity("MADS.Entities.GuildUserDbEntity", b =>
+                {
+                    b.Property<ulong>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint unsigned")
+                        .HasColumnName("id");
+
+                    b.Property<ulong>("DiscordId")
+                        .HasColumnType("bigint unsigned")
+                        .HasColumnName("discordId");
+
+                    b.Property<ulong>("GuildId")
+                        .HasColumnType("bigint unsigned")
+                        .HasColumnName("guildId");
+
+                    b.Property<ulong?>("UserId")
+                        .HasColumnType("bigint unsigned");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GuildId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("GuildUsers");
                 });
 
             modelBuilder.Entity("MADS.Entities.IncidentDbEntity", b =>
@@ -176,6 +202,23 @@ namespace MADS.Migrations
                     b.Navigation("Settings");
                 });
 
+            modelBuilder.Entity("MADS.Entities.GuildUserDbEntity", b =>
+                {
+                    b.HasOne("MADS.Entities.GuildDbEntity", "Guild")
+                        .WithMany("Users")
+                        .HasForeignKey("GuildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MADS.Entities.UserDbEntity", "User")
+                        .WithMany("Guilds")
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("Guild");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("MADS.Entities.IncidentDbEntity", b =>
                 {
                     b.HasOne("MADS.Entities.GuildDbEntity", "Guild")
@@ -201,10 +244,14 @@ namespace MADS.Migrations
             modelBuilder.Entity("MADS.Entities.GuildDbEntity", b =>
                 {
                     b.Navigation("Incidents");
+
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("MADS.Entities.UserDbEntity", b =>
                 {
+                    b.Navigation("Guilds");
+
                     b.Navigation("Incidents");
                 });
 #pragma warning restore 612, 618

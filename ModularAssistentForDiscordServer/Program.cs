@@ -137,6 +137,7 @@ internal static class MainProgram
     {
         var builder = Host.CreateDefaultBuilder(args);
         var config = DataProvider.GetConfig();
+        
         builder.ConfigureServices((context, services) => services.AddEntityFrameworkMySql()
                                                                  .AddDbContextFactory<MadsContext>(
                                                                      options => options.UseMySql(
