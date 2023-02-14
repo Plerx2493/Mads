@@ -5,8 +5,11 @@ namespace MADS.Entities;
 
 public class IncidentDbEntity
 {
-    [Key]
+    [Column("id"), Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public ulong Id { get; set; }
+
+    [Column("guild_id")]
+    public ulong GuildId { get; set; }
 
     [Column("target_id")]
     public ulong TargetId { get; set; }
@@ -18,7 +21,7 @@ public class IncidentDbEntity
     public string Reason { get; set; } = "not given";
 
 
-    public GuildDbEntity  Guild             { get; set; }
-    public UserDbEntity   TargetUser        { get; set; }
+    public GuildDbEntity Guild { get; set; }
+    public UserDbEntity TargetUser { get; set; }
     public DateTimeOffset CreationTimeStamp { get; set; }
 }

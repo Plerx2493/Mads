@@ -5,7 +5,6 @@ using MADS.Entities;
 using MADS.Extensions;
 using MADS.JsonModel;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -71,12 +70,23 @@ internal static class MainProgram
     {
         var configPath = DataProvider.GetPath("config.json");
 
-        if (!File.Exists(configPath)) { return false; }
+        if (!File.Exists(configPath))
+        {
+            return false;
+        }
 
         var lConfig = DataProvider.GetConfig();
 
-        if (lConfig.Token is null or "" or "<Your Token here>") { return false; }
-        if (lConfig.Prefix is null or "") { lConfig.Prefix = "!"; }
+        if (lConfig.Token is null or "" or "<Your Token here>")
+        {
+            return false;
+        }
+
+        if (lConfig.Prefix is null or "")
+        {
+            lConfig.Prefix = "!";
+        }
+
         if (lConfig.DiscordWebhook is null or "") return false;
         lConfig.DmProxyChannelId ??= 0;
 
@@ -119,32 +129,31 @@ internal static class MainProgram
 
 
         var exceptionEmbed = new DiscordEmbedBuilder()
-                             .WithAuthor("Mads-Debug")
-                             .WithColor(new DiscordColor(0, 255, 194))
-                             .WithTimestamp(DateTime.UtcNow)
-                             .WithTitle($"Ooopsie...  {e.GetType()}")
-                             .WithDescription(e.Message);
+            .WithAuthor("Mads-Debug")
+            .WithColor(new DiscordColor(0, 255, 194))
+            .WithTimestamp(DateTime.UtcNow)
+            .WithTitle($"Ooopsie...  {e.GetType()}")
+            .WithDescription(e.Message);
 
         var webhookBuilder = new DiscordWebhookBuilder()
-                             .WithUsername("Mads-Debug")
-                             .AddEmbed(exceptionEmbed);
+            .WithUsername("Mads-Debug")
+            .AddEmbed(exceptionEmbed);
 
         await webhookClient.BroadcastMessageAsync(webhookBuilder);
     }
-    
+
     [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "EFCore CLI tools rely on reflection.")]
     public static IHostBuilder CreateHostBuilder(string[] args)
     {
         var builder = Host.CreateDefaultBuilder(args);
         var config = DataProvider.GetConfig();
-        
-        builder.ConfigureServices((context, services) => services.AddEntityFrameworkMySql()
-                                                                 .AddDbContextFactory<MadsContext>(
-                                                                     options => options.UseMySql(
-                                                                         config.ConnectionString,
-                                                                         ServerVersion.AutoDetect(
-                                                                             config.ConnectionString))
-                                                                 ));
+
+        builder.ConfigureServices((context, services) => services.AddDbContextFactory<MadsContext>(
+            options => options.UseMySql(
+                config.ConnectionString,
+                ServerVersion.AutoDetect(
+                    config.ConnectionString))
+        ));
         return builder;
     }
 }

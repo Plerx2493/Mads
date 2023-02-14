@@ -13,6 +13,7 @@ public class MadsContext : DbContext
     public DbSet<GuildConfigDbEntity> Configs { get; set; }
     public DbSet<IncidentDbEntity> Incidents { get; set; }
     public DbSet<StarboardMessageDbEntity> Starboard { get; set; }
+    public DbSet<QuoteDbEntity> Quotes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

@@ -83,7 +83,6 @@ public class ModularDiscordBot : IDisposable
         _services = new ServiceCollection()
             .AddSingleton(this)
             .AddSingleton(DiscordClient)
-            .AddEntityFrameworkMySql()
             .AddDbFactoryDebugOrRelease(_config)
             .AddMemoryCache(options =>
             {
