@@ -28,4 +28,6 @@ public class GuildDbEntity
     public GuildConfigDbEntity Settings { get; set; }
 
     public List<IncidentDbEntity> Incidents { get; set; }
+
+    public List<QuoteDbEntity> Quotes { get; set; }
 }

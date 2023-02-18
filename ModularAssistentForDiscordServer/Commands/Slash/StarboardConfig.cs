@@ -13,7 +13,7 @@ public class StarboardConfig : MadsBaseApplicationCommand
 {
     public IDbContextFactory<MadsContext> ContextFactory { get; set; }
 
-    private static Regex EmoteRegex = new Regex(@"^<(?<animated>a)?:(?<name>[a-zA-Z0-9_]+?):(?<id>\d+?)>$",
+    private static Regex _emoteRegex = new Regex(@"^<(?<animated>a)?:(?<name>[a-zA-Z0-9_]+?):(?<id>\d+?)>$",
         RegexOptions.ECMAScript | RegexOptions.Compiled);
 
 
@@ -40,7 +40,7 @@ public class StarboardConfig : MadsBaseApplicationCommand
         DiscordEmoji emoji;
         if (!DiscordEmoji.TryFromUnicode(emojiString, out emoji))
         {
-            var match = EmoteRegex.Match(emojiString);
+            var match = _emoteRegex.Match(emojiString);
             if (match.Success)
             {
                 DiscordEmoji.TryFromGuildEmote(ctx.Client, ulong.Parse(match.Groups["id"].Value), out emoji);

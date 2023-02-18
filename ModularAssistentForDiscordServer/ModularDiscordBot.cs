@@ -83,7 +83,6 @@ public class ModularDiscordBot : IDisposable
         _services = new ServiceCollection()
             .AddSingleton(this)
             .AddSingleton(DiscordClient)
-            .AddEntityFrameworkMySql()
             .AddDbFactoryDebugOrRelease(_config)
             .AddMemoryCache(options =>
             {
@@ -92,6 +91,7 @@ public class ModularDiscordBot : IDisposable
             })
             .AddMediatR(typeof(ModularDiscordBot))
             .AddSingleton<VolatileMemoryService>()
+            .AddSingleton<QuotesService>()
             .AddSingleton<StarboardService>()
             .AddHostedService(s => s.GetRequiredService<StarboardService>())
             .AddSingleton(_ => new TokenListener("51151", "/api/v1/mads/token/"))
