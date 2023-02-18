@@ -1,15 +1,16 @@
 ﻿using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
+using DSharpPlus.SlashCommands.Attributes;
 using MADS.Entities;
 using MADS.Extensions;
-using Microsoft.EntityFrameworkCore;
+using MADS.Services;
 
 namespace MADS.Commands.Slash;
 
-[SlashCommandGroup("Quotes", "Commands related to adding and retrieving quotes")]
+[SlashCommandGroup("Quotes", "Commands related to adding and retrieving quotes"), SlashRequireGuild]
 public class Quotes : MadsBaseApplicationCommand
 {
-    public IDbContextFactory<MadsContext> ContextFactory { get; set; }
+    public QuotesService QuotesService { get; set; }
 
     [SlashCommand("add", "Add a quote form a user")]
     public async Task AddQuoteUser
@@ -20,7 +21,7 @@ public class Quotes : MadsBaseApplicationCommand
     )
     {
         await ctx.DeferAsync(true);
-        using var db = await ContextFactory.CreateDbContextAsync();
+
 
         var newQuote = new QuoteDbEntity()
         {
@@ -32,11 +33,25 @@ public class Quotes : MadsBaseApplicationCommand
         };
 
 
-        await db.Quotes.AddAsync(newQuote);
-        await db.SaveChangesAsync();
-        await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Success"));
+        QuotesService.AddQuote(newQuote);
 
-        await IntendedWait(5000);
-        await ctx.DeleteResponseAsync();
+        var embed = await newQuote.GetEmbedAsync(ctx.Client);
+
+        await ctx.EditResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
+    }
+
+    [SlashCommand("getRandom", "Get a random quote from this server")]
+    public async Task GetRndQuote
+    (
+        InteractionContext ctx
+    )
+    {
+        await ctx.DeferAsync(true);
+
+        var quote = await QuotesService.GetRndGuildAsync(ctx.Guild.Id);
+
+        var embed = await quote.GetEmbedAsync(ctx.Client);
+
+        await ctx.EditResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
     }
 }
