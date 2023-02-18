@@ -3,6 +3,7 @@ using System;
 using MADS.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MADS.Migrations
 {
     [DbContext(typeof(MadsContext))]
-    partial class MadsContextModelSnapshot : ModelSnapshot
+    [Migration("20230218173246_Reminder")]
+    partial class Reminder
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -155,10 +158,6 @@ namespace MADS.Migrations
                     b.Property<ulong>("ChannelId")
                         .HasColumnType("bigint unsigned")
                         .HasColumnName("channelId");
-
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("creationTime");
 
                     b.Property<DateTime>("ExecutionTime")
                         .HasColumnType("datetime(6)")
