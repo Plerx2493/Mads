@@ -13,7 +13,6 @@ using MADS.EventListeners;
 using MADS.Extensions;
 using MADS.JsonModel;
 using MADS.Services;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -89,13 +88,15 @@ public class ModularDiscordBot : IDisposable
                 options.ExpirationScanFrequency = TimeSpan.FromMinutes(10);
                 options.SizeLimit = 1024L;
             })
-            .AddMediatR(typeof(ModularDiscordBot))
+            .AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(ModularDiscordBot).Assembly))
             .AddSingleton<VolatileMemoryService>()
             .AddSingleton<QuotesService>()
             .AddSingleton<StarboardService>()
             .AddHostedService(s => s.GetRequiredService<StarboardService>())
             .AddSingleton(_ => new TokenListener("51151", "/api/v1/mads/token/"))
             .AddHostedService(s => s.GetRequiredService<TokenListener>())
+            .AddSingleton<ReminderService>()
+            .AddHostedService(s => s.GetRequiredService<ReminderService>())
             .BuildServiceProvider();
 
         RegisterDSharpExtensions();
@@ -117,6 +118,7 @@ public class ModularDiscordBot : IDisposable
 #pragma warning disable CS4014
         _services.GetRequiredService<StarboardService>().StartAsync(_cancellationToken);
         _services.GetRequiredService<TokenListener>().StartAsync(_cancellationToken);
+        _services.GetRequiredService<ReminderService>().StartAsync(_cancellationToken);
 #pragma warning restore CS4014
 
         DiscordClient.Zombied += EventListener.OnZombied;

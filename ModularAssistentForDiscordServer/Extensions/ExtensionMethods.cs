@@ -32,4 +32,21 @@ public static class ExtensionMethods
 
         return embed;
     }
+
+    public static DiscordMessageBuilder GetMessage(this ReminderDbEntity reminder)
+    {
+        var message = new DiscordMessageBuilder();
+        if (reminder.MentionedMessage != 0) message.WithReply(reminder.MentionedMessage);
+
+
+        var embed = new DiscordEmbedBuilder();
+
+        embed.WithTitle(Formatter.Timestamp(reminder.CreationTime - DateTime.UtcNow) + "you wanted to be reminded:")
+            .WithDescription(reminder.ReminderText)
+            .WithColor(DiscordColor.Green);
+
+        message.WithEmbed(embed);
+
+        return message;
+    }
 }
