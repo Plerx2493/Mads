@@ -1,7 +1,6 @@
 ﻿using DSharpPlus;
 using MADS.Entities;
 using MADS.Extensions;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 
@@ -9,13 +8,13 @@ namespace MADS.Services;
 
 public class ReminderService : IHostedService
 {
-    private readonly PeriodicTimer          _timer;
-    private          List<ReminderDbEntity> _reminders;
-    private          bool                   _isDisposed;
-    
-    private          bool                           _isRunning;
-    private          Task                           _workerThread;
-    private          DiscordClient                  _client;
+    private readonly PeriodicTimer _timer;
+    private List<ReminderDbEntity> _reminders;
+    private bool _isDisposed;
+
+    private bool _isRunning;
+    private Task _workerThread;
+    private DiscordClient _client;
     private readonly IDbContextFactory<MadsContext> _dbContextFactory;
 
 
@@ -40,22 +39,21 @@ public class ReminderService : IHostedService
 
     private async Task Worker()
     {
-        while (await _timer.WaitForNextTickAsync() && !_isDisposed )
+        while (await _timer.WaitForNextTickAsync() && !_isDisposed)
         {
-            Console.WriteLine("test");
             await using var db = await _dbContextFactory.CreateDbContextAsync();
             _reminders = db.Reminders.ToList();
-            
-            var recentReminder = _reminders.Where(x => (x.ExecutionTime - DateTime.Now) <= TimeSpan.FromMinutes(5)).ToList();
 
-            if(!recentReminder.Any()) continue;
-            
-            Console.WriteLine("test1");
+            var recentReminder = _reminders.Where(x => (x.ExecutionTime - DateTime.UtcNow) <= TimeSpan.FromMinutes(5))
+                .ToList();
+
+            if (!recentReminder.Any()) continue;
+
             foreach (var reminder in recentReminder)
             {
-                _ = Task.Run(() => DispatchReminder(reminder, reminder.ExecutionTime - DateTime.Now));    
+                Task.Run(async () => await DispatchReminder(reminder, reminder.ExecutionTime - DateTime.UtcNow));
             }
-               
+
             db.Reminders.RemoveRange(recentReminder);
             await db.SaveChangesAsync();
         }
@@ -64,16 +62,15 @@ public class ReminderService : IHostedService
     private async Task DispatchReminder(ReminderDbEntity reminder, TimeSpan delay)
     {
         await Task.Delay(delay);
-        
+
         var channel = await _client.GetChannelAsync(reminder.ChannelId);
         await channel.SendMessageAsync(reminder.GetMessage());
-        
     }
 
     public async void AddReminder(ReminderDbEntity reminder)
     {
         await using var db = await _dbContextFactory.CreateDbContextAsync();
-        
+
         db.Reminders.Add(reminder);
         await db.SaveChangesAsync();
     }
