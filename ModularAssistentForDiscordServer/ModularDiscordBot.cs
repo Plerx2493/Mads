@@ -13,7 +13,6 @@ using MADS.EventListeners;
 using MADS.Extensions;
 using MADS.JsonModel;
 using MADS.Services;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -89,7 +88,7 @@ public class ModularDiscordBot : IDisposable
                 options.ExpirationScanFrequency = TimeSpan.FromMinutes(10);
                 options.SizeLimit = 1024L;
             })
-            .AddMediatR(typeof(ModularDiscordBot))
+            .AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(ModularDiscordBot).Assembly))
             .AddSingleton<VolatileMemoryService>()
             .AddSingleton<QuotesService>()
             .AddSingleton<StarboardService>()

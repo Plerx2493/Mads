@@ -7,12 +7,13 @@ namespace MADS.Extensions.MediatR;
 public class MessageSend
 {
     public record MessageSendEvent(DiscordClient Sender, MessageCreateEventArgs Args) : IRequest;
-    
-    public class SyncHandler : RequestHandler<MessageSendEvent>
+
+    public class SyncHandler : IRequestHandler<MessageSendEvent>
     {
-        protected override void Handle(MessageSendEvent request)
+        public Task Handle(MessageSendEvent request, CancellationToken cancellationToken)
         {
             Console.WriteLine("Test");
+            return Task.CompletedTask;
         }
     }
 }
