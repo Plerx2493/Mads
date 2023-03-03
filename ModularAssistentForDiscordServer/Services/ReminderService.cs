@@ -11,6 +11,7 @@ public class ReminderService : IHostedService
     private readonly PeriodicTimer _timer;
     private List<ReminderDbEntity> _reminders;
     private bool _isDisposed;
+    private List<ulong> _activeReminder;
 
     private bool _isRunning;
     private Task _workerThread;
@@ -35,27 +36,27 @@ public class ReminderService : IHostedService
     {
         _isDisposed = true;
         _isRunning = false;
+        _workerThread.Dispose();
     }
 
     private async Task Worker()
     {
-        while (await _timer.WaitForNextTickAsync() && !_isDisposed)
+        while (!_isDisposed && await _timer.WaitForNextTickAsync())
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
-            _reminders = db.Reminders.ToList();
 
-            var recentReminder = _reminders.Where(x => (x.ExecutionTime - DateTime.UtcNow) <= TimeSpan.FromMinutes(5))
+            var recentReminder = db.Reminders
+                .Where(x => (x.ExecutionTime - DateTime.UtcNow) <= TimeSpan.FromMinutes(5))
+                .Where(x => !_activeReminder.Contains(x.Id))
                 .ToList();
 
             if (!recentReminder.Any()) continue;
 
             foreach (var reminder in recentReminder)
             {
+                _activeReminder.Add(reminder.Id);
                 Task.Run(async () => await DispatchReminder(reminder, reminder.ExecutionTime - DateTime.UtcNow));
             }
-
-            db.Reminders.RemoveRange(recentReminder);
-            await db.SaveChangesAsync();
         }
     }
 
@@ -65,6 +66,10 @@ public class ReminderService : IHostedService
 
         var channel = await _client.GetChannelAsync(reminder.ChannelId);
         await channel.SendMessageAsync(reminder.GetMessage());
+        await using var db = await _dbContextFactory.CreateDbContextAsync();
+        db.Reminders.Remove(reminder);
+        _activeReminder.Remove(reminder.Id);
+        await db.SaveChangesAsync();
     }
 
     public async void AddReminder(ReminderDbEntity reminder)
