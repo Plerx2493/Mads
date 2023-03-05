@@ -27,12 +27,11 @@ public class StarboardService : IHostedService
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        Console.WriteLine("Starboard active");
         _client.MessageReactionAdded += HandleReactionAdded;
         _client.MessageReactionRemoved += HandleReactionRemoved;
         _client.MessageReactionsCleared += HandleReactionsCleared;
         _client.MessageReactionRemovedEmoji += HandleReactionEmojiRemoved;
-
+        _client.Logger.LogInformation("Starboard active");
         return Task.CompletedTask;
     }
 

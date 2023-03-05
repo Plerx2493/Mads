@@ -3,6 +3,7 @@ using DSharpPlus.Entities;
 using MADS.Entities;
 using MADS.JsonModel;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query.Internal;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.Extensions;
@@ -41,12 +42,18 @@ public static class ExtensionMethods
 
         var embed = new DiscordEmbedBuilder();
 
-        embed.WithTitle(Formatter.Timestamp(reminder.CreationTime - DateTime.UtcNow) + "you wanted to be reminded:")
+        embed.WithTitle(reminder.GetTimestamp() + "you wanted to be reminded:")
             .WithDescription(reminder.ReminderText)
             .WithColor(DiscordColor.Green);
 
         message.WithEmbed(embed);
 
         return message;
+    }
+
+    public static string GetTimestamp(this ReminderDbEntity reminder)
+    {
+        var timespan = reminder.ExecutionTime - DateTime.UtcNow;
+        return Formatter.Timestamp(timespan);
     }
 }
