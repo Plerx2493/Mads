@@ -3,6 +3,7 @@ using MADS.Entities;
 using MADS.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace MADS.Services;
 
@@ -11,7 +12,7 @@ public class ReminderService : IHostedService
     private readonly PeriodicTimer _timer;
     private List<ReminderDbEntity> _reminders;
     private bool _isDisposed;
-    private List<ulong> _activeReminder;
+    private List<ulong> _activeReminder = new();
 
     private bool _isRunning;
     private Task _workerThread;
@@ -22,7 +23,7 @@ public class ReminderService : IHostedService
     public ReminderService(IDbContextFactory<MadsContext> dbContextFactory, DiscordClient client)
     {
         _dbContextFactory = dbContextFactory;
-        _timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
+        _timer = new PeriodicTimer(TimeSpan.FromMinutes(1));
         _client = client;
     }
 
@@ -30,6 +31,7 @@ public class ReminderService : IHostedService
     {
         _isRunning = true;
         _workerThread = Worker();
+       _client.Logger.LogInformation("Reminders acitve");
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
@@ -46,23 +48,23 @@ public class ReminderService : IHostedService
             await using var db = await _dbContextFactory.CreateDbContextAsync();
 
             var recentReminder = db.Reminders
-                .Where(x => (x.ExecutionTime - DateTime.UtcNow) <= TimeSpan.FromMinutes(5))
+                .Where(x => (x.ExecutionTime - DateTime.UtcNow).Milliseconds <= TimeSpan.FromMinutes(5).Milliseconds)
                 .Where(x => !_activeReminder.Contains(x.Id))
                 .ToList();
-
+            
             if (!recentReminder.Any()) continue;
 
             foreach (var reminder in recentReminder)
             {
                 _activeReminder.Add(reminder.Id);
-                Task.Run(async () => await DispatchReminder(reminder, reminder.ExecutionTime - DateTime.UtcNow));
+                _ = Task.Run(async () => await DispatchReminder(reminder, reminder.ExecutionTime - DateTime.UtcNow));
             }
         }
     }
 
     private async Task DispatchReminder(ReminderDbEntity reminder, TimeSpan delay)
     {
-        await Task.Delay(delay);
+        if (delay.Milliseconds > 0) await Task.Delay(delay);
 
         var channel = await _client.GetChannelAsync(reminder.ChannelId);
         await channel.SendMessageAsync(reminder.GetMessage());
@@ -78,5 +80,49 @@ public class ReminderService : IHostedService
 
         db.Reminders.Add(reminder);
         await db.SaveChangesAsync();
+    }
+    
+    public async Task<List<ReminderDbEntity>> GetByUserAsync(ulong userId)
+    {
+        await using var db = await _dbContextFactory.CreateDbContextAsync();
+        return db.Reminders.Where(x => x.UserId == userId).ToList();
+    }
+
+    public async Task<bool> TryDeleteById(ulong reminderId)
+    {
+        await using var db = await _dbContextFactory.CreateDbContextAsync();
+
+        ReminderDbEntity reminder = null;
+        
+        try
+        {
+            reminder = db.Reminders.First(x => x.Id == reminderId);
+        }
+        catch (InvalidOperationException e)
+        {
+            return false;
+        }
+        
+        if (reminder is null) return false;
+        
+        db.Reminders.Remove(reminder);
+        await db.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<ReminderDbEntity?> TryGetByIdAsync(ulong id)
+    {
+        await using var db = await _dbContextFactory.CreateDbContextAsync();
+        
+        ReminderDbEntity reminder;
+        try
+        {
+            reminder = db.Reminders.First(x => x.Id == id);
+        }
+        catch (InvalidOperationException e)
+        {
+            return null;
+        }
+        return reminder;
     }
 }

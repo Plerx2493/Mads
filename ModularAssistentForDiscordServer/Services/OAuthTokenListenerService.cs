@@ -1,6 +1,8 @@
 ﻿using System.Net;
 using System.Text;
+using DSharpPlus;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace MADS.Services;
 
@@ -22,12 +24,14 @@ public class TokenListener : IDisposable, IHostedService
     private static HttpListener _listener;
     private static string _url;
     private Task _listenTask;
+    private DiscordClient _client;
 
-    public TokenListener(string port, string path = "/")
+    public TokenListener(string port, DiscordClient client, string path = "/")
     {
         _url = $"http://localhost:{port}{path}";
         _listener = new HttpListener();
         _listener.Prefixes.Add(_url);
+        _client = client;
     }
 
     public void Dispose()
@@ -67,7 +71,7 @@ public class TokenListener : IDisposable, IHostedService
     public Task StartAsync(CancellationToken cancellationToken)
     {
         _listener.Start();
-        Console.WriteLine("Listening for connections on {0}", _url);
+        _client.Logger.LogInformation("Listening for connections on {url}", _url);
 
         _listenTask = HandleIncomingConnections(cancellationToken);
         return Task.CompletedTask;

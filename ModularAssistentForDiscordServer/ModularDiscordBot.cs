@@ -15,6 +15,7 @@ using MADS.JsonModel;
 using MADS.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace MADS;
 
@@ -93,7 +94,7 @@ public class ModularDiscordBot : IDisposable
             .AddSingleton<QuotesService>()
             .AddSingleton<StarboardService>()
             .AddHostedService(s => s.GetRequiredService<StarboardService>())
-            .AddSingleton(_ => new TokenListener("51151", "/api/v1/mads/token/"))
+            .AddSingleton(s => new TokenListener("51151", s.GetRequiredService<DiscordClient>(), "/api/v1/mads/token/"))
             .AddHostedService(s => s.GetRequiredService<TokenListener>())
             .AddSingleton<ReminderService>()
             .AddHostedService(s => s.GetRequiredService<ReminderService>())
@@ -185,7 +186,7 @@ public class ModularDiscordBot : IDisposable
 #if RELEASE
         _slashCommandsExtension.RegisterCommands(asm);
 #else
-        Console.WriteLine("DEBUG");
+        DiscordClient.Logger.LogWarning("DEBUG");
         _slashCommandsExtension.RegisterCommands(asm, 938120155974750288);
 #endif
         _slashCommandsExtension.SlashCommandErrored += EventListener.OnSlashCommandErrored;
