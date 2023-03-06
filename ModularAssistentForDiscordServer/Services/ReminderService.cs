@@ -10,9 +10,8 @@ namespace MADS.Services;
 public class ReminderService : IHostedService
 {
     private readonly PeriodicTimer _timer;
-    private List<ReminderDbEntity> _reminders;
-    private bool _isDisposed;
-    private List<ulong> _activeReminder = new();
+    private          bool          _isDisposed;
+    private          List<ulong>   _activeReminder = new();
 
     private bool _isRunning;
     private Task _workerThread;
@@ -29,6 +28,7 @@ public class ReminderService : IHostedService
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
+        if (_isRunning) return;
         _isRunning = true;
         _workerThread = Worker();
        _client.Logger.LogInformation("Reminders acitve");
@@ -92,13 +92,13 @@ public class ReminderService : IHostedService
     {
         await using var db = await _dbContextFactory.CreateDbContextAsync();
 
-        ReminderDbEntity reminder = null;
+        ReminderDbEntity reminder;
         
         try
         {
             reminder = db.Reminders.First(x => x.Id == reminderId);
         }
-        catch (InvalidOperationException e)
+        catch (InvalidOperationException)
         {
             return false;
         }
@@ -119,7 +119,7 @@ public class ReminderService : IHostedService
         {
             reminder = db.Reminders.First(x => x.Id == id);
         }
-        catch (InvalidOperationException e)
+        catch (InvalidOperationException)
         {
             return null;
         }

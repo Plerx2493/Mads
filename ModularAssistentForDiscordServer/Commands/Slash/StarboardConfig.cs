@@ -13,7 +13,7 @@ public class StarboardConfig : MadsBaseApplicationCommand
 {
     public IDbContextFactory<MadsContext> ContextFactory { get; set; }
 
-    private static Regex _emoteRegex = new Regex(@"^<(?<animated>a)?:(?<name>[a-zA-Z0-9_]+?):(?<id>\d+?)>$",
+    private static readonly Regex EmoteRegex = new Regex(@"^<(?<animated>a)?:(?<name>[a-zA-Z0-9_]+?):(?<id>\d+?)>$",
         RegexOptions.ECMAScript | RegexOptions.Compiled);
 
 
@@ -35,12 +35,11 @@ public class StarboardConfig : MadsBaseApplicationCommand
 
         var db = await ContextFactory.CreateDbContextAsync();
 
-        var guildConfig = db.Configs.FirstOrDefault(x => x.DiscordGuildId == ctx.Guild.Id);
+        var guildConfig = db.Configs.First(x => x.DiscordGuildId == ctx.Guild.Id);
 
-        DiscordEmoji emoji;
-        if (!DiscordEmoji.TryFromUnicode(emojiString, out emoji))
+        if (!DiscordEmoji.TryFromUnicode(emojiString, out var emoji))
         {
-            var match = _emoteRegex.Match(emojiString);
+            var match = EmoteRegex.Match(emojiString);
             if (match.Success)
             {
                 DiscordEmoji.TryFromGuildEmote(ctx.Client, ulong.Parse(match.Groups["id"].Value), out emoji);
@@ -54,10 +53,9 @@ public class StarboardConfig : MadsBaseApplicationCommand
         guildConfig.StarboardActive = true;
 
         db.Configs.Update(guildConfig);
-        db.SaveChanges();
+        await db.SaveChangesAsync();
         await db.DisposeAsync();
 
         await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Success"));
-        return;
     }
 }

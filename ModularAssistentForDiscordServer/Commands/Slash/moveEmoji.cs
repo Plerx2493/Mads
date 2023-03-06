@@ -76,6 +76,7 @@ public class MoveEmoji : MadsBaseApplicationCommand
             Content = "Submitted"
         });
 
+        //TODO: finish command
 
         await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("End"));
     }

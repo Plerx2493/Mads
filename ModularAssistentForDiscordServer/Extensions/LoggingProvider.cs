@@ -17,7 +17,7 @@ public class LoggingProvider
     private readonly ModularDiscordBot      _modularDiscordBot;
     private List<DiscordDmChannel> _ownerChannel = new();
     private          DiscordRestClient      _discordRestClient;
-    private          bool                   _isSetup = false;
+    private          bool                   _isSetup;
 
     internal LoggingProvider(ModularDiscordBot dBot)
     {

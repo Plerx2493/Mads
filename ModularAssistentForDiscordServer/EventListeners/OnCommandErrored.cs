@@ -46,12 +46,10 @@ internal static partial class EventListener
         {
             await e.Context.Interaction.EditOriginalResponseAsync(
                 new DiscordWebhookBuilder(new DiscordInteractionResponseBuilder().AddEmbed(discordEmbed).AsEphemeral()));
-            return;
         }
-        catch (BadRequestException)
-        {
-            await e.Context.Channel.SendMessageAsync(discordEmbed);
-        }
+        catch (BadRequestException) { }
+        
+        await e.Context.Channel.SendMessageAsync(discordEmbed);
     }
 
 

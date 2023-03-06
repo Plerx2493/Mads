@@ -1,5 +1,4 @@
-﻿using System.Security.Policy;
-using DSharpPlus;
+﻿using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using MADS.CustomComponents;

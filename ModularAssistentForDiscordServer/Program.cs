@@ -60,9 +60,7 @@ internal static class MainProgram
             {
                 Task.Delay(10_000, cancellationSource.Token).GetAwaiter().GetResult();
             }
-            catch (TaskCanceledException e)
-            {
-            }
+            catch (TaskCanceledException) { }
         }
     }
 
@@ -148,7 +146,7 @@ internal static class MainProgram
         var builder = Host.CreateDefaultBuilder(args);
         var config = DataProvider.GetConfig();
 
-        builder.ConfigureServices((context, services) => services.AddDbContextFactory<MadsContext>(
+        builder.ConfigureServices((_, services) => services.AddDbContextFactory<MadsContext>(
             options => options.UseMySql(
                 config.ConnectionString,
                 ServerVersion.AutoDetect(

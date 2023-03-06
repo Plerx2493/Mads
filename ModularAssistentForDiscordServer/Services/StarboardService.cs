@@ -333,7 +333,7 @@ public class StarboardService : IHostedService
     {
         var starboardMessageBuilder = await BuildStarboardMessage(starData, emoji);
 
-        var starboardChannel = await _client.GetChannelAsync(congfig.StarboardChannelId.Value);
+        var starboardChannel = await _client.GetChannelAsync(congfig.StarboardChannelId!.Value);
 
         var starboardMessage = await starboardChannel.SendMessageAsync(starboardMessageBuilder);
 
@@ -345,7 +345,7 @@ public class StarboardService : IHostedService
 
         starDataOld.StarboardMessageId = starboardMessage.Id;
         starDataOld.StarboardChannelId = starboardMessage.ChannelId;
-        starDataOld.StarboardGuildId = starboardMessage.Channel.GuildId.Value;
+        starDataOld.StarboardGuildId = starboardMessage.Channel.GuildId!.Value;
 
         db.Update(starDataOld);
         await db.SaveChangesAsync();

@@ -11,12 +11,16 @@ public class GuildDbEntity
     {
         Id = 0;
         Incidents = new List<IncidentDbEntity>();
+        Settings = new GuildConfigDbEntity();
+        Quotes = new List<QuoteDbEntity>();
     }
 
     public GuildDbEntity(GuildDbEntity old)
     {
         Id = old.Id;
         Incidents = old.Incidents;
+        Settings = old.Settings;
+        Quotes = old.Quotes;
     }
 
     [Key, Column("id"), DefaultValue(0), DatabaseGenerated(DatabaseGeneratedOption.Identity)]

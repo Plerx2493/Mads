@@ -3,7 +3,6 @@ using DSharpPlus.Entities;
 using MADS.Entities;
 using MADS.JsonModel;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query.Internal;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.Extensions;
