@@ -128,7 +128,7 @@ internal static class MainProgram
 
         var exceptionEmbed = new DiscordEmbedBuilder()
             .WithAuthor("Mads-Debug")
-            .WithColor(new DiscordColor(0, 255, 194))
+            .WithColor(DiscordColor.Red)
             .WithTimestamp(DateTime.UtcNow)
             .WithTitle($"Ooopsie...  {e.GetType()}")
             .WithDescription(e.Message);

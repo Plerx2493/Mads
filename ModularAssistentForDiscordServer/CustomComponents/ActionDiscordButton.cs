@@ -108,10 +108,20 @@ public static class ActionDiscordButton
                     throw new ArgumentException("Please provide 1 id (ulong)");
                 }
                 actionCode = (int)ActionDiscordButtonEnum.DeleteOneUserOnly;
-                customId += actionCode + ":" + args[0]; //+ ":" + args[1];
+                customId += actionCode + ":" + args[0];
                 break;
 
             case ActionDiscordButtonEnum.AnswerDmChannel:
+                if (args.Length != 1)  
+                {
+                    throw new ArgumentException("Only 1 id possible");
+                }
+                if (args[0].GetType() != typeof(ulong))
+                {
+                    throw new ArgumentException("Please provide 1 id (ulong)");
+                }
+                actionCode = (int)ActionDiscordButtonEnum.AnswerDmChannel;
+                customId += actionCode + ":" + args[0];
                 break;
 
             default:

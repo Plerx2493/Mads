@@ -2,6 +2,8 @@
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
+using DSharpPlus.Interactivity;
+using DSharpPlus.Interactivity.Extensions;
 using MADS.CustomComponents;
 using Microsoft.Extensions.Logging;
 
@@ -61,6 +63,9 @@ internal static partial class EventListener
                     case (int)ActionDiscordButtonEnum.DeleteOneUserOnly:
                         DeleteOneUserOnly(e, substring);
                         break;
+                    case (int)ActionDiscordButtonEnum.AnswerDmChannel:
+                        AnswerDmChannel(e, sender,substring);
+                        break;
                 }
             }
             catch (Exception exception)
@@ -69,6 +74,63 @@ internal static partial class EventListener
             }
             return Task.CompletedTask;
         };
+    }
+
+    private static async void AnswerDmChannel(ComponentInteractionCreateEventArgs e, DiscordClient client , IReadOnlyList<string> substring)
+    {
+        if (!client.CurrentApplication.Owners.Contains(e.User))
+        {
+            await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("401 - Unauthorized").AsEphemeral());
+            return;
+        }
+        
+        var modal = new DiscordInteractionResponseBuilder()
+                    .WithTitle("Answer to user:")
+                    .WithCustomId($"AnswerDM-{substring[1]}")
+                    .AddComponents(new TextInputComponent("Please enter your answer:", "answer-text", required: true,
+                        style: TextInputStyle.Paragraph));
+        await e.Interaction.CreateResponseAsync(InteractionResponseType.Modal, modal);
+        
+        
+        var interactive = client.GetInteractivity();
+        var result = await interactive.WaitForModalAsync($"AnswerDM-{substring[1]}");
+
+        if (result.TimedOut)
+        {
+            await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("408 - Request Timeout").AsEphemeral());
+            return;
+        }
+        
+        await result.Result.Interaction.DeferAsync(true);
+        
+        var embed = new DiscordEmbedBuilder()
+                    .WithDescription(result.Result.Values["answer-text"])
+                    .WithColor(DiscordColor.Green)
+                    .WithAuthor(result.Result.Interaction.User.Username + "#" + result.Result.Interaction.User.Discriminator)
+                    .WithFooter("Answer form a developer");
+
+        try
+        {
+            var channel = await client.GetChannelAsync(ulong.Parse(substring[1]));
+            await channel.SendMessageAsync(embed);
+        }
+        catch (Exception exception)
+        {
+            await result.Result.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().WithContent($"500 - Internal Server Error ({exception.GetType()})"));
+            return;
+        }
+        
+        var resultEmbed = new DiscordEmbedBuilder()
+                          .WithTitle("Answer successful!")
+                          .WithColor(DiscordColor.Green);
+        await result.Result.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(resultEmbed));
+        
+        var editedMessage = new DiscordMessageBuilder(e.Message);
+        editedMessage.ClearComponents();
+        editedMessage.AddComponents(new DiscordButtonComponent(ButtonStyle.Success, "invalid", "Already answered", true));
+        
+         
+        await e.Message.ModifyAsync(editedMessage);
     }
 
     private static async void DeleteOneUserOnly(ComponentInteractionCreateEventArgs e, IReadOnlyList<string> substring)
