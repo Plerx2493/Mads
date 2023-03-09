@@ -14,7 +14,7 @@ public class ReminderService : IHostedService
     private          List<ulong>   _activeReminder = new();
 
     private bool _isRunning;
-    private Task _workerThread;
+    private Thread _workerThread;
     private DiscordClient _client;
     private readonly IDbContextFactory<MadsContext> _dbContextFactory;
 
@@ -29,16 +29,24 @@ public class ReminderService : IHostedService
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         if (_isRunning) return;
+        
+        _workerThread = new Thread(() => Worker()) 
+        {
+            // This is important as it allows the process to exit while this thread is running
+            IsBackground = true
+        };
+        _workerThread.Start();
+        
         _isRunning = true;
-        _workerThread = Worker();
-       _client.Logger.LogInformation("Reminders acitve");
+        _client.Logger.LogInformation("Reminders acitve");
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
         _isDisposed = true;
         _isRunning = false;
-        _workerThread.Dispose();
+        _workerThread.Interrupt();
+        _client.Logger.LogInformation("Reminders stopped");
     }
 
     private async Task Worker()

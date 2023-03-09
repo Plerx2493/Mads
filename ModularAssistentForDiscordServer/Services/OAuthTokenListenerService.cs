@@ -23,7 +23,7 @@ public class TokenListener : IDisposable, IHostedService
 
     private static HttpListener _listener;
     private static string _url;
-    private Task _listenTask;
+    private Thread _listenTask;
     private DiscordClient _client;
 
     public TokenListener(string port, DiscordClient client, string path = "/")
@@ -37,7 +37,6 @@ public class TokenListener : IDisposable, IHostedService
     public void Dispose()
     {
         _listener.Abort();
-        //_listenTask?.Dispose();
     }
 
     private static async Task HandleIncomingConnections(CancellationToken token)
@@ -72,15 +71,23 @@ public class TokenListener : IDisposable, IHostedService
     {
         _listener.Start();
         _client.Logger.LogInformation("Listening for connections on {url}", _url);
+        
+        _listenTask = new Thread(() => HandleIncomingConnections(cancellationToken)) 
+        {
+            
+            IsBackground = true
+        };
+        _listenTask.Start();
 
-        _listenTask = HandleIncomingConnections(cancellationToken);
+        
         return Task.CompletedTask;
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
         _listener.Abort();
-        _listenTask.Dispose();
+        _listenTask.Interrupt();
+        _client.Logger.LogInformation("Tokenlistener stopped");
         return Task.CompletedTask;
     }
 }
