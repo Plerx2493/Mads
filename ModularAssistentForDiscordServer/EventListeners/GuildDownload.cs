@@ -26,40 +26,37 @@ internal static partial class EventListener
     private static async Task UpdateUsersDb(GuildDownloadCompletedEventArgs args,
         IDbContextFactory<MadsContext> dbFactory)
     {
-        using (var db = await dbFactory.CreateDbContextAsync())
+        await using var db = await dbFactory.CreateDbContextAsync();
+        var newUserIds = args.Guilds.Values
+                             .SelectMany(x => x.Members.Values)
+                             .Select(x => x.Id)
+                             .Distinct()
+                             .Except(db.Users.Select(y => y.Id))
+                             .ToList();
+
+        var newUserDbEntities = newUserIds.Select(userId =>
         {
-            var newUserIds = args.Guilds.Values
-                .SelectMany(x => x.Members.Values)
-                .Select(x => x.Id)
-                .Distinct()
-                .Except(db.Users.Select(y => y.Id))
-                .ToList();
+            var user = args.Guilds.Values
+                           .SelectMany(x => x.Members.Values)
+                           .FirstOrDefault(x => x.Id == userId);
 
-            var newUserDbEntities = newUserIds.Select(userId =>
+            return new UserDbEntity()
             {
-                var user = args.Guilds.Values
-                    .SelectMany(x => x.Members.Values)
-                    .FirstOrDefault(x => x.Id == userId);
+                Id = user.Id,
+                Username = user.Username,
+                Discriminator = Convert.ToInt32(user.Discriminator)
+            };
+        });
 
-                return new UserDbEntity()
-                {
-                    Id = user.Id,
-                    Username = user.Username,
-                    Discriminator = Convert.ToInt32(user.Discriminator)
-                };
-            }).ToList();
-
-            await db.Users.AddRangeAsync(newUserDbEntities);
-            await db.SaveChangesAsync();
-            await db.DisposeAsync();
-        }
+        await db.Users.AddRangeAsync(newUserDbEntities);
+        await db.SaveChangesAsync();
     }
 
 
     private static async Task UpdateGuilds(GuildDownloadCompletedEventArgs args,
         IDbContextFactory<MadsContext> dbFactory)
     {
-        var db = await dbFactory.CreateDbContextAsync();
+        await using var db = await dbFactory.CreateDbContextAsync();
 
         var dbGuildIds = db.Guilds.Select(x => x.DiscordId).ToList();
 
@@ -74,11 +71,9 @@ internal static partial class EventListener
                     Prefix = "",
                     StarboardActive = false
                 }
-            })
-            .ToList();
+            });
 
         await db.Guilds.AddRangeAsync(newGuildEntities);
         await db.SaveChangesAsync();
-        await db.DisposeAsync();
     }
 }
