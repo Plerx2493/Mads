@@ -22,7 +22,7 @@ public class ReminderService : IHostedService
     public ReminderService(IDbContextFactory<MadsContext> dbContextFactory, DiscordClient client)
     {
         _dbContextFactory = dbContextFactory;
-        _timer = new PeriodicTimer(TimeSpan.FromMinutes(1));
+        _timer = new PeriodicTimer(TimeSpan.FromMinutes(5));
         _client = client;
     }
 
@@ -75,7 +75,7 @@ public class ReminderService : IHostedService
         if (delay.Milliseconds > 0) await Task.Delay(delay);
 
         var channel = await _client.GetChannelAsync(reminder.ChannelId);
-        await channel.SendMessageAsync(reminder.GetMessage());
+        await channel.SendMessageAsync(await reminder.GetMessageAsync(_client));
         await using var db = await _dbContextFactory.CreateDbContextAsync();
         db.Reminders.Remove(reminder);
         _activeReminder.Remove(reminder.Id);

@@ -33,19 +33,21 @@ public static class ExtensionMethods
         return embed;
     }
 
-    public static DiscordMessageBuilder GetMessage(this ReminderDbEntity reminder)
+    public static async Task<DiscordMessageBuilder> GetMessageAsync(this ReminderDbEntity reminder, DiscordClient client)
     {
         var message = new DiscordMessageBuilder();
         if (reminder.MentionedMessage != 0) message.WithReply(reminder.MentionedMessage);
-
-
+        
+        var user = await client.GetUserAsync(reminder.UserId);
+        var userMention = new UserMention(user);
         var embed = new DiscordEmbedBuilder();
 
-        embed.WithTitle(reminder.GetTimestamp() + "you wanted to be reminded:")
+        embed.WithTitle(user.Mention + ": " + reminder.GetTimestamp() + "you wanted to be reminded:")
             .WithDescription(reminder.ReminderText)
+            .WithFooter("Id: " + reminder.Id)
             .WithColor(DiscordColor.Green);
 
-        message.WithEmbed(embed);
+        message.WithEmbed(embed).WithAllowedMention(userMention);
 
         return message;
     }
