@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System.Runtime.InteropServices;
+using System.Text;
+using System.Text.RegularExpressions;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
@@ -11,31 +13,52 @@ namespace MADS.Extensions;
 public class LoggingProvider
 {
     //Utilities
-    private readonly string                 _dirPath              = DataProvider.GetPath("Logs");
-    private DiscordWebhookClient   _discordWebhookClient = new();
+    private readonly string                 _dirPath = DataProvider.GetPath("Logs");
     private readonly string                 _logPath;
     private readonly ModularDiscordBot      _modularDiscordBot;
-    private List<DiscordDmChannel> _ownerChannel = new();
     private          DiscordRestClient      _discordRestClient;
+    private          DiscordWebhookClient   _discordWebhookClient = new();
     private          bool                   _isSetup;
+    private          List<DiscordDmChannel> _ownerChannel = new();
 
     internal LoggingProvider(ModularDiscordBot dBot)
     {
         var startDate = DateTime.Now;
         _modularDiscordBot = dBot;
         Directory.CreateDirectory(_dirPath);
-
+        var osVersion = Environment.OSVersion.VersionString;
         _logPath = DataProvider.GetPath("Logs",
             $"{startDate.Day}-{startDate.Month}-{startDate.Year}_{startDate.Hour}-{startDate.Minute}-{startDate.Second}.log");
-        File.AppendAllTextAsync(_logPath, "========== LOG START ==========\n\n", Encoding.UTF8);
+
+        var os = osVersion.StartsWith("Unix") ? FetchLinuxName() : Environment.OSVersion.VersionString;
+
+        File.AppendAllText(_logPath, $".Net: {RuntimeInformation.FrameworkDescription}\n", Encoding.UTF8);
+        File.AppendAllText(_logPath, $"Operating system: {os}\n", Encoding.UTF8);
+        File.AppendAllText(_logPath, "========== LOG START ==========\n\n", Encoding.UTF8);
 
         Console.WriteLine(_logPath);
+    }
+
+    private static readonly Regex PrettyNameRegex = new("PRETTY_NAME=(.*)", RegexOptions.Compiled);
+
+    private static string FetchLinuxName()
+    {
+        try
+        {
+            var result = File.ReadAllText("/etc/os-release");
+            var match = PrettyNameRegex.Match(result);
+            return !match.Success ? Environment.OSVersion.VersionString : match.Groups[1].Value.Replace("\"", "");
+        }
+        catch
+        {
+            return Environment.OSVersion.VersionString;
+        }
     }
 
     public void Setup()
     {
         if (_isSetup) return;
-        
+
         AddRestClient();
         AddOwnerChannels();
         SetupFeedback();
@@ -47,7 +70,7 @@ public class LoggingProvider
     private void AddRestClient()
     {
         if (_discordRestClient != null) return;
-        
+
         var config = DataProvider.GetConfig();
 
         var discordConfig = new DiscordConfiguration
@@ -60,10 +83,11 @@ public class LoggingProvider
 
     private async void AddOwnerChannels()
     {
-        _ownerChannel = new List<DiscordDmChannel>();
-        
         var application = _modularDiscordBot.DiscordClient.CurrentApplication;
         var owners = application.Owners.ToArray();
+        if (_ownerChannel.Count == owners.Length) return;
+
+        _ownerChannel = new List<DiscordDmChannel>();
 
         foreach (var owner in owners)
         {
@@ -81,7 +105,7 @@ public class LoggingProvider
             _ownerChannel.Add(ownerChannel);
         }
 
-        _modularDiscordBot.DiscordClient.Logger.LogInformation("Found {1} dm Channel for {2} application owner",
+        _modularDiscordBot.DiscordClient.Logger.LogInformation("Found {ownerChannel} dm Channel for {owner} application owner",
             _ownerChannel.Count, owners.Length);
     }
 
@@ -127,21 +151,17 @@ public class LoggingProvider
 
             await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, responseBuilder);
 
-            var guildName = "Dms";
-            if (e.Interaction.Guild is not null) { guildName = e.Interaction.Guild.Name; }
+            var guildName = e.Interaction.Guild.Name ?? "Dms";
 
             var discordEmbed = new DiscordEmbedBuilder
             {
                 Title = "Feedback",
                 Description = e.Values["feedback-text"],
                 Color = new Optional<DiscordColor>(new DiscordColor(0, 255, 194)),
-                Timestamp = DateTime.Now,
+                Timestamp = (DateTimeOffset)DateTime.Now,
                 Footer = new DiscordEmbedBuilder.EmbedFooter
                 {
-                    Text = "Send by "
-                           + e.Interaction.User.Username
-                           + " from "
-                           + guildName
+                    Text = "Send by " + e.Interaction.User.Username + " from " + guildName
                 }
             };
 
@@ -151,41 +171,40 @@ public class LoggingProvider
 
     private void SetupWebhookLogging()
     {
-        _discordWebhookClient = new DiscordWebhookClient(); 
+        _discordWebhookClient = new DiscordWebhookClient();
         var config = DataProvider.GetConfig();
         var webhookUrl = new Uri(config.DiscordWebhook);
         _discordWebhookClient.AddWebhookAsync(webhookUrl).GetAwaiter().GetResult();
     }
 
-    public Task LogEvent(string message, string sender, LogLevel lvl)
+    public async Task LogEvent(string message, string sender, LogLevel lvl)
     {
         var log = $"[{DateTime.Now:yyyy'-'MM'-'dd'T'HH':'mm':'ss}] [{lvl}] [{sender}] {message}";
-        File.AppendAllTextAsync(_logPath, log + "\n", Encoding.UTF8);
-        return Task.CompletedTask;
+        await File.AppendAllTextAsync(_logPath, log + "\n", Encoding.UTF8);
     }
 
     public async Task LogCommandExecutionAsync(CommandContext ctx, TimeSpan timespan)
     {
-        if (ctx.Command != null)
-        {
-            var commandName = ctx.Command.Name;
-            var logEntry =
-                $"[{DateTime.Now:dd'.'MM'.'yyyy'-'HH':'mm':'ss}] [INFO] [{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [{commandName}]{timespan.TotalMilliseconds} milliseconds to execute";
-            await File.AppendAllTextAsync(_logPath, logEntry + "\n", Encoding.UTF8);
-        }
+        await LogInfo(
+            $"[{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [/{ctx.Command.Name}] {timespan.TotalMilliseconds} milliseconds to execute");
     }
 
     public async Task LogCommandExecutionAsync(InteractionContext ctx, TimeSpan timespan)
     {
-        var logEntry =
-            $"[{DateTime.Now:dd'.'MM'.'yyyy'-'HH':'mm':'ss}] [INFO] [{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [/{ctx.CommandName}] {timespan.TotalMilliseconds} milliseconds to execute";
-        await File.AppendAllTextAsync(_logPath, logEntry + "\n", Encoding.UTF8);
+        await LogInfo(
+            $"[{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [/{ctx.CommandName}] {timespan.TotalMilliseconds} milliseconds to execute");
     }
 
     public async Task LogCommandExecutionAsync(ContextMenuContext ctx, TimeSpan timespan)
     {
+        await LogInfo(
+            $"[{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [{ctx.CommandName}] {timespan.TotalMilliseconds} milliseconds to execute");
+    }
+
+    private async Task LogInfo(string input)
+    {
         var logEntry =
-            $"[{DateTime.Now:dd'.'MM'.'yyyy'-'HH':'mm':'ss}] [INFO] [{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [/{ctx.CommandName}] {timespan.TotalMilliseconds} milliseconds to execute";
+            $"[{DateTime.Now:dd'.'MM'.'yyyy'-'HH':'mm':'ss}] [INFO]" + input;
         await File.AppendAllTextAsync(_logPath, logEntry + "\n", Encoding.UTF8);
     }
 
