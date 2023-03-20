@@ -9,10 +9,9 @@ internal static partial class EventListener
 {
     public static void GuildDownload(DiscordClient client, IDbContextFactory<MadsContext> contextFactory)
     {
-        client.GuildDownloadCompleted += (sender, args) =>
+        client.GuildDownloadCompleted += async (sender, args) =>
         {
-            _ = Task.Run(() => UpdateDb(args, contextFactory));
-            return Task.CompletedTask;
+            await UpdateDb(args, contextFactory);
         };
     }
 

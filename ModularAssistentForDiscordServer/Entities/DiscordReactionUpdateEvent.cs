@@ -1,5 +1,6 @@
-﻿using DSharpPlus.Entities;
-using Emzi0767.Utilities;
+﻿using DSharpPlus.AsyncEvents;
+using DSharpPlus.Entities;
+
 
 namespace MADS.Entities;
 

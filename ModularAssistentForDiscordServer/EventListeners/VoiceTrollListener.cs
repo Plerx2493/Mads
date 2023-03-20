@@ -8,12 +8,11 @@ internal static partial class EventListener
 {
     public static Task VoiceTrollListener(DiscordClient client, VolatileMemoryService memory)
     {
-        client.VoiceStateUpdated += Task(_, e) =>
+        client.VoiceStateUpdated += async Task(_, e) =>
         {
-            if (e.After is null || e.Before is not null) return Task.CompletedTask;
-            if (!memory.VoiceTroll.Active(e.User)) return Task.CompletedTask;
-            Task.Run(() => TrollUser(e));
-            return Task.CompletedTask;
+            if (e.After is null || e.Before is not null) return;
+            if (!memory.VoiceTroll.Active(e.User)) return;
+            await TrollUser(e);
         };
         return Task.CompletedTask;
     }
