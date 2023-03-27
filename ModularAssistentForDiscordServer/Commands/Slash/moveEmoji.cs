@@ -27,6 +27,16 @@ public class MoveEmoji : MadsBaseApplicationCommand
             await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("There are no emojis in your input"));
             return;
         }
+        
+        var split = matches[0].Groups[2].Value;
+        var emojiName = matches[0].Groups[1].Value;
+        var animated = matches[0].Value.StartsWith("<a");
+
+        if (!ulong.TryParse(split, out var emojiId))
+        {
+            await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("⚠️ Failed to fetch your new emoji."));
+        }
+        
         List<DiscordGuild> guilds = new();
 
         foreach (var guild in ctx.Client.Guilds.Values)
@@ -76,7 +86,11 @@ public class MoveEmoji : MadsBaseApplicationCommand
             Content = "Submitted"
         });
 
-        //TODO: finish command
+        foreach (var value in selectResponse.Result.Values)
+        {
+            var guildId = ulong.Parse(value);
+            await CopyEmoji(ctx.Client, emojiName, emojiId, animated, guildId);
+        }
 
         await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("End"));
     }
