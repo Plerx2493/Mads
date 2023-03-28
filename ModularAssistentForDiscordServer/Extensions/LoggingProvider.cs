@@ -55,6 +55,7 @@ public class LoggingProvider
 
     private static readonly Regex PrettyNameRegex = new("PRETTY_NAME=(.*)", RegexOptions.Compiled);
 
+    //Fetching Linux name by Naamloos. Can be found in Naamloos/Modcore
     private static string FetchLinuxName()
     {
         try
@@ -244,5 +245,12 @@ public class LoggingProvider
         }
 
         return messageList;
+    }
+    
+    public async Task LogToWebhook(DiscordMessageBuilder message)
+    {
+        var messageBuilder = new DiscordWebhookBuilder(message);
+
+        await _discordWebhookClient.BroadcastMessageAsync(messageBuilder);
     }
 }

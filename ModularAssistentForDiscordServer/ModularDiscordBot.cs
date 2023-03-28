@@ -127,6 +127,7 @@ public class ModularDiscordBot : IDisposable
 
         EventListener.GuildDownload(DiscordClient, _contextProvider);
         EventListener.EnableMessageSniper(DiscordClient, _services.GetService<VolatileMemoryService>());
+        EventListener.AddGuildNotifier(this);
         await EventListener.VoiceTrollListener(DiscordClient, _services.GetService<VolatileMemoryService>());
 
         //Make sure hosted services are running
@@ -183,7 +184,6 @@ public class ModularDiscordBot : IDisposable
             DmHelp = false,
             EnableDms = true,
             EnableMentionPrefix = true,
-            PrefixResolver = GetPrefixPositionAsync,
             Services = _services,
             CommandExecutor = new ParallelQueuedCommandExecutor()
         };
@@ -216,35 +216,10 @@ public class ModularDiscordBot : IDisposable
             Timeout = TimeSpan.FromMinutes(10),
             ButtonBehavior = ButtonPaginationBehavior.DeleteButtons,
             PaginationBehaviour = PaginationBehaviour.Ignore,
-            AckPaginationButtons = true,
             ResponseBehavior = InteractionResponseBehavior.Ignore,
             ResponseMessage = "invalid interaction",
             PaginationDeletion = PaginationDeletion.DeleteEmojis
         };
         _interactivityExtension = DiscordClient.UseInteractivity(interactivityConfig);
-    }
-
-
-    public static async Task<DiscordMessage> AnswerWithDelete
-    (
-        CommandContext ctx,
-        DiscordEmbed message,
-        int secondsToDelete = 20
-    )
-    {
-        var response = await ctx.Channel.SendMessageAsync(message);
-
-        if (ctx.Channel.IsPrivate) return response;
-
-        await Task.Delay(secondsToDelete * 1000);
-        await response.DeleteAsync();
-        await ctx.Message.DeleteAsync();
-
-        return response;
-    }
-
-    private Task<int> GetPrefixPositionAsync(DiscordMessage msg)
-    {
-        return Task.FromResult(-1);
     }
 }
