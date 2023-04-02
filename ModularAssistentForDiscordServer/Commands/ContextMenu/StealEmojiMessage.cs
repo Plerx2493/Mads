@@ -39,9 +39,11 @@ public class StealEmojiMessage : MadsBaseApplicationCommand
             return;
         }
         
+        var distinctMatches = matches.DistinctBy(x => x.Value).ToList();
+        
         var newEmojis = new List<DiscordEmoji>();
 
-        foreach (Match match in matches)
+        foreach (var match in distinctMatches)
         {
             try
             {
@@ -61,7 +63,7 @@ public class StealEmojiMessage : MadsBaseApplicationCommand
             {
                 // ignored
             }
-            await Task.Delay(1000);
+            await IntendedWait(1000);
         }
         
         var message = newEmojis.Aggregate("✅ Yoink! These emoji(s) have been added to your server: ", (current, emoji) => current + $" {emoji}");

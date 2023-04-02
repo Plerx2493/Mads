@@ -201,7 +201,7 @@ public class LoggingProvider
     public async Task LogCommandExecutionAsync(CommandContext ctx, TimeSpan timespan)
     {
         await LogInfo(
-            $"[{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [/{ctx.Command.Name}] {timespan.TotalMilliseconds} milliseconds to execute");
+            $"[{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [{ctx.Command.Name}] {timespan.TotalMilliseconds} milliseconds to execute");
     }
 
     public async Task LogCommandExecutionAsync(InteractionContext ctx, TimeSpan timespan)
@@ -213,7 +213,7 @@ public class LoggingProvider
     public async Task LogCommandExecutionAsync(ContextMenuContext ctx, TimeSpan timespan)
     {
         await LogInfo(
-            $"[{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [{ctx.CommandName}] {timespan.TotalMilliseconds} milliseconds to execute");
+            $"[{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [CM-{ctx.CommandName}] {timespan.TotalMilliseconds} milliseconds to execute");
     }
 
     private async Task LogInfo(string input)
