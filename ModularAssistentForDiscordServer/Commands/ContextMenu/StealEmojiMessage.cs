@@ -67,7 +67,7 @@ public class StealEmojiMessage : MadsBaseApplicationCommand
         }
         
         var message = newEmojis.Aggregate("✅ Yoink! These emoji(s) have been added to your server: ", (current, emoji) => current + $" {emoji}");
-        message += $" {newEmojis.Count}/{matches.Count} emojis added";
+        message += $" {newEmojis.Count}/{distinctMatches.Count} emojis added";
         
         var discordWebhook = new DiscordWebhookBuilder().AddEmbed(
             new DiscordEmbedBuilder().WithTitle(message));
