@@ -21,7 +21,7 @@ namespace MADS.Commands.Slash;
 
 public class Ping : MadsBaseApplicationCommand
 {
-    [SlashCommand("ping", "Get the bot's ping"), SlashCooldown(1, 60, SlashCooldownBucketType.User)]
+    [SlashCommand("ping", "Get the bot's ping")]
     public async Task PingCommand(InteractionContext ctx)
     {
         var diff = DateTime.Now - CommandService.StartTime;
