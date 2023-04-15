@@ -27,7 +27,7 @@ namespace MADS;
 
 internal static class MainProgram
 {
-    public static void Main()
+    public static async Task Main()
     {
         //Create cancellationToken and hook the cancelKey
         var cancellationSource = new CancellationTokenSource();
@@ -50,7 +50,7 @@ internal static class MainProgram
         //Create a discordWebhookClient and add the debug webhook from the config.json
         var webhookClient = new DiscordWebhookClient();
         var webhookUrl = new Uri(config.DiscordWebhook);
-        webhookClient.AddWebhookAsync(webhookUrl).GetAwaiter().GetResult();
+        await webhookClient.AddWebhookAsync(webhookUrl);
 
         //loop while the bot shouldn't be canceled
         while (!cancellationSource.IsCancellationRequested)
@@ -60,7 +60,7 @@ internal static class MainProgram
             //execute the bot and catch uncaught exceptions
             try
             {
-                modularDiscordBot.RunAsync(config, cancellationSource.Token).GetAwaiter().GetResult();
+                await modularDiscordBot.RunAsync(config, cancellationSource.Token);
             }
             catch (Exception e)
             {
@@ -72,7 +72,7 @@ internal static class MainProgram
 
             try
             {
-                Task.Delay(10_000, cancellationSource.Token).GetAwaiter().GetResult();
+                await Task.Delay(10_000, cancellationSource.Token);
             }
             catch (TaskCanceledException) { }
         }
