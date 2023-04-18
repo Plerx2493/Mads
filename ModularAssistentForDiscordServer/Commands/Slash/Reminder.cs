@@ -37,7 +37,14 @@ public class Reminder : MadsBaseApplicationCommand
     )
     {
         await ctx.DeferAsync(true);
-        
+
+        if (timeSpan < TimeSpan.FromSeconds(30))
+        {
+            await ctx.EditResponseAsync(
+                new DiscordWebhookBuilder().WithContent($"Can not create reminder with a timespan under 30 seconds"));
+            return;
+        }
+
         var newReminder = new ReminderDbEntity
         {
             UserId = ctx.User.Id,
@@ -50,9 +57,11 @@ public class Reminder : MadsBaseApplicationCommand
 
         ReminderService.AddReminder(newReminder);
 
-        await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent($"Reminder created. I will remind you in {Formatter.Timestamp(timeSpan.Value)}"));
+        await ctx.EditResponseAsync(
+            new DiscordWebhookBuilder().WithContent(
+                $"Reminder created. I will remind you in {Formatter.Timestamp(timeSpan.Value)}"));
     }
-    
+
     [SlashCommand("list", "list your Reminder")]
     public async Task ListReminder
     (
@@ -60,16 +69,16 @@ public class Reminder : MadsBaseApplicationCommand
     )
     {
         await ctx.DeferAsync(true);
-        
+
         var reminders = await ReminderService.GetByUserAsync(ctx.User.Id);
         var remindersTextList = reminders.Select(x => $"```-Id: {x.Id}\n-Remindertext:\n{x.ReminderText}```");
-        
-        var reminderText = new StringBuilder().AppendJoin("\n\n" ,remindersTextList);
-        
+
+        var reminderText = new StringBuilder().AppendJoin("\n\n", remindersTextList);
+
         var embed = new DiscordEmbedBuilder()
             .WithTitle("Your reminders:")
             .WithDescription(reminderText.ToString());
-        
+
         await ctx.EditResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
     }
 
@@ -82,26 +91,28 @@ public class Reminder : MadsBaseApplicationCommand
     )
     {
         await ctx.DeferAsync(true);
-        var reminder = await ReminderService.TryGetByIdAsync((ulong)id);
-        
-        if (reminder is null )
+        var reminder = await ReminderService.TryGetByIdAsync((ulong) id);
+
+        if (reminder is null)
         {
             await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Reminder does not exsists"));
             return;
         }
 
-        var success =  await ReminderService.TryDeleteById((ulong)id);
-        
-        if (!success) 
+        var success = await ReminderService.TryDeleteById((ulong) id);
+
+        if (!success)
         {
-            await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Something went wrong. Please try again"));
+            await ctx.EditResponseAsync(
+                new DiscordWebhookBuilder().WithContent("Something went wrong. Please try again"));
             return;
         }
-            
+
         var embed = new DiscordEmbedBuilder()
-                    .WithTitle("Reminder removed")
-                    .WithDescription($"```-Id: {reminder.Id}\n-Remindertext:\n{reminder.ReminderText}```\nWould have fired {reminder.GetTimestamp()}");
-        
+            .WithTitle("Reminder removed")
+            .WithDescription(
+                $"```-Id: {reminder.Id}\n-Remindertext:\n{reminder.ReminderText}```\nWould have fired {reminder.GetTimestamp()}");
+
         await ctx.EditResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
     }
 }
