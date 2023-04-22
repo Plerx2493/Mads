@@ -57,11 +57,12 @@ public static class ExtensionMethods
         var userMention = new UserMention(user);
         var embed = new DiscordEmbedBuilder();
 
-        embed.WithTitle(user.Mention + " : " + reminder.GetTimestamp() + " you wanted to be reminded:")
+        embed.WithTitle($"{reminder.GetTimestamp()} you wanted to be reminded:")
             .WithDescription(reminder.ReminderText)
             .WithFooter("Id: " + reminder.Id)
             .WithColor(DiscordColor.Green);
 
+        message.WithContent($"<@!{user.Id}>");
         message.WithEmbed(embed).WithAllowedMention(userMention);
 
         return message;
