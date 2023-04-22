@@ -24,8 +24,8 @@ namespace MADS.Services;
 public class ReminderService : IHostedService
 {
     private readonly PeriodicTimer _timer;
-    private          bool          _isDisposed;
-    private          List<ulong>   _activeReminder = new();
+    private bool _isDisposed;
+    private List<ulong> _activeReminder = new();
 
     private bool _isRunning;
     private Thread _workerThread;
@@ -36,21 +36,21 @@ public class ReminderService : IHostedService
     public ReminderService(IDbContextFactory<MadsContext> dbContextFactory, DiscordClient client)
     {
         _dbContextFactory = dbContextFactory;
-        _timer = new PeriodicTimer(TimeSpan.FromMinutes(5));
+        _timer = new PeriodicTimer(TimeSpan.FromSeconds(30));
         _client = client;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         if (_isRunning) return;
-        
-        _workerThread = new Thread(() => Worker()) 
+
+        _workerThread = new Thread(() => Worker())
         {
             // This is important as it allows the process to exit while this thread is running
             IsBackground = true
         };
         _workerThread.Start();
-        
+
         _isRunning = true;
         _client.Logger.LogInformation("Reminders acitve");
     }
@@ -73,7 +73,7 @@ public class ReminderService : IHostedService
                 .Where(x => (x.ExecutionTime - DateTime.UtcNow).Milliseconds <= TimeSpan.FromMinutes(5).Milliseconds)
                 .Where(x => !_activeReminder.Contains(x.Id))
                 .ToList();
-            
+
             if (!recentReminder.Any()) continue;
 
             foreach (var reminder in recentReminder)
@@ -103,7 +103,7 @@ public class ReminderService : IHostedService
         db.Reminders.Add(reminder);
         await db.SaveChangesAsync();
     }
-    
+
     public async Task<List<ReminderDbEntity>> GetByUserAsync(ulong userId)
     {
         await using var db = await _dbContextFactory.CreateDbContextAsync();
@@ -115,7 +115,7 @@ public class ReminderService : IHostedService
         await using var db = await _dbContextFactory.CreateDbContextAsync();
 
         ReminderDbEntity reminder;
-        
+
         try
         {
             reminder = db.Reminders.First(x => x.Id == reminderId);
@@ -124,9 +124,9 @@ public class ReminderService : IHostedService
         {
             return false;
         }
-        
+
         if (reminder is null) return false;
-        
+
         db.Reminders.Remove(reminder);
         await db.SaveChangesAsync();
         return true;
@@ -135,7 +135,7 @@ public class ReminderService : IHostedService
     public async Task<ReminderDbEntity?> TryGetByIdAsync(ulong id)
     {
         await using var db = await _dbContextFactory.CreateDbContextAsync();
-        
+
         ReminderDbEntity reminder;
         try
         {
@@ -145,6 +145,7 @@ public class ReminderService : IHostedService
         {
             return null;
         }
+
         return reminder;
     }
 }
