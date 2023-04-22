@@ -44,6 +44,7 @@ public class ModularDiscordBot : IDisposable
     private ServiceProvider _services;
     private SlashCommandsExtension _slashCommandsExtension;
     public DiscordClient DiscordClient;
+    public DiscordRestClient DiscordRestClient;
     public DateTime StartTime;
     private IDbContextFactory<MadsContext> _contextProvider;
 
@@ -93,10 +94,20 @@ public class ModularDiscordBot : IDisposable
         };
 
         DiscordClient = new DiscordClient(discordConfig);
+        
+        var config = DataProvider.GetConfig();
+
+        var discordRestConfig = new DiscordConfiguration
+        {
+            Token = config.Token
+        };
+
+        DiscordRestClient = new DiscordRestClient(discordRestConfig);
 
         _services = new ServiceCollection()
             .AddSingleton(this)
             .AddSingleton(DiscordClient)
+            .AddSingleton(DiscordRestClient)
             .AddDbFactoryDebugOrRelease(_config)
             .AddMemoryCache(options =>
             {

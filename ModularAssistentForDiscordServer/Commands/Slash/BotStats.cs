@@ -13,19 +13,37 @@
 // limitations under the License.
 
 using System.Diagnostics;
+using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using Humanizer;
 using Humanizer.Localisation;
+using MADS.Entities;
 using MADS.Extensions;
+using Microsoft.EntityFrameworkCore;
 
 namespace MADS.Commands.Slash;
 
 public class BotStats : MadsBaseApplicationCommand
 {
+    public IDbContextFactory<MadsContext> ContextFactory   { get; set; }
+    public DiscordRestClient              DiscordRestClient { get; set; }
+    
     [SlashCommand("botstats", "Get statistics about the bot")]
     public async Task GetBotStatsAsync(InteractionContext ctx)
     {
+        await using var db = await ContextFactory.CreateDbContextAsync();
+        var swDB = new Stopwatch();
+        var swRest = new Stopwatch();
+        
+        swDB.Start();
+        var _ = await db.Guilds.FirstAsync();
+        swDB.Stop();
+        
+        swRest.Start();
+        var __ = await DiscordRestClient.GetChannelAsync(ctx.Channel.Id);
+        swRest.Stop();
+
         using var process = Process.GetCurrentProcess();
 
         var members = ctx.Client.Guilds.Values.Select(x => x.MemberCount).Sum();
@@ -40,8 +58,10 @@ public class BotStats : MadsBaseApplicationCommand
             .WithColor(new DiscordColor(0, 255, 194))
             .AddField("Membercount:", members.ToString("N0"), true)
             .AddField("Guildcount:", guilds.ToString("N0"), true)
-            .AddField("Ping:", ping.ToString("N0"), true)
             .AddField("Threads:", $"{ThreadPool.ThreadCount}", true)
+            .AddField("Websocket Latency:", ping.ToString("N0")+ " ms", true)
+            .AddField("DB Latency:", swDB.ElapsedMilliseconds.ToString("N0")+ " ms", true)
+            .AddField("Rest Latency:", swRest.ElapsedMilliseconds.ToString("N0")+ " ms", true)
             .AddField("Memory:", heapMemory, true)
             .AddField("Uptime:",
                 $"{DateTimeOffset.UtcNow.Subtract(process.StartTime).Humanize(2, minUnit: TimeUnit.Millisecond, maxUnit: TimeUnit.Day)}",

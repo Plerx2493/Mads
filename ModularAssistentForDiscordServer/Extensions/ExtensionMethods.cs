@@ -70,7 +70,7 @@ public static class ExtensionMethods
 
     public static string GetTimestamp(this ReminderDbEntity reminder)
     {
-        var timespan = reminder.ExecutionTime - DateTime.UtcNow;
+        var timespan = reminder.CreationTime - DateTime.UtcNow;
         return Formatter.Timestamp(timespan);
     }
 }
