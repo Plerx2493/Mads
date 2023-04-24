@@ -16,6 +16,7 @@ using System.Text;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
+using Humanizer;
 using MADS.Entities;
 using MADS.Extensions;
 using MADS.Services;
@@ -37,11 +38,17 @@ public class Reminder : MadsBaseApplicationCommand
     )
     {
         await ctx.DeferAsync(true);
+        
+        if (timeSpan is null)
+        {
+            await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Invalid timespan (5s, 3m, 7h, 2d)"));
+            return;
+        }
 
         if (timeSpan < TimeSpan.FromSeconds(30))
         {
             await ctx.EditResponseAsync(
-                new DiscordWebhookBuilder().WithContent($"Can not create reminder with a timespan under 30 seconds"));
+                new DiscordWebhookBuilder().WithContent("Can not create reminder with a timespan under 30 seconds"));
             return;
         }
 
@@ -71,9 +78,10 @@ public class Reminder : MadsBaseApplicationCommand
         await ctx.DeferAsync(true);
 
         var reminders = await ReminderService.GetByUserAsync(ctx.User.Id);
-        var remindersTextList = reminders.Select(x => $"```-Id: {x.Id}\n-Remindertext:\n{x.ReminderText}```");
+        var remindersTextList = reminders
+            .Select(x => $"```-Id: {x.Id}\n-Remindertext:\n{x.ReminderText}\n-ExecutionTime: {(x.ExecutionTime).Humanize()}```");
 
-        var reminderText = new StringBuilder().AppendJoin("\n\n", remindersTextList);
+        var reminderText = new StringBuilder().AppendJoin("\n", remindersTextList);
 
         var embed = new DiscordEmbedBuilder()
             .WithTitle("Your reminders:")
