@@ -35,7 +35,7 @@ internal static partial class EventListener
 
                 sender.Logger.LogTrace(e.Id);
 
-                if (!Regex.IsMatch(e.Id, @"^CMD:\d{1,4}(?::\d{1,20}){0,3}$"))
+                if (!Regex.IsMatch(e.Id, @"^CMD:\d{1,4}(?::\d{1,20}){0,3}$", RegexOptions.Compiled))
                 {
                     return Task.CompletedTask;
                 }

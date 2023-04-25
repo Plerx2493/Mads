@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Runtime.Loader;
 using DSharpPlus;
 using DSharpPlus.EventArgs;
 using MADS.Entities;

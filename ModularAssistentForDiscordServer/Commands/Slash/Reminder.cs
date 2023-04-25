@@ -17,6 +17,7 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using Humanizer;
+using MADS.Commands.AutoCompletion;
 using MADS.Entities;
 using MADS.Extensions;
 using MADS.Services;
@@ -94,7 +95,8 @@ public class Reminder : MadsBaseApplicationCommand
     public async Task DeleteById
     (
         InteractionContext ctx,
-        [Option("id", "id of the given reminder which should be deleted")]
+        [Autocomplete(typeof(ReminderAutoCompletion))]
+        [Option("id", "id of the given reminder which should be deleted", true)]
         long id
     )
     {

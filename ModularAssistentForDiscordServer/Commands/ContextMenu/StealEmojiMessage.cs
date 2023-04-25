@@ -31,7 +31,7 @@ public class StealEmojiMessage : MadsBaseApplicationCommand
     {
         await ctx.DeferAsync(true);
 
-        var matches = Regex.Matches(ctx.TargetMessage.Content.Replace("><","> <"), EmojiRegex);
+        var matches = Regex.Matches(ctx.TargetMessage.Content.Replace("><","> <"), EmojiRegex, RegexOptions.Compiled);
 
         if (matches.Count < 1)
         {

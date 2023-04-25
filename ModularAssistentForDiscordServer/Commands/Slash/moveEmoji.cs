@@ -34,7 +34,7 @@ public class MoveEmoji : MadsBaseApplicationCommand
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource,
             new DiscordInteractionResponseBuilder().AsEphemeral());
 
-        var matches = Regex.Matches(pEmoji, EmojiRegex);
+        var matches = Regex.Matches(pEmoji, EmojiRegex, RegexOptions.Compiled);
 
         if (!matches.Any())
         {
