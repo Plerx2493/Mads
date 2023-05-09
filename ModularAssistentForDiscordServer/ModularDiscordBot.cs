@@ -111,8 +111,8 @@ public class ModularDiscordBot : IDisposable
             .AddDbFactoryDebugOrRelease(_config)
             .AddMemoryCache(options =>
             {
-                options.ExpirationScanFrequency = TimeSpan.FromMinutes(10);
-                options.SizeLimit = 1024L;
+                options.ExpirationScanFrequency = TimeSpan.FromMinutes(1);
+                options.SizeLimit = 8192L;
             })
             .AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(ModularDiscordBot).Assembly))
             .AddSingleton<VolatileMemoryService>()

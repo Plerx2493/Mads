@@ -73,4 +73,16 @@ public static class ExtensionMethods
         var timespan = reminder.ExecutionTime - DateTime.UtcNow;
         return Formatter.Timestamp(timespan);
     }
+
+    internal static CachedMessage ToCached(this DiscordMessage message)
+    {
+        return new CachedMessage()
+        {
+            Author = message.Author.Id,
+            Content = message.Content.Normalize().ToLower().Trim(),
+            Channel = message.ChannelId,
+            Guild = (ulong) message.Channel.GuildId,
+            CreatedAt = message.Timestamp
+        };
+    }
 }
