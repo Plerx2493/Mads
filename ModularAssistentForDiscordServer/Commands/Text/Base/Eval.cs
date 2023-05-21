@@ -51,7 +51,7 @@ public class Eval : MadsBaseCommand
             var scriptOptions = ScriptOptions.Default;
             scriptOptions = scriptOptions.WithImports("System", "System.Collections.Generic", "System.Linq",
                 "System.Text", "System.Threading.Tasks", "DSharpPlus", "DSharpPlus.Entities", "DSharpPlus.CommandsNext",
-                "MADS", "Humanizer");
+                "MADS", "Humanizer", "Microsoft.Extensions.Logging");
             scriptOptions = scriptOptions.WithReferences(AppDomain.CurrentDomain.GetAssemblies()
                                                                   .Where(assembly =>
                                                                       !assembly.IsDynamic

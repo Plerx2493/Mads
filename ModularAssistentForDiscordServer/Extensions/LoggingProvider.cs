@@ -55,7 +55,7 @@ public class LoggingProvider
 
     private static readonly Regex PrettyNameRegex = new("PRETTY_NAME=(.*)", RegexOptions.Compiled);
 
-    //Fetching Linux name by Naamloos. Can be found in Naamloos/Modcore
+    //Fetching Linux name by Naamloos. Can be found in Naamloos/Modcore on Github
     private static string FetchLinuxName()
     {
         try

@@ -103,7 +103,7 @@ public class ModularDiscordBot : IDisposable
         };
 
         DiscordRestClient = new DiscordRestClient(discordRestConfig);
-
+        var asm = Assembly.GetExecutingAssembly();
         _services = new ServiceCollection()
             .AddSingleton(this)
             .AddSingleton(DiscordClient)
@@ -114,10 +114,10 @@ public class ModularDiscordBot : IDisposable
                 options.ExpirationScanFrequency = TimeSpan.FromMinutes(1);
                 options.SizeLimit = 8192L;
             })
-            .AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(ModularDiscordBot).Assembly))
             .AddSingleton<VolatileMemoryService>()
             .AddSingleton<QuotesService>()
             .AddSingleton<StarboardService>()
+            .AddSingleton(new AntiPhishingService(DiscordClient))
             .AddHostedService(s => s.GetRequiredService<StarboardService>())
             .AddSingleton(s => new TokenListener("51151", s.GetRequiredService<DiscordClient>(), "/api/v1/mads/token/"))
             .AddHostedService(s => s.GetRequiredService<TokenListener>())

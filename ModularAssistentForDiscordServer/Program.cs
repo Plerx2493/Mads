@@ -64,7 +64,7 @@ internal static class MainProgram
             }
             catch (Exception e)
             {
-                if (e is TaskCanceledException) return;
+                if (e is TaskCanceledException or OperationCanceledException) return;
 
                 var _ = LogToWebhookAsync(e);
                 modularDiscordBot.Dispose();
