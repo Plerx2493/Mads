@@ -34,11 +34,13 @@ public class About : MadsBaseApplicationCommand
         var diff = DateTime.Now - CommandService.StartTime;
         var date = $"{diff.Days} days {diff.Hours} hours {diff.Minutes} minutes";
 
+        var currentUser = ctx.Client.CurrentUser;
+
         discordEmbedBuilder
             .WithTitle("About me")
             .WithDescription("A modular designed discord bot for moderation and stuff")
-            .WithAuthor(ctx.Client.CurrentUser.Username, ctx.Client.CurrentUser.AvatarUrl,
-                ctx.Client.CurrentUser.AvatarUrl)
+            .WithAuthor(currentUser.Username, currentUser.AvatarUrl,
+                currentUser.AvatarUrl)
             .WithColor(new DiscordColor(0, 255, 194))
             .AddField("Owner:", "[Plerx#0175](https://github.com/Plerx2493/)", true)
             .AddField("Source:", "[Github](https://github.com/Plerx2493/Mads)", true)

@@ -30,6 +30,7 @@ using MADS.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace MADS;
 
@@ -90,7 +91,8 @@ public class ModularDiscordBot : IDisposable
             TokenType = TokenType.Bot,
             AutoReconnect = true,
             MinimumLogLevel = _config.LogLevel,
-            Intents = DiscordIntents.All
+            Intents = DiscordIntents.All,
+            LoggerFactory = new LoggerFactory().AddSerilog()
         };
 
         DiscordClient = new DiscordClient(discordConfig);

@@ -29,13 +29,18 @@ namespace MADS.Services;
 
 public class AntiPhishingService
 {
-    private HttpClient antiFishClient;
-    private HttpClient pishggClient;
+    private DiscordClient _discordClient;
+    private HttpClient _antiFishClient;
+    private HttpClient _phishggClient;
 
     public ILogger Logger { get; set; }
 
     private Regex _linkRegex = new("(?:[A-z0-9](?:[A-z0-9-]{0,61}[A-z0-9])?\\.)+[A-z0-9][A-z0-9-]{0,61}[A-z0-9]",
-        RegexOptions.Compiled);
+        RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
+        
+    private Regex _inviteRegex = new(@"(https?:\/\/)?(.*?@)?(www\.)?(discord\.(gg)|discord(app)?\.com\/invite)\/(?<code>[\w-]+)",
+            RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(100));
+        
 
     private JsonSerializerOptions tmp = new JsonSerializerOptions()
     {
@@ -46,35 +51,38 @@ public class AntiPhishingService
     public AntiPhishingService(DiscordClient discordClient)
     {
         Logger = discordClient.Logger;
+        _discordClient = discordClient;
 
         var httpHandler = new HttpClientHandler
         {
-            UseCookies = false,
-            AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip
+            UseCookies = false
+            //AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip
         };
 
-        antiFishClient = new HttpClient(httpHandler)
+        _antiFishClient = new HttpClient(httpHandler)
         {
             BaseAddress = new Uri("https://anti-fish.bitflow.dev/check")
         };
 
-        antiFishClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent",
+        _antiFishClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent",
             "MadsDiscordBot (https://github.com/Plerx2493/Mads, v1)");
         
         
 
-        pishggClient = new HttpClient(httpHandler)
+        _phishggClient = new HttpClient(httpHandler)
         {
             BaseAddress = new Uri("https://api.phish.gg/")
         };
 
-        pishggClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent",
+        _phishggClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent",
             "MadsDiscordBot (https://github.com/Plerx2493/Mads, v1)");
         
 
 
         discordClient.MessageCreated += HandleMessage;
         discordClient.MessageUpdated += HandleMessageUpdate;
+        //discordClient.GuildMemberAdded += HandleUserJoined;
+        //discordClient.GuildMemberUpdated += HandleUserUpdated;
     }
 
 
@@ -86,13 +94,16 @@ public class AntiPhishingService
     private async Task HandleMessage(DiscordClient sender, MessageCreateEventArgs args)
     {
         var _ = Task.Run(() => CheckLinksAsync(args.Message));
+        var invites = await CheckServerAsync(args.Message);
+        
+        if (invites == null) return;
+
+        args.Message.Channel.SendMessageAsync("Test");
     }
 
     private async Task<AntiFishResponse?> CheckLinksAsync(DiscordMessage message)
     {
         if (message.Content == null) return null;
-        if (message.Author.IsBot) return null;
-        if (message.WebhookMessage) return null;
 
         var matches = _linkRegex.Matches(message.Content);
 
@@ -103,7 +114,7 @@ public class AntiPhishingService
         var json = new JsonObject();
         json.Add("message", message.Content);
 
-        var res = await antiFishClient.PostAsJsonAsync("", json);
+        var res = await _antiFishClient.PostAsJsonAsync("", json);
 
         if (res.StatusCode == HttpStatusCode.NotFound) return null;
         
@@ -121,7 +132,7 @@ public class AntiPhishingService
         var json = new JsonObject();
         json.Add("username", username);
 
-        var res = await antiFishClient.PostAsJsonAsync("username", json);
+        var res = await _antiFishClient.PostAsJsonAsync("username", json);
         
         if (res.StatusCode != HttpStatusCode.OK)
         {
@@ -132,16 +143,33 @@ public class AntiPhishingService
         return await res.Content.ReadFromJsonAsync<PhishggResponse>();
     }
 
-    private async Task<PhishggResponse?> CheckServerAsync(ulong serverId)
+    private async Task<IEnumerable<PhishggResponse>?> CheckServerAsync(DiscordMessage message)
     {
-        var res = await antiFishClient.GetAsync($"server?id={serverId}");
-        
-        if (res.StatusCode != HttpStatusCode.OK)
+        if (message.Content == null) return null;
+
+        var matches = _inviteRegex.Matches(message.Content);
+
+        if (matches.Count == 0) return null;
+
+        List<PhishggResponse> responses = new();
+
+        foreach (Match match in matches)
         {
-            Logger.LogError($"AntiPhishing failed: {res.StatusCode.Humanize()} {res.ReasonPhrase}");
-            return null;
+            var invite = await _discordClient.GetInviteByCodeAsync(match.Groups["code"].Value);
+            
+            var res = await _phishggClient.GetAsync($"server?id={invite.Guild.Id}");
+        
+            if (res.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.LogError($"AntiPhishing failed: {res.StatusCode.Humanize()} {res.ReasonPhrase}");
+                continue;
+            }
+            Console.WriteLine(await  res.Content.ReadAsStringAsync());
+            var resJson = await res.Content.ReadFromJsonAsync<PhishggResponse>();
+            
+            responses.Add(resJson);
         }
         
-        return await res.Content.ReadFromJsonAsync<PhishggResponse>();
+        return responses;
     }
 }

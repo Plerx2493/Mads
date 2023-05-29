@@ -22,6 +22,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Serilog;
+using Serilog.Core;
 
 namespace MADS;
 
@@ -29,6 +31,11 @@ internal static class MainProgram
 {
     public static void Main()
     {
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Debug()
+            .WriteTo.Console()
+            .CreateLogger();
+        
         //Create cancellationToken and hook the cancelKey
         var cancellationSource = new CancellationTokenSource();
         Console.CancelKeyPress += (_, args) =>
