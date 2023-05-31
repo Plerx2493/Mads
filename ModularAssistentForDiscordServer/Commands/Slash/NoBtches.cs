@@ -13,7 +13,7 @@
 // limitations under the License.
 
 using DSharpPlus.SlashCommands;
-using MADS.Extensions;
+using MADS.Services;
 
 namespace MADS.Commands.Slash;
 

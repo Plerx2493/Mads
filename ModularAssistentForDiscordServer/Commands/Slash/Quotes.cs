@@ -16,7 +16,6 @@ using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.Attributes;
 using MADS.Entities;
-using MADS.Extensions;
 using MADS.Services;
 
 namespace MADS.Commands.Slash;

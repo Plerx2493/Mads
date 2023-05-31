@@ -15,12 +15,12 @@
 using System.Diagnostics;
 using DSharpPlus.CommandsNext;
 
-namespace MADS.Extensions;
+namespace MADS.Services;
 
 public class MadsBaseCommand : BaseCommandModule
 {
     private readonly Stopwatch         _executionTimer = new();
-    public           ModularDiscordBot CommandService { get; set; }
+    public           DiscordClientService CommandService { get; set; }
 
     public override Task BeforeExecutionAsync(CommandContext ctx)
     {

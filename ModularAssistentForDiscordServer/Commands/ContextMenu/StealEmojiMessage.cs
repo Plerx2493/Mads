@@ -17,7 +17,7 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.Attributes;
-using MADS.Extensions;
+using MADS.Services;
 
 namespace MADS.Commands.ContextMenu;
 

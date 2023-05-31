@@ -14,7 +14,7 @@
 
 using Newtonsoft.Json;
 
-namespace MADS.Extensions;
+namespace MADS.Services;
 
 internal static class JsonProvider
 {

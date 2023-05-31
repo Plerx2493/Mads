@@ -14,7 +14,7 @@
 
 using DSharpPlus;
 using MADS.Entities;
-using MADS.Extensions;
+using MADS.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;

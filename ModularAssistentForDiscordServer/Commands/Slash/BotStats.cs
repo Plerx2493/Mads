@@ -19,7 +19,7 @@ using DSharpPlus.SlashCommands;
 using Humanizer;
 using Humanizer.Localisation;
 using MADS.Entities;
-using MADS.Extensions;
+using MADS.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace MADS.Commands.Slash;

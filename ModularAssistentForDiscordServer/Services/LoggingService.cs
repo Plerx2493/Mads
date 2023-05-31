@@ -21,22 +21,24 @@ using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 using DSharpPlus.SlashCommands;
 using Microsoft.Extensions.Logging;
+using Serilog;
 
-namespace MADS.Extensions;
+namespace MADS.Services;
 
-public class LoggingProvider
+public class LoggingService
 {
     //Utilities
     private readonly string                 _dirPath = DataProvider.GetPath("Logs");
     private readonly string                 _logPath;
-    private readonly ModularDiscordBot      _modularDiscordBot;
+    private readonly DiscordClientService      _modularDiscordBot;
     private          DiscordRestClient      _discordRestClient;
     private          DiscordWebhookClient   _discordWebhookClient = new();
     private          bool                   _isSetup;
     private          List<DiscordDmChannel> _ownerChannel = new();
 
-    internal LoggingProvider(ModularDiscordBot dBot)
+    internal LoggingService(DiscordClientService dBot)
     {
+        Log.Warning("LoggingService");
         var startDate = DateTime.Now;
         _modularDiscordBot = dBot;
         Directory.CreateDirectory(_dirPath);

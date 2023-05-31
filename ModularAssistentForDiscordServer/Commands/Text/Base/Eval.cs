@@ -16,7 +16,7 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
-using MADS.Extensions;
+using MADS.Services;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 
@@ -94,10 +94,10 @@ public class Eval : MadsBaseCommand
 
 public class TestVariables
 {
-    public TestVariables(DiscordMessage msg, DiscordClient client, CommandContext ctx, ModularDiscordBot mdb)
+    public TestVariables(DiscordMessage msg, DiscordClient client, CommandContext ctx, DiscordClientService mdb)
     {
         Client = client;
-        Mdb = mdb;
+        ClientService = mdb;
         Message = msg;
         Channel = msg.Channel;
         Guild = Channel.Guild;
@@ -114,5 +114,5 @@ public class TestVariables
     public DiscordMember     Member  { get; set; }
     public CommandContext    Context { get; set; }
     public DiscordClient     Client  { get; set; }
-    public ModularDiscordBot Mdb     { get; set; }
+    public DiscordClientService ClientService     { get; set; }
 }

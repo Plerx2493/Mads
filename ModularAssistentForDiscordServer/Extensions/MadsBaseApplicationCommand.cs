@@ -13,15 +13,16 @@
 // limitations under the License.
 
 using System.Diagnostics;
+using DSharpPlus;
 using DSharpPlus.SlashCommands;
 
-namespace MADS.Extensions;
+namespace MADS.Services;
 
 [SlashModuleLifespan(SlashModuleLifespan.Transient)]
 public class MadsBaseApplicationCommand : ApplicationCommandModule
 {
     private readonly Stopwatch         _executionTimer = new();
-    public           ModularDiscordBot CommandService { get; set; }
+    public           DiscordClientService CommandService { get; set; }
 
     public override Task<bool> BeforeSlashExecutionAsync(InteractionContext ctx)
     {

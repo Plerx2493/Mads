@@ -19,7 +19,7 @@ using MADS.JsonModel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace MADS.Extensions;
+namespace MADS.Services;
 
 public static class ExtensionMethods
 {
@@ -30,6 +30,18 @@ public static class ExtensionMethods
             options => options.UseMySql(config.ConnectionString, ServerVersion.AutoDetect(config.ConnectionString))
         );
 
+        return serviceCollection;
+    }
+
+    public static IServiceCollection AddDiscordRestClient(this IServiceCollection serviceCollection,
+        ConfigJson config)
+    {
+        var discordRestConfig = new DiscordConfiguration
+        {
+            Token = config.Token
+        };
+
+        serviceCollection.AddSingleton(new DiscordRestClient(discordRestConfig));
         return serviceCollection;
     }
 

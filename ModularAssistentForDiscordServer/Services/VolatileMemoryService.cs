@@ -16,6 +16,7 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace MADS.Services;
 
@@ -24,23 +25,21 @@ public class VolatileMemoryService
     public readonly MessageSnipe MessageSnipe;
     public readonly VoiceTroll   VoiceTroll;
 
-    public VolatileMemoryService(IMemoryCache memoryCache, DiscordClient client)
+    public VolatileMemoryService(IMemoryCache memoryCache)
     {
         VoiceTroll = new VoiceTroll();
-        MessageSnipe = new MessageSnipe(memoryCache, client);
+        MessageSnipe = new MessageSnipe(memoryCache);
     }
 }
 
 public class MessageSnipe
 {
     private readonly IMemoryCache            _memoryCache;
-    private readonly DiscordClient           _client;
     private readonly MemoryCacheEntryOptions _options;
 
-    public MessageSnipe(IMemoryCache memoryCache, DiscordClient client)
+    public MessageSnipe(IMemoryCache memoryCache)
     {
         _memoryCache = memoryCache;
-        _client = client;
         _options = new MemoryCacheEntryOptions();
         _options.SetAbsoluteExpiration(TimeSpan.FromHours(12))
                 .SetSize(1)
@@ -49,7 +48,7 @@ public class MessageSnipe
 
     private void PostEvictionCallback(object key, object value, EvictionReason reason, object state)
     {
-        _client.Logger.LogTrace($"MessageSniper: Message eviction - {reason}");
+        Log.Verbose($"MessageSniper: Message eviction - {reason}");
     }
 
     public void AddMessage(DiscordMessage message)

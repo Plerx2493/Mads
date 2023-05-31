@@ -22,7 +22,7 @@ using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.EventArgs;
-using MADS.Extensions;
+using MADS.Services;
 
 namespace MADS.EventListeners;
 

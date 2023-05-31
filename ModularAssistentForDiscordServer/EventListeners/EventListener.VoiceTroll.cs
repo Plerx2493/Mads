@@ -20,7 +20,7 @@ namespace MADS.EventListeners;
 
 internal static partial class EventListener
 {
-    public static Task VoiceTrollListener(DiscordClient client, VolatileMemoryService memory)
+    public static void VoiceTrollListener(DiscordClient client, VolatileMemoryService memory)
     {
         client.VoiceStateUpdated += async Task(_, e) =>
         {
@@ -28,7 +28,6 @@ internal static partial class EventListener
             if (!memory.VoiceTroll.Active(e.User)) return;
             await TrollUser(e);
         };
-        return Task.CompletedTask;
     }
 
     private static async Task TrollUser(VoiceStateUpdateEventArgs eventArgs)

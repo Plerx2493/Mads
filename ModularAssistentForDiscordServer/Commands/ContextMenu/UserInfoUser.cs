@@ -17,7 +17,7 @@ using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 using DSharpPlus.SlashCommands;
 using Humanizer;
-using MADS.Extensions;
+using MADS.Services;
 
 namespace MADS.Commands.ContextMenu;
 

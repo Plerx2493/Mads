@@ -19,7 +19,6 @@ using DSharpPlus.SlashCommands;
 using Humanizer;
 using MADS.Commands.AutoCompletion;
 using MADS.Entities;
-using MADS.Extensions;
 using MADS.Services;
 
 namespace MADS.Commands.Slash;

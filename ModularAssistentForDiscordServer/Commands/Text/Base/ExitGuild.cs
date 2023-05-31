@@ -15,7 +15,7 @@
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
-using MADS.Extensions;
+using MADS.Services;
 
 namespace MADS.Commands.Text.Base;
 
