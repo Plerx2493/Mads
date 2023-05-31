@@ -37,7 +37,7 @@ public class Ping : MadsBaseApplicationCommand
         await ctx.CreateResponseAsync(discordEmbedBuilder, true);
 
         await IntendedWait(10_000);
-        
+
         await ctx.DeleteResponseAsync();
     }
 }

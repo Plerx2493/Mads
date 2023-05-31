@@ -46,10 +46,11 @@ public class DiscordClientService : IHostedService
     private IDbContextFactory<MadsContext> _dbContextFactory;
     private IServiceProvider _services;
 
-    public DiscordClientService(ConfigJson pConfig, IServiceProvider services, IDbContextFactory<MadsContext> dbDbContextFactory, VolatileMemoryService memoryService)
+    public DiscordClientService(ConfigJson pConfig, IServiceProvider services,
+        IDbContextFactory<MadsContext> dbDbContextFactory, VolatileMemoryService memoryService)
     {
         Log.Warning("DiscordClientService");
-        
+
         StartTime = DateTime.Now;
         _services = services;
         _config = pConfig;
@@ -67,12 +68,12 @@ public class DiscordClientService : IHostedService
         };
 
         DiscordClient = new DiscordClient(discordConfig);
-        
+
         EventListener.GuildDownload(DiscordClient, _dbContextFactory);
         EventListener.EnableMessageSniper(DiscordClient, memoryService);
         EventListener.AddGuildNotifier(DiscordClient, Logging);
         EventListener.VoiceTrollListener(DiscordClient, memoryService);
-        
+
         var asm = Assembly.GetExecutingAssembly();
 
         //CNext
@@ -119,7 +120,7 @@ public class DiscordClientService : IHostedService
             PaginationDeletion = PaginationDeletion.DeleteEmojis
         };
         DiscordClient.UseInteractivity(interactivityConfig);
-        
+
         DiscordClient.Zombied += EventListener.OnZombied;
         DiscordClient.GuildDownloadCompleted += OnGuildDownloadCompleted;
         DiscordClient.MessageCreated += EventListener.DmHandler;
@@ -137,10 +138,8 @@ public class DiscordClientService : IHostedService
         //Update database to latest version
         var context = await _dbContextFactory.CreateDbContextAsync(_cancellationToken);
         if ((await context.Database.GetPendingMigrationsAsync()).Any())
-        {
             await context.Database.MigrateAsync(_cancellationToken);
-        }
-        
+
         DiscordActivity act = new("over some Servers", ActivityType.Watching);
 
 

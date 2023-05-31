@@ -27,7 +27,7 @@ public class StarboardConfig : MadsBaseApplicationCommand
 {
     public IDbContextFactory<MadsContext> ContextFactory { get; set; }
 
-    private static readonly Regex EmoteRegex = new Regex(@"^<(?<animated>a)?:(?<name>[a-zA-Z0-9_]+?):(?<id>\d+?)>$",
+    private static readonly Regex EmoteRegex = new(@"^<(?<animated>a)?:(?<name>[a-zA-Z0-9_]+?):(?<id>\d+?)>$",
         RegexOptions.ECMAScript | RegexOptions.Compiled);
 
 
@@ -55,9 +55,7 @@ public class StarboardConfig : MadsBaseApplicationCommand
         {
             var match = EmoteRegex.Match(emojiString);
             if (match.Success)
-            {
                 DiscordEmoji.TryFromGuildEmote(ctx.Client, ulong.Parse(match.Groups["id"].Value), out emoji);
-            }
         }
 
         guildConfig.StarboardChannelId = channel.Id;

@@ -23,7 +23,7 @@ namespace MADS.Services;
 public class VolatileMemoryService
 {
     public readonly MessageSnipe MessageSnipe;
-    public readonly VoiceTroll   VoiceTroll;
+    public readonly VoiceTroll VoiceTroll;
 
     public VolatileMemoryService(IMemoryCache memoryCache)
     {
@@ -34,7 +34,7 @@ public class VolatileMemoryService
 
 public class MessageSnipe
 {
-    private readonly IMemoryCache            _memoryCache;
+    private readonly IMemoryCache _memoryCache;
     private readonly MemoryCacheEntryOptions _options;
 
     public MessageSnipe(IMemoryCache memoryCache)
@@ -42,8 +42,8 @@ public class MessageSnipe
         _memoryCache = memoryCache;
         _options = new MemoryCacheEntryOptions();
         _options.SetAbsoluteExpiration(TimeSpan.FromHours(12))
-                .SetSize(1)
-                .RegisterPostEvictionCallback(PostEvictionCallback);
+            .SetSize(1)
+            .RegisterPostEvictionCallback(PostEvictionCallback);
     }
 
     private void PostEvictionCallback(object key, object value, EvictionReason reason, object state)

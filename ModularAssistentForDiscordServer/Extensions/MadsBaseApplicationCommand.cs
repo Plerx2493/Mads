@@ -21,8 +21,8 @@ namespace MADS.Services;
 [SlashModuleLifespan(SlashModuleLifespan.Transient)]
 public class MadsBaseApplicationCommand : ApplicationCommandModule
 {
-    private readonly Stopwatch         _executionTimer = new();
-    public           DiscordClientService CommandService { get; set; }
+    private readonly Stopwatch _executionTimer = new();
+    public DiscordClientService CommandService { get; set; }
 
     public override Task<bool> BeforeSlashExecutionAsync(InteractionContext ctx)
     {
@@ -62,7 +62,7 @@ public class MadsBaseApplicationCommand : ApplicationCommandModule
         _executionTimer.Stop();
 
         await Task.Delay(milliseconds);
-        
+
         _executionTimer.Start();
     }
 }

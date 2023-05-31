@@ -28,13 +28,13 @@ namespace MADS.Services;
 public class LoggingService
 {
     //Utilities
-    private readonly string                 _dirPath = DataProvider.GetPath("Logs");
-    private readonly string                 _logPath;
-    private readonly DiscordClientService      _modularDiscordBot;
-    private          DiscordRestClient      _discordRestClient;
-    private          DiscordWebhookClient   _discordWebhookClient = new();
-    private          bool                   _isSetup;
-    private          List<DiscordDmChannel> _ownerChannel = new();
+    private readonly string _dirPath = DataProvider.GetPath("Logs");
+    private readonly string _logPath;
+    private readonly DiscordClientService _modularDiscordBot;
+    private DiscordRestClient _discordRestClient;
+    private DiscordWebhookClient _discordWebhookClient = new();
+    private bool _isSetup;
+    private List<DiscordDmChannel> _ownerChannel = new();
 
     internal LoggingService(DiscordClientService dBot)
     {
@@ -122,7 +122,8 @@ public class LoggingService
             _ownerChannel.Add(ownerChannel);
         }
 
-        _modularDiscordBot.DiscordClient.Logger.LogInformation("Found {ownerChannel} dm Channel for {owner} application owner",
+        _modularDiscordBot.DiscordClient.Logger.LogInformation(
+            "Found {ownerChannel} dm Channel for {owner} application owner",
             _ownerChannel.Count, owners.Length);
     }
 
@@ -131,10 +132,7 @@ public class LoggingService
         //Button response with modal
         _modularDiscordBot.DiscordClient.ComponentInteractionCreated += async (_, e) =>
         {
-            if (e.Id != "feedback-button")
-            {
-                return;
-            }
+            if (e.Id != "feedback-button") return;
 
             DiscordInteractionResponseBuilder modal = new();
 
@@ -150,10 +148,7 @@ public class LoggingService
         //Modal processing
         _modularDiscordBot.DiscordClient.ModalSubmitted += async (_, e) =>
         {
-            if (e.Interaction.Data.CustomId != "feedback-modal")
-            {
-                return;
-            }
+            if (e.Interaction.Data.CustomId != "feedback-modal") return;
 
             DiscordInteractionResponseBuilder responseBuilder = new();
             DiscordEmbedBuilder embedBuilder = new();
@@ -175,7 +170,7 @@ public class LoggingService
                 Title = "Feedback",
                 Description = e.Values["feedback-text"],
                 Color = new Optional<DiscordColor>(new DiscordColor(0, 255, 194)),
-                Timestamp = (DateTimeOffset)DateTime.Now,
+                Timestamp = (DateTimeOffset) DateTime.Now,
                 Footer = new DiscordEmbedBuilder.EmbedFooter
                 {
                     Text = "Send by " + e.Interaction.User.Username + " from " + guildName
@@ -241,14 +236,11 @@ public class LoggingService
 
         List<DiscordMessage> messageList = new();
 
-        foreach (var channel in _ownerChannel)
-        {
-            messageList.Add(await channel.SendMessageAsync(discordEmbed));
-        }
+        foreach (var channel in _ownerChannel) messageList.Add(await channel.SendMessageAsync(discordEmbed));
 
         return messageList;
     }
-    
+
     public async Task LogToWebhook(DiscordMessageBuilder message)
     {
         var messageBuilder = new DiscordWebhookBuilder(message);

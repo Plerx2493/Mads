@@ -25,26 +25,26 @@ internal static partial class EventListener
         client.GuildCreated += async (sender, args) =>
         {
             var embed = new DiscordEmbedBuilder()
-                            .WithTitle($"New guild added: {args.Guild.Name}")
-                            .AddField("Id:", args.Guild.Id.ToString())
-                            .AddField("Owner:", args.Guild.Owner.Username+"#"+args.Guild.Owner.Discriminator)
-                            .AddField("Membercount:", args.Guild.MemberCount.ToString())
-                            .AddField("Added:", Formatter.Timestamp(DateTimeOffset.Now))
-                            .AddField("Created:", Formatter.Timestamp(args.Guild.CreationTimestamp))
-                            .WithColor(DiscordColor.Green);
+                .WithTitle($"New guild added: {args.Guild.Name}")
+                .AddField("Id:", args.Guild.Id.ToString())
+                .AddField("Owner:", args.Guild.Owner.Username + "#" + args.Guild.Owner.Discriminator)
+                .AddField("Membercount:", args.Guild.MemberCount.ToString())
+                .AddField("Added:", Formatter.Timestamp(DateTimeOffset.Now))
+                .AddField("Created:", Formatter.Timestamp(args.Guild.CreationTimestamp))
+                .WithColor(DiscordColor.Green);
             await loggingService.LogToWebhook(new DiscordMessageBuilder().WithEmbed(embed));
         };
-        
+
         client.GuildDeleted += async (sender, args) =>
         {
             var embed = new DiscordEmbedBuilder()
-                        .WithTitle($"Guild removed: {args.Guild.Name}")
-                        .AddField("Id:", args.Guild.Id.ToString())
-                        .AddField("Owner:", args.Guild.Owner.Username+"#"+args.Guild.Owner.Discriminator)
-                        .AddField("Membercount:", args.Guild.MemberCount.ToString())
-                        .AddField("Removed:", Formatter.Timestamp(DateTimeOffset.Now))
-                        .AddField("Created:", Formatter.Timestamp(args.Guild.CreationTimestamp))
-                        .WithColor(DiscordColor.Red);
+                .WithTitle($"Guild removed: {args.Guild.Name}")
+                .AddField("Id:", args.Guild.Id.ToString())
+                .AddField("Owner:", args.Guild.Owner.Username + "#" + args.Guild.Owner.Discriminator)
+                .AddField("Membercount:", args.Guild.MemberCount.ToString())
+                .AddField("Removed:", Formatter.Timestamp(DateTimeOffset.Now))
+                .AddField("Created:", Formatter.Timestamp(args.Guild.CreationTimestamp))
+                .WithColor(DiscordColor.Red);
             await loggingService.LogToWebhook(new DiscordMessageBuilder().WithEmbed(embed));
         };
     }

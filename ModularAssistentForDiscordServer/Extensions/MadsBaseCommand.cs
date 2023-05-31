@@ -19,8 +19,8 @@ namespace MADS.Services;
 
 public class MadsBaseCommand : BaseCommandModule
 {
-    private readonly Stopwatch         _executionTimer = new();
-    public           DiscordClientService CommandService { get; set; }
+    private readonly Stopwatch _executionTimer = new();
+    public DiscordClientService CommandService { get; set; }
 
     public override Task BeforeExecutionAsync(CommandContext ctx)
     {
@@ -38,13 +38,13 @@ public class MadsBaseCommand : BaseCommandModule
 
         return Task.FromResult(true);
     }
-    
+
     public async Task IntendedWait(int milliseconds)
     {
         _executionTimer.Stop();
 
         await Task.Delay(milliseconds);
-        
+
         _executionTimer.Start();
     }
 }

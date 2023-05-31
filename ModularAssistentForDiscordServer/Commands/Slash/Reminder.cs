@@ -38,7 +38,7 @@ public class Reminder : MadsBaseApplicationCommand
     )
     {
         await ctx.DeferAsync(true);
-        
+
         if (timeSpan is null)
         {
             await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Invalid timespan (5s, 3m, 7h, 2d)"));
@@ -79,7 +79,8 @@ public class Reminder : MadsBaseApplicationCommand
 
         var reminders = await ReminderService.GetByUserAsync(ctx.User.Id);
         var remindersTextList = reminders
-            .Select(x => $"```-Id: {x.Id}\n-Remindertext:\n{x.ReminderText}\n-ExecutionTime: {(x.ExecutionTime).Humanize()}```");
+            .Select(x =>
+                $"```-Id: {x.Id}\n-Remindertext:\n{x.ReminderText}\n-ExecutionTime: {x.ExecutionTime.Humanize()}```");
 
         var reminderText = new StringBuilder().AppendJoin("\n", remindersTextList);
 
@@ -94,8 +95,8 @@ public class Reminder : MadsBaseApplicationCommand
     public async Task DeleteById
     (
         InteractionContext ctx,
-        [Autocomplete(typeof(ReminderAutoCompletion))]
-        [Option("id", "id of the given reminder which should be deleted", true)]
+        [Autocomplete(typeof(ReminderAutoCompletion)),
+         Option("id", "id of the given reminder which should be deleted", true)]
         long id
     )
     {

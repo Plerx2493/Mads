@@ -33,7 +33,7 @@ internal static class MainProgram
         Log.Logger = new LoggerConfiguration()
             .WriteTo.Console()
             .CreateLogger();
-        
+
         //Create cancellationToken and hook the cancelKey
         var cancellationSource = new CancellationTokenSource();
         Console.CancelKeyPress += (_, args) =>
@@ -60,25 +60,27 @@ internal static class MainProgram
         //loop while the bot shouldn't be canceled
         //while (!cancellationSource.IsCancellationRequested)
         //{
-            //Create a new instance of the bot
-            ModularDiscordBot modularDiscordBot = new();
-            //execute the bot and catch uncaught exceptions
-            try
-            {
-                modularDiscordBot.RunAsync(cancellationSource.Token).GetAwaiter().GetResult();
-            }
-            catch (Exception e)
-            {
-                if (e is TaskCanceledException) return;
+        //Create a new instance of the bot
+        ModularDiscordBot modularDiscordBot = new();
+        //execute the bot and catch uncaught exceptions
+        try
+        {
+            modularDiscordBot.RunAsync(cancellationSource.Token).GetAwaiter().GetResult();
+        }
+        catch (Exception e)
+        {
+            if (e is TaskCanceledException) return;
 
-                var _ = LogToWebhookAsync(e);
-            }
+            var _ = LogToWebhookAsync(e);
+        }
 
-            try
-            {
-                Task.Delay(10_000, cancellationSource.Token).GetAwaiter().GetResult();
-            }
-            catch (TaskCanceledException) { }
+        try
+        {
+            Task.Delay(10_000, cancellationSource.Token).GetAwaiter().GetResult();
+        }
+        catch (TaskCanceledException)
+        {
+        }
         //}
     }
 
@@ -86,22 +88,13 @@ internal static class MainProgram
     {
         var configPath = DataProvider.GetPath("config.json");
 
-        if (!File.Exists(configPath))
-        {
-            return false;
-        }
+        if (!File.Exists(configPath)) return false;
 
         var lConfig = DataProvider.GetConfig();
 
-        if (lConfig.Token is null or "" or "<Your Token here>")
-        {
-            return false;
-        }
+        if (lConfig.Token is null or "" or "<Your Token here>") return false;
 
-        if (lConfig.Prefix is null or "")
-        {
-            lConfig.Prefix = "!";
-        }
+        if (lConfig.Prefix is null or "") lConfig.Prefix = "!";
 
         if (lConfig.DiscordWebhook is null or "") return false;
         lConfig.DmProxyChannelId ??= 0;

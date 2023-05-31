@@ -62,9 +62,9 @@ public class RoleSelection : MadsBaseApplicationCommand
         roles.RemoveAll(x => x.Position >= ctx.Guild.GetMemberAsync(ctx.Client.CurrentUser.Id).Result.Hierarchy);
         roles.RemoveAll(x => x.Position >= ctx.Member.Hierarchy);
         options = roles
-                  .Select(discordRole => new DiscordSelectComponentOption(discordRole.Name, discordRole.Id.ToString()))
-                  .Aggregate(options, (current, option) => current.Append(option))
-                  .ToList();
+            .Select(discordRole => new DiscordSelectComponentOption(discordRole.Name, discordRole.Id.ToString()))
+            .Aggregate(options, (current, option) => current.Append(option))
+            .ToList();
 
         //Create the select component and update our first response
         DiscordSelectComponent select = new("roleSelectionStart-" + ctx.Channel.Id,
@@ -101,9 +101,9 @@ public class RoleSelection : MadsBaseApplicationCommand
          */
         List<DiscordSelectComponentOption> selectedRoles = new();
         selectedRoles = selectResponse.Result.Values.Select(ulong.Parse)
-                                      .Select(roleId => ctx.Guild.GetRole(roleId))
-                                      .Select(role => new DiscordSelectComponentOption(role.Name, role.Id.ToString()))
-                                      .Aggregate(selectedRoles, (current, option) => current.Append(option).ToList());
+            .Select(roleId => ctx.Guild.GetRole(roleId))
+            .Select(role => new DiscordSelectComponentOption(role.Name, role.Id.ToString()))
+            .Aggregate(selectedRoles, (current, option) => current.Append(option).ToList());
 
         //Create the final select menu and send it in the channel
         DiscordSelectComponent finalSelect = new("RoleSelection:" + ctx.Guild.Id,

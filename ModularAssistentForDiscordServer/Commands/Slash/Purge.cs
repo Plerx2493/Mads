@@ -38,7 +38,7 @@ public class Purge : MadsBaseApplicationCommand
             new DiscordInteractionResponseBuilder());
         var response = await ctx.GetOriginalResponseAsync();
 
-        var messagesApi = await ctx.Channel.GetMessagesAsync((int)amount);
+        var messagesApi = await ctx.Channel.GetMessagesAsync((int) amount);
         List<DiscordMessage> messages = new();
         messages.AddRange(messagesApi);
 
