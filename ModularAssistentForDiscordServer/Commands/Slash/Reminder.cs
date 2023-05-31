@@ -46,13 +46,6 @@ public class Reminder : MadsBaseApplicationCommand
             return;
         }
 
-        if (timeSpan < TimeSpan.FromSeconds(30))
-        {
-            await ctx.EditResponseAsync(
-                new DiscordWebhookBuilder().WithContent("Can not create reminder with a timespan under 30 seconds"));
-            return;
-        }
-
         var newReminder = new ReminderDbEntity
         {
             UserId = ctx.User.Id,
@@ -63,7 +56,7 @@ public class Reminder : MadsBaseApplicationCommand
             IsPrivate = false
         };
 
-        ReminderService.AddReminder(newReminder);
+        await ReminderService.AddReminder(newReminder);
 
         await ctx.EditResponseAsync(
             new DiscordWebhookBuilder().WithContent(

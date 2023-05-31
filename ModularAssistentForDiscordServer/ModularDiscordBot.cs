@@ -30,6 +30,9 @@ using MADS.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Quartz;
+using Serilog;
+using Serilog.Extensions.Logging;
 
 namespace MADS;
 
@@ -90,7 +93,8 @@ public class ModularDiscordBot : IDisposable
             TokenType = TokenType.Bot,
             AutoReconnect = true,
             MinimumLogLevel = _config.LogLevel,
-            Intents = DiscordIntents.All
+            Intents = DiscordIntents.All,
+            LoggerFactory = new LoggerFactory().AddSerilog()
         };
 
         DiscordClient = new DiscordClient(discordConfig);
@@ -105,7 +109,25 @@ public class ModularDiscordBot : IDisposable
         DiscordRestClient = new DiscordRestClient(discordRestConfig);
 
         _services = new ServiceCollection()
+            .AddSingleton(Log.Logger)
             .AddSingleton(this)
+            .AddQuartz(x =>
+            {
+                x.UsePersistentStore(options =>
+                {
+                    options.UseMySql(opt =>
+                    {
+                        opt.ConnectionString = config.ConnectionString;
+                        opt.TablePrefix = "QRTZ_";
+                    });
+                });
+
+                x.InterruptJobsOnShutdownWithWait = true;
+                x.UseMicrosoftDependencyInjectionJobFactory();
+                x.UseSimpleTypeLoader();
+
+                x.SchedulerName = "reminder-scheduler";
+            })
             .AddSingleton(DiscordClient)
             .AddSingleton(DiscordRestClient)
             .AddDbFactoryDebugOrRelease(_config)
@@ -123,6 +145,11 @@ public class ModularDiscordBot : IDisposable
             .AddHostedService(s => s.GetRequiredService<TokenListener>())
             .AddSingleton<ReminderService>()
             .AddHostedService(s => s.GetRequiredService<ReminderService>())
+            .AddQuartzHostedService(options =>
+            {
+                // when shutting down we want jobs to complete gracefully
+                options.WaitForJobsToComplete = true;
+            })
             .BuildServiceProvider();
 
         RegisterDSharpExtensions();
