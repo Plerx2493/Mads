@@ -38,6 +38,8 @@ public class ModularDiscordBot
 {
     private CancellationToken _cancellationToken;
     private ConfigJson _config;
+    public static IServiceProvider Services;
+    public static DateTimeOffset StartTime = DateTimeOffset.Now;
 
     public ModularDiscordBot()
     {
@@ -57,14 +59,15 @@ public class ModularDiscordBot
                         .AddLogging(logging => logging.ClearProviders().AddSerilog())
                         .AddSingleton(DataProvider.GetConfig())
                         .AddSingleton<DiscordClientService>()
+                        .AddHostedService(s => s.GetRequiredService<DiscordClientService>())
                         .AddSingleton(s => s.GetRequiredService<DiscordClientService>().DiscordClient)
                         .AddDbFactoryDebugOrRelease(_config)
+                        .AddDiscordRestClient(_config)
                         .AddMemoryCache(options =>
                         {
                             options.ExpirationScanFrequency = TimeSpan.FromMinutes(10);
                             options.SizeLimit = 1024L;
                         })
-                        .AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(ModularDiscordBot).Assembly))
                         .AddSingleton<VolatileMemoryService>()
                         .AddSingleton<QuotesService>()
                         .AddSingleton<StarboardService>()
@@ -73,7 +76,9 @@ public class ModularDiscordBot
                             new TokenListener("51151", s.GetRequiredService<DiscordClient>(), "/api/v1/mads/token/"))
                         .AddHostedService(s => s.GetRequiredService<TokenListener>())
                         .AddSingleton<ReminderService>()
-                        .AddHostedService(s => s.GetRequiredService<ReminderService>());
+                        .AddHostedService<ReminderService>(s => s.GetRequiredService<ReminderService>());
+
+                    Services = services.BuildServiceProvider();
                 }
             )
             .RunConsoleAsync();

@@ -15,6 +15,7 @@
 using System.Diagnostics;
 using DSharpPlus;
 using DSharpPlus.SlashCommands;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.Services;
 
@@ -22,7 +23,7 @@ namespace MADS.Services;
 public class MadsBaseApplicationCommand : ApplicationCommandModule
 {
     private readonly Stopwatch _executionTimer = new();
-    public DiscordClientService CommandService { get; set; }
+    public DiscordClientService CommandService => ModularDiscordBot.Services.GetRequiredService<DiscordClientService>();
 
     public override Task<bool> BeforeSlashExecutionAsync(InteractionContext ctx)
     {

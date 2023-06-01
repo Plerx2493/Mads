@@ -17,12 +17,14 @@ using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using MADS.CustomComponents;
 using MADS.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.Commands.Slash;
 
 public class MessageSnipe : MadsBaseApplicationCommand
 {
-    public VolatileMemoryService MemoryService;
+    public VolatileMemoryService MemoryService =>
+        ModularDiscordBot.Services.GetRequiredService<VolatileMemoryService>();
 
     [SlashCommand("snipe", "Snipes the last deleted message.")]
     public Task SnipeAsync(InteractionContext ctx)

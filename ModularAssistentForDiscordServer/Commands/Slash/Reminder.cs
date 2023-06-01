@@ -20,13 +20,14 @@ using Humanizer;
 using MADS.Commands.AutoCompletion;
 using MADS.Entities;
 using MADS.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.Commands.Slash;
 
 [SlashCommandGroup("reminder", "mangage reminders")]
 public class Reminder : MadsBaseApplicationCommand
 {
-    public ReminderService ReminderService;
+    public ReminderService ReminderService => ModularDiscordBot.Services.GetRequiredService<ReminderService>();
 
     [SlashCommand("add", "add new reminder")]
     public async Task AddReminder

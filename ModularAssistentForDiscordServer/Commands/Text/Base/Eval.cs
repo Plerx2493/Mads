@@ -99,6 +99,7 @@ public class TestVariables
         if (Guild != null)
             Member = Guild.GetMemberAsync(User.Id).GetAwaiter().GetResult();
         Context = ctx;
+        
     }
 
     public DiscordMessage Message { get; set; }
@@ -109,4 +110,5 @@ public class TestVariables
     public CommandContext Context { get; set; }
     public DiscordClient Client { get; set; }
     public DiscordClientService ClientService { get; set; }
+    public IServiceProvider Services => ModularDiscordBot.Services;
 }

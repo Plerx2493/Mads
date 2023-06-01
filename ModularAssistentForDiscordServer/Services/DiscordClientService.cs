@@ -44,15 +44,18 @@ public class DiscordClientService : IHostedService
     private readonly CancellationToken _cancellationToken;
     private readonly ConfigJson _config;
     private IDbContextFactory<MadsContext> _dbContextFactory;
-    private IServiceProvider _services;
 
-    public DiscordClientService(ConfigJson pConfig, IServiceProvider services,
-        IDbContextFactory<MadsContext> dbDbContextFactory, VolatileMemoryService memoryService)
+    public DiscordClientService
+    (
+        ConfigJson pConfig,
+        IServiceProvider services,
+        IDbContextFactory<MadsContext> dbDbContextFactory,
+        VolatileMemoryService memoryService
+    )
     {
         Log.Warning("DiscordClientService");
 
         StartTime = DateTime.Now;
-        _services = services;
         _config = pConfig;
         _dbContextFactory = dbDbContextFactory;
         Logging = new LoggingService(this);
@@ -83,7 +86,6 @@ public class DiscordClientService : IHostedService
             DmHelp = false,
             EnableDms = true,
             EnableMentionPrefix = true,
-            Services = _services,
             CommandExecutor = new ParallelQueuedCommandExecutor()
         };
         CommandsNext = DiscordClient.UseCommandsNext(cnextConfig);
@@ -93,7 +95,6 @@ public class DiscordClientService : IHostedService
         //Slashcommands
         SlashCommandsConfiguration slashConfig = new()
         {
-            Services = _services
         };
         SlashCommands = DiscordClient.UseSlashCommands(slashConfig);
 #if RELEASE
@@ -135,6 +136,7 @@ public class DiscordClientService : IHostedService
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
+        Log.Warning("DiscordClientService started");
         //Update database to latest version
         var context = await _dbContextFactory.CreateDbContextAsync(_cancellationToken);
         if ((await context.Database.GetPendingMigrationsAsync()).Any())

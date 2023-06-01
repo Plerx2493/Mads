@@ -31,9 +31,9 @@ public class StarboardService : IHostedService
     private readonly Queue<DiscordReactionUpdateEvent> _messageQueue;
     private bool _active;
 
-    public StarboardService(DiscordClient client, IDbContextFactory<MadsContext> dbFactory)
+    public StarboardService(DiscordClientService client, IDbContextFactory<MadsContext> dbFactory)
     {
-        _client = client;
+        _client = client.DiscordClient;
         _messageQueue = new Queue<DiscordReactionUpdateEvent>();
         _active = false;
         _dbFactory = dbFactory;

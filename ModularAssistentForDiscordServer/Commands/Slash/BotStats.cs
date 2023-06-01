@@ -21,13 +21,15 @@ using Humanizer.Localisation;
 using MADS.Entities;
 using MADS.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.Commands.Slash;
 
 public class BotStats : MadsBaseApplicationCommand
 {
-    public IDbContextFactory<MadsContext> ContextFactory { get; set; }
-    public DiscordRestClient DiscordRestClient { get; set; }
+    public IDbContextFactory<MadsContext> ContextFactory =>
+        ModularDiscordBot.Services.GetRequiredService<IDbContextFactory<MadsContext>>();
+    public DiscordRestClient DiscordRestClient => ModularDiscordBot.Services.GetRequiredService<DiscordRestClient>();
 
     [SlashCommand("botstats", "Get statistics about the bot")]
     public async Task GetBotStatsAsync(InteractionContext ctx)

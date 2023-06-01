@@ -20,12 +20,14 @@ using DSharpPlus.SlashCommands.Attributes;
 using MADS.Entities;
 using MADS.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.Commands.Slash;
 
 public class StarboardConfig : MadsBaseApplicationCommand
 {
-    public IDbContextFactory<MadsContext> ContextFactory { get; set; }
+    public IDbContextFactory<MadsContext> ContextFactory =>
+        ModularDiscordBot.Services.GetRequiredService<IDbContextFactory<MadsContext>>();
 
     private static readonly Regex EmoteRegex = new(@"^<(?<animated>a)?:(?<name>[a-zA-Z0-9_]+?):(?<id>\d+?)>$",
         RegexOptions.ECMAScript | RegexOptions.Compiled);

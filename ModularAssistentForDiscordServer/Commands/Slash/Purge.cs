@@ -26,7 +26,10 @@ public class Purge : MadsBaseApplicationCommand
      SlashRequirePermissions(Permissions.ManageMessages),
      SlashRequireGuild]
     public async Task PurgeMessages
-        (InteractionContext ctx, [Option("amount", "Delete a bunch of messages")] long amount = 100)
+    (
+        InteractionContext ctx, [Option("amount", "Delete a bunch of messages")] 
+        long amount = 100
+    )
     {
         if (amount > 100)
         {

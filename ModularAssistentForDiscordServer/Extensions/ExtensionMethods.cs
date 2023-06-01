@@ -17,7 +17,11 @@ using DSharpPlus.Entities;
 using MADS.Entities;
 using MADS.JsonModel;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Serilog;
+using Serilog.Extensions.Logging;
 
 namespace MADS.Services;
 
@@ -26,8 +30,17 @@ public static class ExtensionMethods
     public static IServiceCollection AddDbFactoryDebugOrRelease(this IServiceCollection serviceCollection,
         ConfigJson config)
     {
+        var logger = new LoggerFactory().AddSerilog(new LoggerConfiguration()
+            .WriteTo.Console()
+            .MinimumLevel.Warning()
+            .CreateLogger());
+        
         serviceCollection.AddDbContextFactory<MadsContext>(
-            options => options.UseMySql(config.ConnectionString, ServerVersion.AutoDetect(config.ConnectionString))
+            options =>
+            {
+                options.UseMySql(config.ConnectionString, ServerVersion.AutoDetect(config.ConnectionString));
+                options.UseLoggerFactory(logger);
+            }
         );
 
         return serviceCollection;
