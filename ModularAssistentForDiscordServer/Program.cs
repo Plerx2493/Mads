@@ -16,7 +16,7 @@ using System.Diagnostics.CodeAnalysis;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using MADS.Entities;
-using MADS.Extensions;
+using MADS.Services;
 using MADS.JsonModel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,10 +31,9 @@ internal static class MainProgram
     public static void Main()
     {
         Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Debug()
             .WriteTo.Console()
             .CreateLogger();
-        
+
         //Create cancellationToken and hook the cancelKey
         var cancellationSource = new CancellationTokenSource();
         Console.CancelKeyPress += (_, args) =>
@@ -59,51 +58,43 @@ internal static class MainProgram
         webhookClient.AddWebhookAsync(webhookUrl).GetAwaiter().GetResult();
 
         //loop while the bot shouldn't be canceled
-        while (!cancellationSource.IsCancellationRequested)
+        //while (!cancellationSource.IsCancellationRequested)
+        //{
+        //Create a new instance of the bot
+        ModularDiscordBot modularDiscordBot = new();
+        //execute the bot and catch uncaught exceptions
+        try
         {
-            //Create a new instance of the bot
-            ModularDiscordBot modularDiscordBot = new();
-            //execute the bot and catch uncaught exceptions
-            try
-            {
-                modularDiscordBot.RunAsync(config, cancellationSource.Token).GetAwaiter().GetResult();
-            }
-            catch (Exception e)
-            {
-                if (e is TaskCanceledException) return;
-
-                var _ = LogToWebhookAsync(e);
-                modularDiscordBot.Dispose();
-            }
-
-            try
-            {
-                Task.Delay(10_000, cancellationSource.Token).GetAwaiter().GetResult();
-            }
-            catch (TaskCanceledException) { }
+            modularDiscordBot.RunAsync(cancellationSource.Token).GetAwaiter().GetResult();
         }
+        catch (Exception e)
+        {
+            if (e is TaskCanceledException) return;
+
+            var _ = LogToWebhookAsync(e);
+        }
+
+        try
+        {
+            Task.Delay(10_000, cancellationSource.Token).GetAwaiter().GetResult();
+        }
+        catch (TaskCanceledException)
+        {
+        }
+        //}
     }
 
     private static bool ValidateConfig()
     {
         var configPath = DataProvider.GetPath("config.json");
 
-        if (!File.Exists(configPath))
-        {
-            return false;
-        }
+        if (!File.Exists(configPath)) return false;
 
         var lConfig = DataProvider.GetConfig();
 
-        if (lConfig.Token is null or "" or "<Your Token here>")
-        {
-            return false;
-        }
+        if (lConfig.Token is null or "" or "<Your Token here>") return false;
 
-        if (lConfig.Prefix is null or "")
-        {
-            lConfig.Prefix = "!";
-        }
+        if (lConfig.Prefix is null or "") lConfig.Prefix = "!";
 
         if (lConfig.DiscordWebhook is null or "") return false;
         lConfig.DmProxyChannelId ??= 0;

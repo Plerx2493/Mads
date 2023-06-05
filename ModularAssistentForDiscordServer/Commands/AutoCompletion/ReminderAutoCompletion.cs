@@ -25,12 +25,12 @@ public class ReminderAutoCompletion : IAutocompleteProvider
 {
     public async Task<IEnumerable<DiscordAutoCompleteChoice>> Provider(AutocompleteContext ctx)
     {
-        var factory = ctx.Services.GetRequiredService<IDbContextFactory<MadsContext>>();
+        var factory = ModularDiscordBot.Services.GetRequiredService<IDbContextFactory<MadsContext>>();
         await using var db = await factory.CreateDbContextAsync();
         var choices = db.Reminders
-                        .Where(x => x.UserId == ctx.User.Id)
-                        .Select(x => new DiscordAutoCompleteChoice(x.Id.ToString(), x.Id.ToString()))
-                        .ToList();
+            .Where(x => x.UserId == ctx.User.Id)
+            .Select(x => new DiscordAutoCompleteChoice(x.Id.ToString(), x.Id.ToString()))
+            .ToList();
         return choices;
     }
 }

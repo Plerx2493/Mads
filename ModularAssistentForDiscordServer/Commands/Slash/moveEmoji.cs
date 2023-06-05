@@ -19,7 +19,7 @@ using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.Attributes;
-using MADS.Extensions;
+using MADS.Services;
 
 namespace MADS.Commands.Slash;
 
@@ -41,27 +41,25 @@ public class MoveEmoji : MadsBaseApplicationCommand
             await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("There are no emojis in your input"));
             return;
         }
-        
+
         var split = matches[0].Groups[2].Value;
         var emojiName = matches[0].Groups[1].Value;
         var animated = matches[0].Value.StartsWith("<a");
 
         if (!ulong.TryParse(split, out var emojiId))
-        {
             await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("⚠️ Failed to fetch your new emoji."));
-        }
-        
+
         List<DiscordGuild> guilds = new();
 
         foreach (var guild in ctx.Client.Guilds.Values)
-        {
             try
             {
                 var member = await guild.GetMemberAsync(ctx.User.Id);
                 if (member.Permissions.HasFlag(Permissions.ManageEmojis)) guilds.Add(guild);
             }
-            catch (DiscordException) { }
-        }
+            catch (DiscordException)
+            {
+            }
 
         if (!guilds.Any())
         {

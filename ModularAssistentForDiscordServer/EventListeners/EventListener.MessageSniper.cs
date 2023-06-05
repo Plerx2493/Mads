@@ -52,6 +52,7 @@ internal static partial class EventListener
 
             sender.Logger.LogTrace("Message added to cache");
         }
+
         return Task.CompletedTask;
     }
 
@@ -65,7 +66,7 @@ internal static partial class EventListener
         if (e.Message == null) return Task.CompletedTask;
         if (e.Message.WebhookMessage) return Task.CompletedTask;
 
-        if (string.IsNullOrEmpty(e.MessageBefore?.Content) && !(e.MessageBefore?.Attachments.Count > 0)
+        if ((string.IsNullOrEmpty(e.MessageBefore?.Content) && !(e.MessageBefore?.Attachments.Count > 0))
             || e.Message.Author.IsBot) return Task.CompletedTask;
 
         memory.MessageSnipe.AddEditedMessage(e.MessageBefore);

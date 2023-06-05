@@ -16,7 +16,7 @@ using DSharpPlus;
 using DSharpPlus.EventArgs;
 using MediatR;
 
-namespace MADS.Extensions.MediatR;
+namespace MADS.Services.MediatR;
 
 public class MessageSend
 {

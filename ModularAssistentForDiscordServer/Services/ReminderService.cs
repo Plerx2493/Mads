@@ -15,7 +15,7 @@
 using System.Diagnostics;
 using DSharpPlus;
 using MADS.Entities;
-using MADS.Extensions;
+using MADS.Services;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;

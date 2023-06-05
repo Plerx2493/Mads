@@ -22,7 +22,7 @@ internal static partial class EventListener
 {
     internal static void EnableRoleSelectionListener(DiscordClient client)
     {
-        client.ComponentInteractionCreated += async Task(_, e) =>
+        client.ComponentInteractionCreated += async Task (_, e) =>
         {
             if (e.Guild is null) return;
 
@@ -46,14 +46,8 @@ internal static partial class EventListener
             oldRoles.AddRange(roles);
             oldRoles.RemoveAll(x => !member.Roles.Contains(x));
 
-            foreach (var role in newRoles)
-            {
-                await member.GrantRoleAsync(role);
-            }
-            foreach (var role in oldRoles)
-            {
-                await member.RevokeRoleAsync(role);
-            }
+            foreach (var role in newRoles) await member.GrantRoleAsync(role);
+            foreach (var role in oldRoles) await member.RevokeRoleAsync(role);
         };
     }
 }

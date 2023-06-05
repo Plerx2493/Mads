@@ -17,7 +17,7 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.Attributes;
-using MADS.Extensions;
+using MADS.Services;
 
 namespace MADS.Commands.ContextMenu;
 
@@ -31,16 +31,16 @@ public class StealEmojiMessage : MadsBaseApplicationCommand
     {
         await ctx.DeferAsync(true);
 
-        var matches = Regex.Matches(ctx.TargetMessage.Content.Replace("><","> <"), EmojiRegex, RegexOptions.Compiled);
+        var matches = Regex.Matches(ctx.TargetMessage.Content.Replace("><", "> <"), EmojiRegex, RegexOptions.Compiled);
 
         if (matches.Count < 1)
         {
             await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("⚠️ Emoji not found!"));
             return;
         }
-        
+
         var distinctMatches = matches.DistinctBy(x => x.Value).ToList();
-        
+
         var newEmojis = new List<DiscordEmoji>();
 
         foreach (var match in distinctMatches)
@@ -52,23 +52,24 @@ public class StealEmojiMessage : MadsBaseApplicationCommand
                 var animated = match.Value.StartsWith("<a");
 
                 if (!ulong.TryParse(split, out var emojiId))
-                {
-                    await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("⚠️ Failed to fetch your new emoji."));
-                }
+                    await ctx.EditResponseAsync(
+                        new DiscordWebhookBuilder().WithContent("⚠️ Failed to fetch your new emoji."));
                 var success = await CopyEmoji(ctx, emojiName, emojiId, animated);
-            
+
                 newEmojis.Add(success);
             }
             catch (Exception)
             {
                 // ignored
             }
+
             await IntendedWait(1000);
         }
-        
-        var message = newEmojis.Aggregate("✅ Yoink! These emoji(s) have been added to your server: ", (current, emoji) => current + $" {emoji}");
+
+        var message = newEmojis.Aggregate("✅ Yoink! These emoji(s) have been added to your server: ",
+            (current, emoji) => current + $" {emoji}");
         message += $" {newEmojis.Count}/{distinctMatches.Count} emojis added";
-        
+
         var discordWebhook = new DiscordWebhookBuilder().AddEmbed(
             new DiscordEmbedBuilder().WithTitle(message));
 
@@ -87,7 +88,7 @@ public class StealEmojiMessage : MadsBaseApplicationCommand
 
         await downloadedEmoji.DisposeAsync();
         var newEmoji = await ctx.Guild.CreateEmojiAsync(name, memory);
-        
+
         return newEmoji;
     }
 }

@@ -19,27 +19,29 @@ using DSharpPlus.SlashCommands;
 using Humanizer;
 using Humanizer.Localisation;
 using MADS.Entities;
-using MADS.Extensions;
+using MADS.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.Commands.Slash;
 
 public class BotStats : MadsBaseApplicationCommand
 {
-    public IDbContextFactory<MadsContext> ContextFactory   { get; set; }
-    public DiscordRestClient              DiscordRestClient { get; set; }
-    
+    public IDbContextFactory<MadsContext> ContextFactory =>
+        ModularDiscordBot.Services.GetRequiredService<IDbContextFactory<MadsContext>>();
+    public DiscordRestClient DiscordRestClient => ModularDiscordBot.Services.GetRequiredService<DiscordRestClient>();
+
     [SlashCommand("botstats", "Get statistics about the bot")]
     public async Task GetBotStatsAsync(InteractionContext ctx)
     {
         await using var db = await ContextFactory.CreateDbContextAsync();
         var swDB = new Stopwatch();
         var swRest = new Stopwatch();
-        
+
         swDB.Start();
         var _ = await db.Guilds.FirstAsync();
         swDB.Stop();
-        
+
         swRest.Start();
         var __ = await DiscordRestClient.GetChannelAsync(ctx.Channel.Id);
         swRest.Stop();
@@ -59,9 +61,9 @@ public class BotStats : MadsBaseApplicationCommand
             .AddField("Membercount:", members.ToString("N0"), true)
             .AddField("Guildcount:", guilds.ToString("N0"), true)
             .AddField("Threads:", $"{ThreadPool.ThreadCount}", true)
-            .AddField("Websocket Latency:", ping.ToString("N0")+ " ms", true)
-            .AddField("DB Latency:", swDB.ElapsedMilliseconds.ToString("N0")+ " ms", true)
-            .AddField("Rest Latency:", swRest.ElapsedMilliseconds.ToString("N0")+ " ms", true)
+            .AddField("Websocket Latency:", ping.ToString("N0") + " ms", true)
+            .AddField("DB Latency:", swDB.ElapsedMilliseconds.ToString("N0") + " ms", true)
+            .AddField("Rest Latency:", swRest.ElapsedMilliseconds.ToString("N0") + " ms", true)
             .AddField("Memory:", heapMemory, true)
             .AddField("Uptime:",
                 $"{DateTimeOffset.UtcNow.Subtract(process.StartTime).Humanize(2, minUnit: TimeUnit.Millisecond, maxUnit: TimeUnit.Day)}",

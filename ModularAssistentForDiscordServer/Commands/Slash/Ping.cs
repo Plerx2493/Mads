@@ -15,7 +15,7 @@
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.Attributes;
 using Humanizer;
-using MADS.Extensions;
+using MADS.Services;
 
 namespace MADS.Commands.Slash;
 
@@ -37,7 +37,7 @@ public class Ping : MadsBaseApplicationCommand
         await ctx.CreateResponseAsync(discordEmbedBuilder, true);
 
         await IntendedWait(10_000);
-        
+
         await ctx.DeleteResponseAsync();
     }
 }

@@ -22,7 +22,7 @@ using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.EventArgs;
-using MADS.Extensions;
+using MADS.Services;
 
 namespace MADS.EventListeners;
 
@@ -33,13 +33,11 @@ internal static partial class EventListener
         var typeOfException = e.Exception.GetType();
         if (typeOfException == typeof(ArgumentException)
             || typeOfException == typeof(SlashExecutionChecksFailedException))
-        {
             return;
-        }
 
         var embedDescription = new string((e.Exception.Message + ":\n" + e.Exception.StackTrace).Take(4093).ToArray());
         embedDescription += "...";
-        
+
         DiscordEmbedBuilder discordEmbed = new()
         {
             Title = $"{Formatter.Bold(e.Exception.GetType().ToString())} - The command execution failed",
@@ -54,15 +52,20 @@ internal static partial class EventListener
                 new DiscordInteractionResponseBuilder().AddEmbed(discordEmbed).AsEphemeral());
             return;
         }
-        catch (BadRequestException){}
+        catch (BadRequestException)
+        {
+        }
 
         try
         {
             await e.Context.Interaction.EditOriginalResponseAsync(
-                new DiscordWebhookBuilder(new DiscordInteractionResponseBuilder().AddEmbed(discordEmbed).AsEphemeral()));
+                new DiscordWebhookBuilder(new DiscordInteractionResponseBuilder().AddEmbed(discordEmbed)
+                    .AsEphemeral()));
         }
-        catch (BadRequestException) { }
-        
+        catch (BadRequestException)
+        {
+        }
+
         await e.Context.Channel.SendMessageAsync(discordEmbed);
     }
 
@@ -72,9 +75,7 @@ internal static partial class EventListener
         var typeOfException = e.Exception.GetType();
         if (typeOfException == typeof(ChecksFailedException) || typeOfException == typeof(ArgumentException)
                                                              || typeOfException == typeof(CommandNotFoundException))
-        {
             return;
-        }
 
         await e.Context.Message.RespondAsync($"OOPS your command just errored... \n {e.Exception.Message}");
         await e.Context.Message.RespondAsync(e.Exception.InnerException?.Message ?? "no inner exception");
@@ -99,15 +100,15 @@ internal static partial class EventListener
 
 
         var exceptionEmbed = new DiscordEmbedBuilder()
-                             .WithAuthor("Mads-Debug")
-                             .WithColor(new DiscordColor(0, 255, 194))
-                             .WithTimestamp(DateTime.UtcNow)
-                             .WithTitle($"Eventhandler exception: {e.EventName} - {e.Exception.GetType()}")
-                             .WithDescription(e.Exception.Message);
+            .WithAuthor("Mads-Debug")
+            .WithColor(new DiscordColor(0, 255, 194))
+            .WithTimestamp(DateTime.UtcNow)
+            .WithTitle($"Eventhandler exception: {e.EventName} - {e.Exception.GetType()}")
+            .WithDescription(e.Exception.Message);
 
         var webhookBuilder = new DiscordWebhookBuilder()
-                             .WithUsername("Mads-Debug")
-                             .AddEmbed(exceptionEmbed);
+            .WithUsername("Mads-Debug")
+            .AddEmbed(exceptionEmbed);
 
         await webhookClient.BroadcastMessageAsync(webhookBuilder);
     }

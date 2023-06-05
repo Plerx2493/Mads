@@ -17,7 +17,7 @@ using Newtonsoft.Json;
 
 namespace MADS.JsonModel;
 
-public struct ConfigJson
+public class ConfigJson
 {
     [JsonProperty("token")]
     public string Token { get; set; }

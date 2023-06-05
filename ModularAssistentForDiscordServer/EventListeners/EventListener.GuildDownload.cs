@@ -24,15 +24,12 @@ internal static partial class EventListener
 {
     public static void GuildDownload(DiscordClient client, IDbContextFactory<MadsContext> contextFactory)
     {
-        client.GuildDownloadCompleted += async (sender, args) =>
-        {
-            await UpdateDb(args, contextFactory);
-        };
+        client.GuildDownloadCompleted += async (sender, args) => { await UpdateDb(args, contextFactory); };
     }
 
     private static async Task UpdateDb
     (
-        GuildDownloadCompletedEventArgs args, 
+        GuildDownloadCompletedEventArgs args,
         IDbContextFactory<MadsContext> dbFactory
     )
     {
@@ -48,16 +45,16 @@ internal static partial class EventListener
     {
         await using var db = await dbFactory.CreateDbContextAsync();
         var newUserIds = args.Guilds.Values
-                             .SelectMany(x => x.Members.Values)
-                             .Select(x => x.Id)
-                             .Distinct()
-                             .Except(db.Users.Select(y => y.Id));
+            .SelectMany(x => x.Members.Values)
+            .Select(x => x.Id)
+            .Distinct()
+            .Except(db.Users.Select(y => y.Id));
 
         var newUserDbEntities = newUserIds.Select(userId =>
         {
             var user = args.Guilds.Values
-                           .SelectMany(x => x.Members.Values)
-                           .First(x => x.Id == userId);
+                .SelectMany(x => x.Members.Values)
+                .First(x => x.Id == userId);
 
             return new UserDbEntity()
             {
@@ -83,17 +80,17 @@ internal static partial class EventListener
         var dbGuildIds = db.Guilds.Select(x => x.DiscordId).ToList();
 
         var newGuildEntities = args.Guilds
-                                   .Where(x => !dbGuildIds.Contains(x.Key))
-                                   .Select(x => new GuildDbEntity
-                                   {
-                                       DiscordId = x.Value.Id,
-                                       Settings = new GuildConfigDbEntity
-                                       {
-                                           DiscordGuildId = x.Value.Id,
-                                           Prefix = "",
-                                           StarboardActive = false
-                                       }
-                                   });
+            .Where(x => !dbGuildIds.Contains(x.Key))
+            .Select(x => new GuildDbEntity
+            {
+                DiscordId = x.Value.Id,
+                Settings = new GuildConfigDbEntity
+                {
+                    DiscordGuildId = x.Value.Id,
+                    Prefix = "",
+                    StarboardActive = false
+                }
+            });
 
         await db.Guilds.AddRangeAsync(newGuildEntities);
         await db.SaveChangesAsync();
