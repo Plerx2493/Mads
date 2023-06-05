@@ -16,7 +16,7 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.Attributes;
-using MADS.Extensions;
+using MADS.Services;
 
 namespace MADS.Commands.Slash;
 
@@ -26,7 +26,10 @@ public class Purge : MadsBaseApplicationCommand
      SlashRequirePermissions(Permissions.ManageMessages),
      SlashRequireGuild]
     public async Task PurgeMessages
-        (InteractionContext ctx, [Option("amount", "Delete a bunch of messages")] long amount = 100)
+    (
+        InteractionContext ctx, [Option("amount", "Delete a bunch of messages")] 
+        long amount = 100
+    )
     {
         if (amount > 100)
         {
@@ -38,7 +41,7 @@ public class Purge : MadsBaseApplicationCommand
             new DiscordInteractionResponseBuilder());
         var response = await ctx.GetOriginalResponseAsync();
 
-        var messagesApi = await ctx.Channel.GetMessagesAsync((int)amount);
+        var messagesApi = await ctx.Channel.GetMessagesAsync((int) amount);
         List<DiscordMessage> messages = new();
         messages.AddRange(messagesApi);
 

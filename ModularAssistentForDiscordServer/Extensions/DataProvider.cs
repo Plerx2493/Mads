@@ -14,7 +14,7 @@
 
 using MADS.JsonModel;
 
-namespace MADS.Extensions;
+namespace MADS.Services;
 
 internal static class DataProvider
 {

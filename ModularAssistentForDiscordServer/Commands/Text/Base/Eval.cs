@@ -16,7 +16,7 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
-using MADS.Extensions;
+using MADS.Services;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 
@@ -33,16 +33,14 @@ public class Eval : MadsBaseCommand
         var codeEnd = code.LastIndexOf("```", StringComparison.Ordinal);
 
         if (codeStart == -1 || codeEnd == -1)
-        {
             throw new ArgumentException("⚠️ You need to wrap the code into a code block.");
-        }
 
         var csCode = code[codeStart..codeEnd];
 
-        var message = await ctx.RespondAsync(embed: new DiscordEmbedBuilder()
-                                                    .WithColor(new DiscordColor("#FF007F"))
-                                                    .WithDescription("💭 Evaluating...")
-                                                    .Build());
+        var message = await ctx.RespondAsync(new DiscordEmbedBuilder()
+            .WithColor(new DiscordColor("#FF007F"))
+            .WithDescription("💭 Evaluating...")
+            .Build());
 
         try
         {
@@ -53,36 +51,32 @@ public class Eval : MadsBaseCommand
                 "System.Text", "System.Threading.Tasks", "DSharpPlus", "DSharpPlus.Entities", "DSharpPlus.CommandsNext",
                 "MADS", "Humanizer");
             scriptOptions = scriptOptions.WithReferences(AppDomain.CurrentDomain.GetAssemblies()
-                                                                  .Where(assembly =>
-                                                                      !assembly.IsDynamic
-                                                                      && !string.IsNullOrWhiteSpace(
-                                                                          assembly.Location)));
+                .Where(assembly =>
+                    !assembly.IsDynamic
+                    && !string.IsNullOrWhiteSpace(
+                        assembly.Location)));
 
             var script = CSharpScript.Create(csCode, scriptOptions, typeof(TestVariables));
             script.Compile();
             var result = await script.RunAsync(globalVariables);
             if (result?.ReturnValue != null && !string.IsNullOrWhiteSpace(result.ReturnValue.ToString()))
-            {
                 await message.ModifyAsync(new DiscordEmbedBuilder
                 {
                     Title = "✅ Evaluation Result",
                     Description = result.ReturnValue.ToString(),
                     Color = new DiscordColor("#089FDF")
                 }.Build());
-            }
             else
-            {
                 await message.ModifyAsync(new DiscordEmbedBuilder
                 {
                     Title = "✅ Evaluation Successful",
                     Description = "No result was returned.",
                     Color = new DiscordColor("#089FDF")
                 }.Build());
-            }
         }
         catch (Exception ex)
         {
-            await message.ModifyAsync(embed: new DiscordEmbedBuilder
+            await message.ModifyAsync(new DiscordEmbedBuilder
             {
                 Title = "⚠️ Evaluation Failure",
                 Description = string.Concat("**", ex.GetType().ToString(), "**: ", ex.Message),
@@ -94,10 +88,10 @@ public class Eval : MadsBaseCommand
 
 public class TestVariables
 {
-    public TestVariables(DiscordMessage msg, DiscordClient client, CommandContext ctx, ModularDiscordBot mdb)
+    public TestVariables(DiscordMessage msg, DiscordClient client, CommandContext ctx, DiscordClientService mdb)
     {
         Client = client;
-        Mdb = mdb;
+        ClientService = mdb;
         Message = msg;
         Channel = msg.Channel;
         Guild = Channel.Guild;
@@ -105,14 +99,16 @@ public class TestVariables
         if (Guild != null)
             Member = Guild.GetMemberAsync(User.Id).GetAwaiter().GetResult();
         Context = ctx;
+        
     }
 
-    public DiscordMessage    Message { get; set; }
-    public DiscordChannel    Channel { get; set; }
-    public DiscordGuild      Guild   { get; set; }
-    public DiscordUser       User    { get; set; }
-    public DiscordMember     Member  { get; set; }
-    public CommandContext    Context { get; set; }
-    public DiscordClient     Client  { get; set; }
-    public ModularDiscordBot Mdb     { get; set; }
+    public DiscordMessage Message { get; set; }
+    public DiscordChannel Channel { get; set; }
+    public DiscordGuild Guild { get; set; }
+    public DiscordUser User { get; set; }
+    public DiscordMember Member { get; set; }
+    public CommandContext Context { get; set; }
+    public DiscordClient Client { get; set; }
+    public DiscordClientService ClientService { get; set; }
+    public IServiceProvider Services => ModularDiscordBot.Services;
 }

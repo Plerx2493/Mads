@@ -17,7 +17,7 @@ using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 using DSharpPlus.SlashCommands;
 using Humanizer;
-using MADS.Extensions;
+using MADS.Services;
 
 namespace MADS.Commands.ContextMenu;
 
@@ -33,17 +33,11 @@ public class UserInfoUser : MadsBaseApplicationCommand
         user ??= ctx.User;
         try
         {
-            if (!ctx.Channel.IsPrivate)
-            {
-                member = await ctx.Guild.GetMemberAsync(user.Id);
-            }
+            if (!ctx.Channel.IsPrivate) member = await ctx.Guild.GetMemberAsync(user.Id);
         }
         catch (DiscordException e)
         {
-            if (e.GetType() != typeof(NotFoundException))
-            {
-                throw;
-            }
+            if (e.GetType() != typeof(NotFoundException)) throw;
         }
 
         DiscordEmbedBuilder embed = new();
@@ -63,10 +57,7 @@ public class UserInfoUser : MadsBaseApplicationCommand
             embed.AddField("Joined at:",
                 $"{member.JoinedAt.Humanize()} {Formatter.Timestamp(member.JoinedAt, TimestampFormat.ShortDate)}",
                 true);
-            if (member.MfaEnabled.HasValue)
-            {
-                embed.AddField("2FA:", member.MfaEnabled.ToString());
-            }
+            if (member.MfaEnabled.HasValue) embed.AddField("2FA:", member.MfaEnabled.ToString());
 
             embed.AddField("Permissions:", member.Permissions.Humanize());
 
@@ -74,10 +65,7 @@ public class UserInfoUser : MadsBaseApplicationCommand
                 member.Hierarchy != int.MaxValue ? member.Hierarchy.ToString() : "Server owner", true);
 
 
-            if (member.Roles.Any())
-            {
-                embed.AddField("Roles", member.Roles.Select(x => x.Name).Humanize());
-            }
+            if (member.Roles.Any()) embed.AddField("Roles", member.Roles.Select(x => x.Name).Humanize());
         }
 
         await ctx.CreateResponseAsync(embed.Build(), true);

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 using DSharpPlus.SlashCommands;
-using MADS.Extensions;
+using MADS.Services;
 
 namespace MADS.Commands.Slash;
 
@@ -22,12 +22,11 @@ public class NoBtches : MadsBaseApplicationCommand
     [SlashCommand("nobtches", "nobtches api")]
     public async Task PingCommand
     (
-        InteractionContext ctx, 
-        [Option("imageText", "Text on image")]
-        string imageText
+        InteractionContext ctx,
+        [Option("imageText", "Text on image")] string imageText
     )
     {
-        imageText = imageText.Replace(" ", "%20").Replace("?","%3F");
+        imageText = imageText.Replace(" ", "%20").Replace("?", "%3F");
         await ctx.CreateResponseAsync("https://api.no-bitch.es/" + imageText);
     }
 }

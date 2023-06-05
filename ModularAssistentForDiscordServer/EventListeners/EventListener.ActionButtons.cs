@@ -27,7 +27,7 @@ internal static partial class EventListener
 {
     public static void EnableButtonListener(DiscordClient client)
     {
-        client.ComponentInteractionCreated += Task(sender, e) =>
+        client.ComponentInteractionCreated += Task (sender, e) =>
         {
             try
             {
@@ -36,49 +36,44 @@ internal static partial class EventListener
                 sender.Logger.LogTrace(e.Id);
 
                 if (!Regex.IsMatch(e.Id, @"^CMD:\d{1,4}(?::\d{1,20}){0,3}$", RegexOptions.Compiled))
-                {
                     return Task.CompletedTask;
-                }
 
                 var substring = e.Id.Split(':');
-                if (!int.TryParse(substring[1], out var actionCode))
-                {
-                    return Task.CompletedTask;
-                }
+                if (!int.TryParse(substring[1], out var actionCode)) return Task.CompletedTask;
 
                 substring = substring.Skip(1).ToArray();
 
                 switch (actionCode)
                 {
-                    case (int)ActionDiscordButtonEnum.BanUser:
+                    case (int) ActionDiscordButtonEnum.BanUser:
                         BanUser(e, substring);
                         break;
 
-                    case (int)ActionDiscordButtonEnum.KickUser:
+                    case (int) ActionDiscordButtonEnum.KickUser:
                         KickUser(e, substring);
                         break;
 
-                    case (int)ActionDiscordButtonEnum.GetIdUser:
+                    case (int) ActionDiscordButtonEnum.GetIdUser:
                         GetUserId(e, substring);
                         break;
 
-                    case (int)ActionDiscordButtonEnum.GetIdGuild:
+                    case (int) ActionDiscordButtonEnum.GetIdGuild:
                         GetGuildId(e, substring);
                         break;
 
-                    case (int)ActionDiscordButtonEnum.GetIdChannel:
+                    case (int) ActionDiscordButtonEnum.GetIdChannel:
                         GetChannelId(e, substring);
                         break;
 
-                    case (int)ActionDiscordButtonEnum.MoveVoiceChannel:
+                    case (int) ActionDiscordButtonEnum.MoveVoiceChannel:
                         MoveVoiceChannelUser(e, substring);
                         break;
 
-                    case (int)ActionDiscordButtonEnum.DeleteOneUserOnly:
+                    case (int) ActionDiscordButtonEnum.DeleteOneUserOnly:
                         DeleteOneUserOnly(e, substring);
                         break;
-                    case (int)ActionDiscordButtonEnum.AnswerDmChannel:
-                        AnswerDmChannel(e, sender,substring);
+                    case (int) ActionDiscordButtonEnum.AnswerDmChannel:
+                        AnswerDmChannel(e, sender, substring);
                         break;
                 }
             }
@@ -86,42 +81,46 @@ internal static partial class EventListener
             {
                 var _ = MainProgram.LogToWebhookAsync(exception);
             }
+
             return Task.CompletedTask;
         };
     }
 
-    private static async void AnswerDmChannel(ComponentInteractionCreateEventArgs e, DiscordClient client , IReadOnlyList<string> substring)
+    private static async void AnswerDmChannel(ComponentInteractionCreateEventArgs e, DiscordClient client,
+        IReadOnlyList<string> substring)
     {
         if (!client.CurrentApplication.Owners.Contains(e.User))
         {
-            await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("401 - Unauthorized").AsEphemeral());
+            await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                new DiscordInteractionResponseBuilder().WithContent("401 - Unauthorized").AsEphemeral());
             return;
         }
-        
+
         var modal = new DiscordInteractionResponseBuilder()
-                    .WithTitle("Answer to user:")
-                    .WithCustomId($"AnswerDM-{substring[1]}")
-                    .AddComponents(new TextInputComponent("Please enter your answer:", "answer-text", required: true,
-                        style: TextInputStyle.Paragraph));
+            .WithTitle("Answer to user:")
+            .WithCustomId($"AnswerDM-{substring[1]}")
+            .AddComponents(new TextInputComponent("Please enter your answer:", "answer-text", required: true,
+                style: TextInputStyle.Paragraph));
         await e.Interaction.CreateResponseAsync(InteractionResponseType.Modal, modal);
-        
-        
+
+
         var interactive = client.GetInteractivity();
         var result = await interactive.WaitForModalAsync($"AnswerDM-{substring[1]}");
 
         if (result.TimedOut)
         {
-            await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("408 - Request Timeout").AsEphemeral());
+            await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                new DiscordInteractionResponseBuilder().WithContent("408 - Request Timeout").AsEphemeral());
             return;
         }
-        
+
         await result.Result.Interaction.DeferAsync(true);
-        
+
         var embed = new DiscordEmbedBuilder()
-                    .WithDescription(result.Result.Values["answer-text"])
-                    .WithColor(DiscordColor.Green)
-                    .WithAuthor(result.Result.Interaction.User.Username + "#" + result.Result.Interaction.User.Discriminator)
-                    .WithFooter("Answer form a developer");
+            .WithDescription(result.Result.Values["answer-text"])
+            .WithColor(DiscordColor.Green)
+            .WithAuthor(result.Result.Interaction.User.Username + "#" + result.Result.Interaction.User.Discriminator)
+            .WithFooter("Answer form a developer");
 
         try
         {
@@ -130,20 +129,22 @@ internal static partial class EventListener
         }
         catch (Exception exception)
         {
-            await result.Result.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().WithContent($"500 - Internal Server Error ({exception.GetType()})"));
+            await result.Result.Interaction.EditOriginalResponseAsync(
+                new DiscordWebhookBuilder().WithContent($"500 - Internal Server Error ({exception.GetType()})"));
             return;
         }
-        
+
         var resultEmbed = new DiscordEmbedBuilder()
-                          .WithTitle("Answer successful!")
-                          .WithColor(DiscordColor.Green);
+            .WithTitle("Answer successful!")
+            .WithColor(DiscordColor.Green);
         await result.Result.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(resultEmbed));
-        
+
         var editedMessage = new DiscordMessageBuilder(e.Message);
         editedMessage.ClearComponents();
-        editedMessage.AddComponents(new DiscordButtonComponent(ButtonStyle.Success, "invalid", "Already answered", true));
-        
-         
+        editedMessage.AddComponents(
+            new DiscordButtonComponent(ButtonStyle.Success, "invalid", "Already answered", true));
+
+
         await e.Message.ModifyAsync(editedMessage);
     }
 
@@ -161,14 +162,11 @@ internal static partial class EventListener
     )
     {
         var member = await e.Guild.GetMemberAsync(e.User.Id);
-        if (!member.Permissions.HasPermission(Permissions.MoveMembers)) { return; }
+        if (!member.Permissions.HasPermission(Permissions.MoveMembers)) return;
         var originChannel = e.Guild.GetChannel(ulong.Parse(substring[1]));
         var targetChannel = e.Guild.GetChannel(ulong.Parse(substring[2]));
 
-        foreach (var voiceMember in originChannel.Users)
-        {
-            await targetChannel.PlaceMemberAsync(voiceMember);
-        }
+        foreach (var voiceMember in originChannel.Users) await targetChannel.PlaceMemberAsync(voiceMember);
 
         await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
     }
@@ -176,7 +174,7 @@ internal static partial class EventListener
     private static async void BanUser(ComponentInteractionCreateEventArgs e, IReadOnlyList<string> substring)
     {
         var member = await e.Guild.GetMemberAsync(e.User.Id);
-        if (!member.Permissions.HasPermission(Permissions.BanMembers)) { return; }
+        if (!member.Permissions.HasPermission(Permissions.BanMembers)) return;
 
         var userId = ulong.Parse(substring[1]);
         await e.Guild.BanMemberAsync(userId);
@@ -186,7 +184,7 @@ internal static partial class EventListener
     private static async void KickUser(ComponentInteractionCreateEventArgs e, IReadOnlyList<string> substring)
     {
         var member = await e.Guild.GetMemberAsync(e.User.Id);
-        if (!member.Permissions.HasPermission(Permissions.KickMembers)) { return; }
+        if (!member.Permissions.HasPermission(Permissions.KickMembers)) return;
 
         var userId = ulong.Parse(substring[1]);
         await e.Guild.BanMemberAsync(userId);
@@ -198,7 +196,7 @@ internal static partial class EventListener
         var response = new DiscordInteractionResponseBuilder();
 
         response.WithContent("User id: " + ulong.Parse(substring[1]))
-                .AsEphemeral();
+            .AsEphemeral();
 
         await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, response);
     }
@@ -208,7 +206,7 @@ internal static partial class EventListener
         var response = new DiscordInteractionResponseBuilder();
 
         response.WithContent("Guild id: " + ulong.Parse(substring[1]))
-                .AsEphemeral();
+            .AsEphemeral();
 
         await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, response);
     }
@@ -218,7 +216,7 @@ internal static partial class EventListener
         var response = new DiscordInteractionResponseBuilder();
 
         response.WithContent("Channel id: " + ulong.Parse(substring[1]))
-                .AsEphemeral();
+            .AsEphemeral();
 
         await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, response);
     }

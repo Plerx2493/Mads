@@ -14,7 +14,7 @@
 
 using DSharpPlus.SlashCommands;
 
-namespace MADS.Extensions;
+namespace MADS.Services;
 
 public sealed class SlashRequireOwnerAttribute : SlashCheckBaseAttribute
 {

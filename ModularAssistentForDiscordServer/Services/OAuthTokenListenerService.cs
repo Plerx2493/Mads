@@ -85,15 +85,14 @@ public class TokenListener : IDisposable, IHostedService
     {
         _listener.Start();
         _client.Logger.LogInformation("Listening for connections on {url}", _url);
-        
-        _listenTask = new Thread(() => HandleIncomingConnections(cancellationToken)) 
+
+        _listenTask = new Thread(() => HandleIncomingConnections(cancellationToken))
         {
-            
             IsBackground = true
         };
         _listenTask.Start();
 
-        
+
         return Task.CompletedTask;
     }
 

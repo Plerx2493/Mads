@@ -16,15 +16,15 @@ using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.Attributes;
 using MADS.Entities;
-using MADS.Extensions;
 using MADS.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.Commands.Slash;
 
 [SlashCommandGroup("Quotes", "Commands related to adding and retrieving quotes"), SlashRequireGuild]
 public class Quotes : MadsBaseApplicationCommand
 {
-    public QuotesService QuotesService { get; set; }
+    public QuotesService QuotesService => ModularDiscordBot.Services.GetRequiredService<QuotesService>();
 
     [SlashCommand("add", "Add a quote form a user")]
     public async Task AddQuoteUser
