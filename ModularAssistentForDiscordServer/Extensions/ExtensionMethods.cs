@@ -34,7 +34,7 @@ public static class ExtensionMethods
             .WriteTo.Console()
             .MinimumLevel.Warning()
             .CreateLogger());
-        
+
         serviceCollection.AddDbContextFactory<MadsContext>(
             options =>
             {
@@ -82,7 +82,7 @@ public static class ExtensionMethods
         var userMention = new UserMention(user);
         var embed = new DiscordEmbedBuilder();
 
-        embed.WithTitle($"{reminder.GetTimestamp()} you wanted to be reminded:")
+        embed.WithTitle($"{reminder.GetCreationTimestamp()} you wanted to be reminded:")
             .WithDescription(reminder.ReminderText)
             .WithFooter("Id: " + reminder.Id)
             .WithColor(DiscordColor.Green);
@@ -93,9 +93,15 @@ public static class ExtensionMethods
         return message;
     }
 
-    public static string GetTimestamp(this ReminderDbEntity reminder)
+    public static string GetExecutionTimestamp(this ReminderDbEntity reminder)
     {
         var timespan = reminder.ExecutionTime - DateTime.UtcNow;
+        return Formatter.Timestamp(timespan);
+    }
+
+    public static string GetCreationTimestamp(this ReminderDbEntity reminder)
+    {
+        var timespan = reminder.CreationTime - DateTime.UtcNow;
         return Formatter.Timestamp(timespan);
     }
 }

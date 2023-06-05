@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System.Reflection;
+using System.Text.Json;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Executors;
@@ -30,6 +31,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Quartz;
 using Serilog;
 
 namespace MADS;
@@ -67,6 +69,28 @@ public class ModularDiscordBot
                         {
                             options.ExpirationScanFrequency = TimeSpan.FromMinutes(10);
                             options.SizeLimit = 1024L;
+                        })
+                        .AddQuartz(x =>
+                        {
+                            x.UsePersistentStore(options =>
+                            {
+                                options.UseMySqlConnector(opt =>
+                                {
+                                    opt.ConnectionString = _config.ConnectionStringQuartz;
+                                    opt.TablePrefix = "QRTZ_";
+                                });
+                                options.UseJsonSerializer();
+                                ;
+                            });
+                            x.InterruptJobsOnShutdownWithWait = true;
+                            x.UseMicrosoftDependencyInjectionJobFactory();
+                            x.UseSimpleTypeLoader();
+                            x.SchedulerName = "reminder-scheduler";
+                        })
+                        .AddQuartzHostedService(options =>
+                        {
+                            // when shutting down we want jobs to complete gracefully
+                            options.WaitForJobsToComplete = true;
                         })
                         .AddSingleton<VolatileMemoryService>()
                         .AddSingleton<QuotesService>()

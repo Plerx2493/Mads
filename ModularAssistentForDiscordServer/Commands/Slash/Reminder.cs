@@ -74,7 +74,7 @@ public class Reminder : MadsBaseApplicationCommand
         var reminders = await ReminderService.GetByUserAsync(ctx.User.Id);
         var remindersTextList = reminders
             .Select(x =>
-                $"```-Id: {x.Id}\n-Remindertext:\n{x.ReminderText}\n-ExecutionTime: {x.ExecutionTime.Humanize()}```");
+                $"```-Id: {x.Id}\n-Remindertext:\n {x.ReminderText}\n-ExecutionTime: {x.ExecutionTime.Humanize()}\n ({x.ExecutionTime.ToUniversalTime()} UTC)```");
 
         var reminderText = new StringBuilder().AppendJoin("\n", remindersTextList);
 
@@ -115,7 +115,7 @@ public class Reminder : MadsBaseApplicationCommand
         var embed = new DiscordEmbedBuilder()
             .WithTitle("Reminder removed")
             .WithDescription(
-                $"```-Id: {reminder.Id}\n-Remindertext:\n{reminder.ReminderText}```\nWould have fired {reminder.GetTimestamp()}");
+                $"```-Id: {reminder.Id}\n-Remindertext:\n{reminder.ReminderText}```\nWould have fired {reminder.GetExecutionTimestamp()}");
 
         await ctx.EditResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
     }

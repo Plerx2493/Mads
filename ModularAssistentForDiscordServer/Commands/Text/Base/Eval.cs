@@ -99,7 +99,6 @@ public class TestVariables
         if (Guild != null)
             Member = Guild.GetMemberAsync(User.Id).GetAwaiter().GetResult();
         Context = ctx;
-        
     }
 
     public DiscordMessage Message { get; set; }

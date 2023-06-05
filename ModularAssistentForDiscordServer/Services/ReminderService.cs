@@ -29,12 +29,16 @@ public class ReminderService : IHostedService
 {
     private bool _isDisposed;
     private bool _isRunning;
-    private IScheduler _reminderScheduler;
+
+    private IScheduler _reminderScheduler =>
+        _schedulerFactory.GetScheduler("reminder-scheduler").GetAwaiter().GetResult();
+
     private DiscordClient _client;
     private readonly IDbContextFactory<MadsContext> _dbContextFactory;
     private readonly ISchedulerFactory _schedulerFactory;
 
-    public ReminderService(IDbContextFactory<MadsContext> dbContextFactory, ISchedulerFactory schedulerFactory , DiscordClient client)
+    public ReminderService(IDbContextFactory<MadsContext> dbContextFactory, ISchedulerFactory schedulerFactory,
+        DiscordClient client)
     {
         _dbContextFactory = dbContextFactory;
         _schedulerFactory = schedulerFactory;
@@ -45,7 +49,7 @@ public class ReminderService : IHostedService
     {
         if (_isRunning) return;
         if (_isDisposed) throw new UnreachableException();
-        _reminderScheduler = await _schedulerFactory.GetScheduler("reminder-scheduler");
+        //_reminderScheduler = await _schedulerFactory.GetScheduler("reminder-scheduler");
         if (_reminderScheduler == null) throw new NullReferenceException();
         _reminderScheduler.Start();
         _isRunning = true;
@@ -61,7 +65,7 @@ public class ReminderService : IHostedService
         _reminderScheduler.Shutdown();
         _client.Logger.LogInformation("Reminders stopped");
     }
-    
+
 
     private async Task DispatchReminder(ReminderDbEntity reminder)
     {
@@ -77,14 +81,15 @@ public class ReminderService : IHostedService
         await using var db = await _dbContextFactory.CreateDbContextAsync();
 
         db.Reminders.Add(reminder);
-        
+
         await db.SaveChangesAsync();
-        
-        var dbEntity = db.Reminders.First(x => x.UserId == reminder.UserId && x.ExecutionTime == reminder.ExecutionTime);
+
+        var dbEntity =
+            db.Reminders.First(x => x.UserId == reminder.UserId && x.ExecutionTime == reminder.ExecutionTime);
 
         var jobKey = new JobKey($"reminder-{dbEntity.Id}", "reminders");
         var triggerKey = new TriggerKey($"reminder-trigger-{dbEntity.Id}", "reminders");
-        
+
         var job = JobBuilder.Create<ReminderJob>()
             .UsingJobData("reminderId", dbEntity.Id)
             .WithIdentity(jobKey)
@@ -122,6 +127,9 @@ public class ReminderService : IHostedService
 
         if (reminder is null) return false;
 
+        var jobKey = new JobKey($"reminder-{reminder.Id}", "reminders");
+        await _reminderScheduler.DeleteJob(jobKey);
+
         db.Reminders.Remove(reminder);
         await db.SaveChangesAsync();
         return true;
@@ -144,18 +152,20 @@ public class ReminderService : IHostedService
         return reminder;
     }
 
-    class ReminderJob : IJob
+    private class ReminderJob : IJob
     {
         private DiscordClient _client;
         private ReminderService _reminder;
         private readonly IDbContextFactory<MadsContext> _dbContextFactory;
-        
-        public ReminderJob(IDbContextFactory<MadsContext> dbContextFactory, DiscordClient client, ReminderService reminderService)
+
+        public ReminderJob(IDbContextFactory<MadsContext> dbContextFactory, DiscordClient client,
+            ReminderService reminderService)
         {
             _reminder = reminderService;
             _dbContextFactory = dbContextFactory;
             _client = client;
         }
+
         public async Task Execute(IJobExecutionContext context)
         {
             var key = context.JobDetail.Key;
@@ -163,11 +173,18 @@ public class ReminderService : IHostedService
             // note: use context.MergedJobDataMap in production code
             var dataMap = context.MergedJobDataMap;
 
-            var reminderId = (ulong) dataMap.Get("reminderId");
+            var reminderId = Convert.ToUInt64(dataMap.Get("reminderId"));
 
             var reminder = await _reminder.TryGetByIdAsync(reminderId);
-            
-            Log.Information("Dispatching reminder id: {}", reminder.Id);
+
+            if (reminder is null)
+            {
+                Log.Warning("Tried to dispatch a nonexistent reminder: {Id} ",
+                    Convert.ToUInt64(dataMap.Get("reminderId")));
+                return;
+            }
+
+            Log.Warning("Dispatching reminder id: {Id}", reminder.Id);
 
             await _reminder.DispatchReminder(reminder);
         }
