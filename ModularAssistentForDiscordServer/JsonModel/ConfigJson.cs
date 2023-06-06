@@ -31,6 +31,9 @@ public class ConfigJson
     [JsonProperty("databaseConnectionString")]
     public string ConnectionString { get; set; }
 
+    [JsonProperty("databaseConnectionStringQuartz")]
+    public string ConnectionStringQuartz { get; set; }
+
     [JsonProperty("discordWebhook")]
     public string DiscordWebhook { get; set; }
 

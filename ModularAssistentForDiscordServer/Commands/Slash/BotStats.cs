@@ -29,6 +29,7 @@ public class BotStats : MadsBaseApplicationCommand
 {
     public IDbContextFactory<MadsContext> ContextFactory =>
         ModularDiscordBot.Services.GetRequiredService<IDbContextFactory<MadsContext>>();
+
     public DiscordRestClient DiscordRestClient => ModularDiscordBot.Services.GetRequiredService<DiscordRestClient>();
 
     [SlashCommand("botstats", "Get statistics about the bot")]

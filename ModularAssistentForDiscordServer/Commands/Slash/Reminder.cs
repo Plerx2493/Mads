@@ -35,7 +35,9 @@ public class Reminder : MadsBaseApplicationCommand
         InteractionContext ctx,
         [Option("timespan", "when the reminder should trigger")]
         TimeSpan? timeSpan,
-        [Option("text", "text")] string text
+        [Option("text", "text")] string text,
+        [Option("private", "Sets if the reminder should be executed in your DMs")]
+        bool isPrivate = false
     )
     {
         await ctx.DeferAsync(true);
@@ -46,13 +48,6 @@ public class Reminder : MadsBaseApplicationCommand
             return;
         }
 
-        if (timeSpan < TimeSpan.FromSeconds(30))
-        {
-            await ctx.EditResponseAsync(
-                new DiscordWebhookBuilder().WithContent("Can not create reminder with a timespan under 30 seconds"));
-            return;
-        }
-
         var newReminder = new ReminderDbEntity
         {
             UserId = ctx.User.Id,
@@ -60,10 +55,10 @@ public class Reminder : MadsBaseApplicationCommand
             CreationTime = DateTime.UtcNow,
             ExecutionTime = DateTime.UtcNow + timeSpan.Value,
             ReminderText = text,
-            IsPrivate = false
+            IsPrivate = isPrivate
         };
 
-        ReminderService.AddReminder(newReminder);
+        await ReminderService.AddReminder(newReminder);
 
         await ctx.EditResponseAsync(
             new DiscordWebhookBuilder().WithContent(
@@ -81,7 +76,7 @@ public class Reminder : MadsBaseApplicationCommand
         var reminders = await ReminderService.GetByUserAsync(ctx.User.Id);
         var remindersTextList = reminders
             .Select(x =>
-                $"```-Id: {x.Id}\n-Remindertext:\n{x.ReminderText}\n-ExecutionTime: {x.ExecutionTime.Humanize()}```");
+                $"```-Id: {x.Id}\n-Remindertext:\n {x.ReminderText}\n-ExecutionTime: {x.ExecutionTime.Humanize()}\n ({x.ExecutionTime.ToUniversalTime()} UTC)```");
 
         var reminderText = new StringBuilder().AppendJoin("\n", remindersTextList);
 
@@ -122,7 +117,7 @@ public class Reminder : MadsBaseApplicationCommand
         var embed = new DiscordEmbedBuilder()
             .WithTitle("Reminder removed")
             .WithDescription(
-                $"```-Id: {reminder.Id}\n-Remindertext:\n{reminder.ReminderText}```\nWould have fired {reminder.GetTimestamp()}");
+                $"```-Id: {reminder.Id}\n-Remindertext:\n{reminder.ReminderText}```\nWould have fired {reminder.GetExecutionTimestamp()}");
 
         await ctx.EditResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
     }
