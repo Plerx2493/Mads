@@ -172,7 +172,7 @@ public class StarboardService : IHostedService
                 if (guildSettings.StarboardEmojiId != 0)
                     discordEmoji = DiscordEmoji.FromGuildEmote(_client, guildSettings.StarboardEmojiId.Value);
                 else
-                    discordEmoji = DiscordEmoji.FromUnicode(_client, guildSettings.StarboardEmojiName);
+                    discordEmoji = DiscordEmoji.FromUnicode(_client, guildSettings.StarboardEmojiName!);
 
                 if (eventArgs.Emoji != discordEmoji) return;
                 break;
@@ -185,7 +185,7 @@ public class StarboardService : IHostedService
                 if (guildSettings.StarboardEmojiId != 0)
                     discordEmoji = DiscordEmoji.FromGuildEmote(_client, guildSettings.StarboardEmojiId.Value);
                 else
-                    discordEmoji = DiscordEmoji.FromUnicode(_client, guildSettings.StarboardEmojiName);
+                    discordEmoji = DiscordEmoji.FromUnicode(_client, guildSettings.StarboardEmojiName!);
 
                 if (eventArgs.Emoji != discordEmoji) return;
                 break;
@@ -204,7 +204,7 @@ public class StarboardService : IHostedService
                 if (guildSettings.StarboardEmojiId != 0)
                     discordEmoji = DiscordEmoji.FromGuildEmote(_client, guildSettings.StarboardEmojiId.Value);
                 else
-                    discordEmoji = DiscordEmoji.FromUnicode(_client, guildSettings.StarboardEmojiName);
+                    discordEmoji = DiscordEmoji.FromUnicode(_client, guildSettings.StarboardEmojiName!);
 
                 if (argss.Emoji != discordEmoji) return;
                 var msgss = db.Starboard.Where(x =>
@@ -400,7 +400,7 @@ public class StarboardService : IHostedService
         var emotename = emoji.GetDiscordName().Replace(":", "");
         emotename = emotename.EndsWith('s') ? emotename : starData.Stars > 1 ? emotename + "s" : emotename;
 
-        if (message.ReferencedMessage != null)
+        if (message.ReferencedMessage is not null)
         {
             var refContent = message.ReferencedMessage.Content.Truncate(200, "...").Replace(")[", "​)[") + " ";
 

@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Runtime.Loader;
 using DSharpPlus;
 using DSharpPlus.EventArgs;
 using MADS.Entities;
@@ -24,7 +23,7 @@ internal static partial class EventListener
 {
     public static void GuildDownload(DiscordClient client, IDbContextFactory<MadsContext> contextFactory)
     {
-        client.GuildDownloadCompleted += async (sender, args) => { await UpdateDb(args, contextFactory); };
+        client.GuildDownloadCompleted += async (_, args) => { await UpdateDb(args, contextFactory); };
     }
 
     private static async Task UpdateDb
@@ -56,7 +55,7 @@ internal static partial class EventListener
                 .SelectMany(x => x.Members.Values)
                 .First(x => x.Id == userId);
 
-            return new UserDbEntity()
+            return new UserDbEntity
             {
                 Id = user.Id,
                 Username = user.Username,

@@ -12,22 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Reflection;
-using System.Text.Json;
 using DSharpPlus;
-using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Executors;
-using DSharpPlus.Entities;
-using DSharpPlus.EventArgs;
-using DSharpPlus.Interactivity;
-using DSharpPlus.Interactivity.Enums;
-using DSharpPlus.Interactivity.Extensions;
-using DSharpPlus.SlashCommands;
-using MADS.Entities;
-using MADS.EventListeners;
+using MADS.Extensions;
 using MADS.JsonModel;
 using MADS.Services;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -38,10 +26,9 @@ namespace MADS;
 
 public class ModularDiscordBot
 {
-    private CancellationToken _cancellationToken;
-    private ConfigJson _config;
     public static IServiceProvider Services;
     public static DateTimeOffset StartTime = DateTimeOffset.Now;
+    private readonly ConfigJson _config;
 
     public ModularDiscordBot()
     {
@@ -50,12 +37,10 @@ public class ModularDiscordBot
 
     public async Task<bool> RunAsync(CancellationToken token)
     {
-        _cancellationToken = token;
-
         await Host.CreateDefaultBuilder()
             .UseSerilog()
             .UseConsoleLifetime()
-            .ConfigureServices((hostContext, services) =>
+            .ConfigureServices((_, services) =>
                 {
                     services
                         .AddLogging(logging => logging.ClearProviders().AddSerilog())
@@ -80,7 +65,6 @@ public class ModularDiscordBot
                                     opt.TablePrefix = "QRTZ_";
                                 });
                                 options.UseJsonSerializer();
-                                ;
                             });
                             x.InterruptJobsOnShutdownWithWait = true;
                             x.UseMicrosoftDependencyInjectionJobFactory();
@@ -100,7 +84,7 @@ public class ModularDiscordBot
                             new TokenListener("51151", s.GetRequiredService<DiscordClient>(), "/api/v1/mads/token/"))
                         .AddHostedService(s => s.GetRequiredService<TokenListener>())
                         .AddSingleton<ReminderService>()
-                        .AddHostedService<ReminderService>(s => s.GetRequiredService<ReminderService>());
+                        .AddHostedService(s => s.GetRequiredService<ReminderService>());
 
                     Services = services.BuildServiceProvider();
                 }

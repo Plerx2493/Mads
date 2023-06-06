@@ -16,8 +16,7 @@ using System.Diagnostics;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using MADS.Entities;
-using MADS.Services;
-using Microsoft.CodeAnalysis.CSharp;
+using MADS.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -28,16 +27,13 @@ namespace MADS.Services;
 
 public class ReminderService : IHostedService
 {
-    private bool _isDisposed;
-    private bool _isRunning;
-
-    private IScheduler _reminderScheduler =>
-        _schedulerFactory.GetScheduler("reminder-scheduler").GetAwaiter().GetResult();
-
-    private DiscordClient _client;
-    private DiscordRestClient _restClient;
     private readonly IDbContextFactory<MadsContext> _dbContextFactory;
     private readonly ISchedulerFactory _schedulerFactory;
+
+    private readonly DiscordClient _client;
+    private bool _isDisposed;
+    private bool _isRunning;
+    private readonly DiscordRestClient _restClient;
 
     public ReminderService(IDbContextFactory<MadsContext> dbContextFactory, ISchedulerFactory schedulerFactory,
         DiscordClient client, DiscordRestClient rest)
@@ -48,13 +44,16 @@ public class ReminderService : IHostedService
         _restClient = rest;
     }
 
+    private IScheduler ReminderScheduler =>
+        _schedulerFactory.GetScheduler("reminder-scheduler").GetAwaiter().GetResult();
+
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         if (_isRunning) return;
         if (_isDisposed) throw new UnreachableException();
         //_reminderScheduler = await _schedulerFactory.GetScheduler("reminder-scheduler");
-        if (_reminderScheduler == null) throw new NullReferenceException();
-        _reminderScheduler.Start();
+        if (ReminderScheduler == null) throw new NullReferenceException();
+        await ReminderScheduler.Start();
         _isRunning = true;
         _client.Logger.LogInformation("Reminders active");
     }
@@ -65,7 +64,7 @@ public class ReminderService : IHostedService
         if (_isDisposed) return;
         _isDisposed = true;
         _isRunning = false;
-        _reminderScheduler.Shutdown();
+        await ReminderScheduler.Shutdown();
         _client.Logger.LogInformation("Reminders stopped");
     }
 
@@ -74,13 +73,9 @@ public class ReminderService : IHostedService
     {
         DiscordChannel channel;
         if (!reminder.IsPrivate)
-        {
             channel = await _client.GetChannelAsync(reminder.ChannelId);
-        }
         else
-        {
             channel = await _restClient.CreateDmAsync(reminder.UserId);
-        }
 
         await channel.SendMessageAsync(await reminder.GetMessageAsync(_client));
         await using var db = await _dbContextFactory.CreateDbContextAsync();
@@ -109,10 +104,10 @@ public class ReminderService : IHostedService
 
         var trigger = TriggerBuilder.Create()
             .WithIdentity(triggerKey)
-            .StartAt((DateTimeOffset) reminder.ExecutionTime)
+            .StartAt(reminder.ExecutionTime)
             .Build();
 
-        await _reminderScheduler.ScheduleJob(job, trigger);
+        await ReminderScheduler.ScheduleJob(job, trigger);
         return dbEntity;
     }
 
@@ -140,7 +135,7 @@ public class ReminderService : IHostedService
         if (reminder is null) return false;
 
         var jobKey = new JobKey($"reminder-{reminder.Id}", "reminders");
-        await _reminderScheduler.DeleteJob(jobKey);
+        await ReminderScheduler.DeleteJob(jobKey);
 
         db.Reminders.Remove(reminder);
         await db.SaveChangesAsync();
@@ -166,23 +161,15 @@ public class ReminderService : IHostedService
 
     private class ReminderJob : IJob
     {
-        private DiscordClient _client;
-        private ReminderService _reminder;
-        private readonly IDbContextFactory<MadsContext> _dbContextFactory;
+        private readonly ReminderService _reminder;
 
-        public ReminderJob(IDbContextFactory<MadsContext> dbContextFactory, DiscordClient client,
-            ReminderService reminderService)
+        public ReminderJob(ReminderService reminderService)
         {
             _reminder = reminderService;
-            _dbContextFactory = dbContextFactory;
-            _client = client;
         }
 
         public async Task Execute(IJobExecutionContext context)
         {
-            var key = context.JobDetail.Key;
-
-            // note: use context.MergedJobDataMap in production code
             var dataMap = context.MergedJobDataMap;
 
             var reminderId = Convert.ToUInt64(dataMap.Get("reminderId"));

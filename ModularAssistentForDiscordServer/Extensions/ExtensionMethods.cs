@@ -17,13 +17,11 @@ using DSharpPlus.Entities;
 using MADS.Entities;
 using MADS.JsonModel;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
-using Serilog.Extensions.Logging;
 
-namespace MADS.Services;
+namespace MADS.Extensions;
 
 public static class ExtensionMethods
 {
