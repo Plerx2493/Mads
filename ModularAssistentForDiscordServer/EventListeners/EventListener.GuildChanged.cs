@@ -22,7 +22,7 @@ internal static partial class EventListener
 {
     public static void AddGuildNotifier(DiscordClient client, LoggingService loggingService)
     {
-        client.GuildCreated += async (sender, args) =>
+        client.GuildCreated += async (_, args) =>
         {
             var embed = new DiscordEmbedBuilder()
                 .WithTitle($"New guild added: {args.Guild.Name}")
@@ -35,7 +35,7 @@ internal static partial class EventListener
             await loggingService.LogToWebhook(new DiscordMessageBuilder().WithEmbed(embed));
         };
 
-        client.GuildDeleted += async (sender, args) =>
+        client.GuildDeleted += async (_, args) =>
         {
             var embed = new DiscordEmbedBuilder()
                 .WithTitle($"Guild removed: {args.Guild.Name}")

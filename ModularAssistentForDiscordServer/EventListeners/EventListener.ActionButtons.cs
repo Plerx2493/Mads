@@ -16,7 +16,6 @@ using System.Text.RegularExpressions;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
-using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
 using MADS.CustomComponents;
 using Microsoft.Extensions.Logging;
@@ -33,7 +32,7 @@ internal static partial class EventListener
             {
                 if (e is null) return Task.CompletedTask;
 
-                sender.Logger.LogTrace(e.Id);
+                sender.Logger.LogTrace("Button clicked with id: {Id}", e.Id);
 
                 if (!Regex.IsMatch(e.Id, @"^CMD:\d{1,4}(?::\d{1,20}){0,3}$", RegexOptions.Compiled))
                     return Task.CompletedTask;

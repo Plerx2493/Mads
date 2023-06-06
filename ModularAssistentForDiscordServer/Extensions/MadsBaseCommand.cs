@@ -14,9 +14,10 @@
 
 using System.Diagnostics;
 using DSharpPlus.CommandsNext;
+using MADS.Services;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace MADS.Services;
+namespace MADS.Extensions;
 
 public class MadsBaseCommand : BaseCommandModule
 {

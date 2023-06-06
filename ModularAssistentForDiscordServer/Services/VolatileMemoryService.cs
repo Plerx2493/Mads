@@ -12,10 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using DSharpPlus;
 using DSharpPlus.Entities;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Logging;
 using Serilog;
 
 namespace MADS.Services;
@@ -48,7 +46,7 @@ public class MessageSnipe
 
     private void PostEvictionCallback(object key, object value, EvictionReason reason, object state)
     {
-        Log.Verbose($"MessageSniper: Message eviction - {reason}");
+        Log.Verbose("MessageSniper: Message eviction - {Reason}", reason);
     }
 
     public void AddMessage(DiscordMessage message)

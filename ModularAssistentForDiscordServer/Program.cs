@@ -16,7 +16,7 @@ using System.Diagnostics.CodeAnalysis;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using MADS.Entities;
-using MADS.Services;
+using MADS.Extensions;
 using MADS.JsonModel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

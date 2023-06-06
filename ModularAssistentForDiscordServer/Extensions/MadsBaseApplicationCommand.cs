@@ -13,11 +13,11 @@
 // limitations under the License.
 
 using System.Diagnostics;
-using DSharpPlus;
 using DSharpPlus.SlashCommands;
+using MADS.Services;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace MADS.Services;
+namespace MADS.Extensions;
 
 [SlashModuleLifespan(SlashModuleLifespan.Transient)]
 public class MadsBaseApplicationCommand : ApplicationCommandModule

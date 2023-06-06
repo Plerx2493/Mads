@@ -25,7 +25,6 @@ using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
 using MADS.Entities;
 using MADS.EventListeners;
-using MADS.Services;
 using MADS.JsonModel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
@@ -36,19 +35,16 @@ namespace MADS.Services;
 
 public class DiscordClientService : IHostedService
 {
+    private readonly IDbContextFactory<MadsContext> _dbContextFactory;
+    public CommandsNextExtension CommandsNext;
     public DiscordClient DiscordClient;
     public LoggingService Logging;
     public SlashCommandsExtension SlashCommands;
-    public CommandsNextExtension CommandsNext;
     public DateTime StartTime;
-    private readonly CancellationToken _cancellationToken;
-    private readonly ConfigJson _config;
-    private IDbContextFactory<MadsContext> _dbContextFactory;
 
     public DiscordClientService
     (
         ConfigJson pConfig,
-        IServiceProvider services,
         IDbContextFactory<MadsContext> dbDbContextFactory,
         VolatileMemoryService memoryService
     )
@@ -56,16 +52,16 @@ public class DiscordClientService : IHostedService
         Log.Warning("DiscordClientService");
 
         StartTime = DateTime.Now;
-        _config = pConfig;
+        var config = pConfig;
         _dbContextFactory = dbDbContextFactory;
         Logging = new LoggingService(this);
 
         DiscordConfiguration discordConfig = new()
         {
-            Token = _config.Token,
+            Token = config.Token,
             TokenType = TokenType.Bot,
             AutoReconnect = true,
-            MinimumLogLevel = _config.LogLevel,
+            MinimumLogLevel = config.LogLevel,
             LoggerFactory = new LoggerFactory().AddSerilog(),
             Intents = DiscordIntents.All
         };
@@ -93,9 +89,7 @@ public class DiscordClientService : IHostedService
         CommandsNext.CommandErrored += EventListener.OnCNextErrored;
 
         //Slashcommands
-        SlashCommandsConfiguration slashConfig = new()
-        {
-        };
+        SlashCommandsConfiguration slashConfig = new();
         SlashCommands = DiscordClient.UseSlashCommands(slashConfig);
 #if RELEASE
         SlashCommands.RegisterCommands(asm);
@@ -128,19 +122,13 @@ public class DiscordClientService : IHostedService
         DiscordClient.ClientErrored += EventListener.OnClientErrored;
     }
 
-    private Task OnGuildDownloadCompleted(DiscordClient sender, GuildDownloadCompletedEventArgs e)
-    {
-        Logging.Setup();
-        return Task.CompletedTask;
-    }
-
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         Log.Warning("DiscordClientService started");
         //Update database to latest version
-        var context = await _dbContextFactory.CreateDbContextAsync(_cancellationToken);
+        var context = await _dbContextFactory.CreateDbContextAsync();
         if ((await context.Database.GetPendingMigrationsAsync()).Any())
-            await context.Database.MigrateAsync(_cancellationToken);
+            await context.Database.MigrateAsync();
 
         DiscordActivity act = new("over some Servers", ActivityType.Watching);
 
@@ -152,5 +140,11 @@ public class DiscordClientService : IHostedService
     public Task StopAsync(CancellationToken cancellationToken)
     {
         return DiscordClient.DisconnectAsync();
+    }
+
+    private Task OnGuildDownloadCompleted(DiscordClient sender, GuildDownloadCompletedEventArgs e)
+    {
+        Logging.Setup();
+        return Task.CompletedTask;
     }
 }
