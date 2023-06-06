@@ -14,6 +14,7 @@
 
 using System.Diagnostics;
 using DSharpPlus;
+using DSharpPlus.Entities;
 using MADS.Entities;
 using MADS.Services;
 using Microsoft.CodeAnalysis.CSharp;
@@ -34,15 +35,17 @@ public class ReminderService : IHostedService
         _schedulerFactory.GetScheduler("reminder-scheduler").GetAwaiter().GetResult();
 
     private DiscordClient _client;
+    private DiscordRestClient _restClient;
     private readonly IDbContextFactory<MadsContext> _dbContextFactory;
     private readonly ISchedulerFactory _schedulerFactory;
 
     public ReminderService(IDbContextFactory<MadsContext> dbContextFactory, ISchedulerFactory schedulerFactory,
-        DiscordClient client)
+        DiscordClient client, DiscordRestClient rest)
     {
         _dbContextFactory = dbContextFactory;
         _schedulerFactory = schedulerFactory;
         _client = client;
+        _restClient = rest;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -69,7 +72,16 @@ public class ReminderService : IHostedService
 
     private async Task DispatchReminder(ReminderDbEntity reminder)
     {
-        var channel = await _client.GetChannelAsync(reminder.ChannelId);
+        DiscordChannel channel;
+        if (!reminder.IsPrivate)
+        {
+            channel = await _client.GetChannelAsync(reminder.ChannelId);
+        }
+        else
+        {
+            channel = await _restClient.CreateDmAsync(reminder.UserId);
+        }
+
         await channel.SendMessageAsync(await reminder.GetMessageAsync(_client));
         await using var db = await _dbContextFactory.CreateDbContextAsync();
         db.Reminders.Remove(reminder);

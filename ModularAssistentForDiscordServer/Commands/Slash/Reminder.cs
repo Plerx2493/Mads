@@ -35,7 +35,9 @@ public class Reminder : MadsBaseApplicationCommand
         InteractionContext ctx,
         [Option("timespan", "when the reminder should trigger")]
         TimeSpan? timeSpan,
-        [Option("text", "text")] string text
+        [Option("text", "text")] string text,
+        [Option("private", "Sets if the reminder should be executed in your DMs")]
+        bool isPrivate = false
     )
     {
         await ctx.DeferAsync(true);
@@ -53,7 +55,7 @@ public class Reminder : MadsBaseApplicationCommand
             CreationTime = DateTime.UtcNow,
             ExecutionTime = DateTime.UtcNow + timeSpan.Value,
             ReminderText = text,
-            IsPrivate = false
+            IsPrivate = isPrivate
         };
 
         await ReminderService.AddReminder(newReminder);
