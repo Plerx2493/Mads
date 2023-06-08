@@ -37,8 +37,8 @@ public class TokenListener : IDisposable, IHostedService
 
     private static HttpListener _listener;
     private static string _url;
+    private readonly DiscordClient _client;
     private Thread _listenTask;
-    private DiscordClient _client;
 
     public TokenListener(string port, DiscordClient client, string path = "/")
     {
@@ -53,40 +53,12 @@ public class TokenListener : IDisposable, IHostedService
         _listener.Abort();
     }
 
-    private static async Task HandleIncomingConnections(CancellationToken token)
-    {
-        while (!token.IsCancellationRequested)
-        {
-            // Will wait here until we hear from a connection
-            var ctx = await _listener.GetContextAsync();
-
-            // Peel out the requests and response objects
-            var req = ctx.Request;
-            var resp = ctx.Response;
-
-            //TODO add token saving
-            //var userToken = req.QueryString.Get("code");
-
-            // Write the response info
-            var data = Encoding.UTF8.GetBytes(PageData);
-            resp.ContentType = "text/html";
-            resp.ContentEncoding = Encoding.UTF8;
-            resp.ContentLength64 = data.LongLength;
-            //resp.StatusCode = 200;
-
-            // Write out to the response stream (asynchronously), then close it
-            await resp.OutputStream.WriteAsync(data, 0, data.Length, token);
-
-            resp.Close();
-        }
-    }
-
     public Task StartAsync(CancellationToken cancellationToken)
     {
         _listener.Start();
-        _client.Logger.LogInformation("Listening for connections on {url}", _url);
+        _client.Logger.LogInformation("Listening for connections on {Url}", _url);
 
-        _listenTask = new Thread(() => HandleIncomingConnections(cancellationToken))
+        _listenTask = new Thread(() => _ = HandleIncomingConnections(cancellationToken))
         {
             IsBackground = true
         };
@@ -102,5 +74,33 @@ public class TokenListener : IDisposable, IHostedService
         _listenTask.Interrupt();
         _client.Logger.LogInformation("Tokenlistener stopped");
         return Task.CompletedTask;
+    }
+
+    private static async Task HandleIncomingConnections(CancellationToken token)
+    {
+        while (!token.IsCancellationRequested)
+        {
+            // Will wait here until we hear from a connection
+            var ctx = await _listener.GetContextAsync();
+
+            // Peel out the requests and response objects
+            var req = ctx.Request;
+            var resp = ctx.Response;
+
+            //TODO add token saving
+            var userToken = req.QueryString.Get("code");
+
+            // Write the response info
+            var data = Encoding.UTF8.GetBytes(PageData);
+            resp.ContentType = "text/html";
+            resp.ContentEncoding = Encoding.UTF8;
+            resp.ContentLength64 = data.LongLength;
+            //resp.StatusCode = 200;
+
+            // Write out to the response stream (asynchronously), then close it
+            await resp.OutputStream.WriteAsync(data, 0, data.Length, token);
+
+            resp.Close();
+        }
     }
 }

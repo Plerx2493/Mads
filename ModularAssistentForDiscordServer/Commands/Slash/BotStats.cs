@@ -19,7 +19,7 @@ using DSharpPlus.SlashCommands;
 using Humanizer;
 using Humanizer.Localisation;
 using MADS.Entities;
-using MADS.Services;
+using MADS.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -36,12 +36,12 @@ public class BotStats : MadsBaseApplicationCommand
     public async Task GetBotStatsAsync(InteractionContext ctx)
     {
         await using var db = await ContextFactory.CreateDbContextAsync();
-        var swDB = new Stopwatch();
+        var swDb = new Stopwatch();
         var swRest = new Stopwatch();
 
-        swDB.Start();
+        swDb.Start();
         var _ = await db.Guilds.FirstAsync();
-        swDB.Stop();
+        swDb.Stop();
 
         swRest.Start();
         var __ = await DiscordRestClient.GetChannelAsync(ctx.Channel.Id);
@@ -63,7 +63,7 @@ public class BotStats : MadsBaseApplicationCommand
             .AddField("Guildcount:", guilds.ToString("N0"), true)
             .AddField("Threads:", $"{ThreadPool.ThreadCount}", true)
             .AddField("Websocket Latency:", ping.ToString("N0") + " ms", true)
-            .AddField("DB Latency:", swDB.ElapsedMilliseconds.ToString("N0") + " ms", true)
+            .AddField("DB Latency:", swDb.ElapsedMilliseconds.ToString("N0") + " ms", true)
             .AddField("Rest Latency:", swRest.ElapsedMilliseconds.ToString("N0") + " ms", true)
             .AddField("Memory:", heapMemory, true)
             .AddField("Uptime:",

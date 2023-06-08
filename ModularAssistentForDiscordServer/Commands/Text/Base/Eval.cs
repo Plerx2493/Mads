@@ -16,6 +16,7 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using MADS.Extensions;
 using MADS.Services;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
@@ -63,7 +64,7 @@ public class Eval : MadsBaseCommand
                 await message.ModifyAsync(new DiscordEmbedBuilder
                 {
                     Title = "✅ Evaluation Result",
-                    Description = result.ReturnValue.ToString(),
+                    Description = result.ReturnValue.ToString()!,
                     Color = new DiscordColor("#089FDF")
                 }.Build());
             else

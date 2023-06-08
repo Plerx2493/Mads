@@ -16,8 +16,7 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using MADS.CustomComponents;
-using MADS.Services;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
+using MADS.Extensions;
 
 namespace MADS.EventListeners;
 

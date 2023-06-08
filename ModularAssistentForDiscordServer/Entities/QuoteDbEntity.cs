@@ -26,19 +26,19 @@ public class QuoteDbEntity
     public ulong DiscordGuildId { get; set; }
 
     /// <summary>
-    /// User which was quoted
+    ///     User which was quoted
     /// </summary>
     [Column("quotedUserId")]
     public ulong QuotedUserId { get; set; }
 
     /// <summary>
-    /// User who crated this quote
+    ///     User who crated this quote
     /// </summary>
     [Column("UserId")]
     public ulong UserId { get; set; }
 
     /// <summary>
-    /// Quoted content
+    ///     Quoted content
     /// </summary>
     [Column("content"), MaxLength(1000)]
     public string Content { get; set; }

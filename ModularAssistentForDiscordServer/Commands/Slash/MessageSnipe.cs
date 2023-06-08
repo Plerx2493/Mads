@@ -16,6 +16,7 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using MADS.CustomComponents;
+using MADS.Extensions;
 using MADS.Services;
 using Microsoft.Extensions.DependencyInjection;
 

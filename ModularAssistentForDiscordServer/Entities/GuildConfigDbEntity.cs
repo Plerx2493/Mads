@@ -19,6 +19,8 @@ namespace MADS.Entities;
 
 public class GuildConfigDbEntity
 {
+    public GuildDbEntity Guild;
+
     public GuildConfigDbEntity()
     {
     }
@@ -68,6 +70,4 @@ public class GuildConfigDbEntity
 
     [Column("starboardEmojiName")]
     public string? StarboardEmojiName { get; set; }
-
-    public GuildDbEntity Guild;
 }

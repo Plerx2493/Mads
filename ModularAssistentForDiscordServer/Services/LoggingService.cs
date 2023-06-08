@@ -20,6 +20,7 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 using DSharpPlus.SlashCommands;
+using MADS.Extensions;
 using Microsoft.Extensions.Logging;
 using Serilog;
 
@@ -27,6 +28,8 @@ namespace MADS.Services;
 
 public class LoggingService
 {
+    private static readonly Regex PrettyNameRegex = new("PRETTY_NAME=(.*)", RegexOptions.Compiled);
+
     //Utilities
     private readonly string _dirPath = DataProvider.GetPath("Logs");
     private readonly string _logPath;
@@ -54,8 +57,6 @@ public class LoggingService
 
         Console.WriteLine(_logPath);
     }
-
-    private static readonly Regex PrettyNameRegex = new("PRETTY_NAME=(.*)", RegexOptions.Compiled);
 
     //Fetching Linux name by Naamloos. Can be found in Naamloos/Modcore
     private static string FetchLinuxName()
@@ -123,7 +124,7 @@ public class LoggingService
         }
 
         _modularDiscordBot.DiscordClient.Logger.LogInformation(
-            "Found {ownerChannel} dm Channel for {owner} application owner",
+            "Found {OwnerChannel} dm Channel for {Owner} application owner",
             _ownerChannel.Count, owners.Length);
     }
 

@@ -13,9 +13,8 @@
 // limitations under the License.
 
 using DSharpPlus.SlashCommands;
-using DSharpPlus.SlashCommands.Attributes;
 using Humanizer;
-using MADS.Services;
+using MADS.Extensions;
 
 namespace MADS.Commands.Slash;
 
