@@ -24,35 +24,36 @@ namespace MADS.Commands.Slash;
 
 public class MessageSnipe : MadsBaseApplicationCommand
 {
-    public VolatileMemoryService MemoryService =>
-        ModularDiscordBot.Services.GetRequiredService<VolatileMemoryService>();
+    public MessageSnipeService MessageSnipeService =>
+        ModularDiscordBot.Services.GetRequiredService<MessageSnipeService>();
 
     [SlashCommand("snipe", "Snipes the last deleted message.")]
-    public Task SnipeAsync(InteractionContext ctx)
+    public async Task SnipeAsync(InteractionContext ctx)
     {
-        return DoSnipeAsync(ctx, false);
+        await DoSnipeAsync(ctx, false);
     }
 
     [SlashCommand("snipeedit", "Snipes the last edited message.")]
-    public Task SnipeEditAsync(InteractionContext ctx)
+    public async Task SnipeEditAsync(InteractionContext ctx)
     {
-        return DoSnipeAsync(ctx, true);
+        await DoSnipeAsync(ctx, true);
     }
 
     private async Task DoSnipeAsync(InteractionContext ctx, bool edit)
     {
+        await ctx.DeferAsync(true);
         DiscordMessage message;
 
         var result = edit switch
         {
-            true => MemoryService.MessageSnipe.TryGetEditedMessage(ctx.Channel.Id, out message),
-            false => MemoryService.MessageSnipe.TryGetMessage(ctx.Channel.Id, out message)
+            true => MessageSnipeService.TryGetEditedMessage(ctx.Channel.Id, out message),
+            false => MessageSnipeService.TryGetMessage(ctx.Channel.Id, out message)
         };
 
         if (!result)
         {
-            await ctx.CreateResponseAsync(
-                "⚠️ No message to snipe! Either nothing was deleted, or the message has expired (12 hours)!", true);
+            await ctx.EditResponseAsync(
+                new DiscordWebhookBuilder().WithContent("⚠️ No message to snipe! Either nothing was deleted, or the message has expired (12 hours)!"));
             return;
         }
 
@@ -85,7 +86,7 @@ public class MessageSnipe : MadsBaseApplicationCommand
                     .WithTitle("Additional Image").WithThumbnail(attachment.Url));
         }
 
-        var response = new DiscordInteractionResponseBuilder()
+        var response = new DiscordWebhookBuilder()
             .AddEmbeds(embeds.Prepend(embed).Select(x => x.Build()));
 
         var btn = new DiscordButtonComponent(ButtonStyle.Danger, "placeholder", "Delete (Author only)",
@@ -100,6 +101,6 @@ public class MessageSnipe : MadsBaseApplicationCommand
             response.AddComponents(btn1);
         }
 
-        await ctx.CreateResponseAsync(response);
+        await ctx.EditResponseAsync(response);
     }
 }
