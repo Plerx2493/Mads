@@ -104,14 +104,12 @@ public class MessageSnipeService : IHostedService
     public void AddMessage(DiscordMessage message)
     {
         var id = CacheHelper.GetMessageSnipeKey(message.ChannelId);
-        _memoryCache.Remove(id);
         _memoryCache.Set(id, message, _options);
     }
 
     public void AddEditedMessage(DiscordMessage message)
     {
         var id = CacheHelper.GetMessageEditSnipeKey(message.ChannelId);
-        _memoryCache.Remove(id);
         _memoryCache.Set(id, message, _options);
     }
 
@@ -130,16 +128,26 @@ public class MessageSnipeService : IHostedService
     public bool TryGetMessage(ulong channelId, out DiscordMessage message)
     {
         var id = CacheHelper.GetMessageSnipeKey(channelId);
-        var result = _memoryCache.TryGetValue(id, out message);
-        if (result) _memoryCache.Remove(id);
-        return result;
+        message = _memoryCache.Get<DiscordMessage?>(id);
+        if (message is not null)
+        {
+            _memoryCache.Remove(id);
+            return true;
+        }
+
+        return false;
     }
 
     public bool TryGetEditedMessage(ulong channelId, out DiscordMessage message)
     {
         var id = CacheHelper.GetMessageEditSnipeKey(channelId);
-        var result = _memoryCache.TryGetValue(id, out message);
-        if (result) _memoryCache.Remove(id);
-        return result;
+        message = _memoryCache.Get<DiscordMessage?>(id);
+        if (message is not null)
+        {
+            _memoryCache.Remove(id);
+            return true;
+        }
+
+        return false;
     }
 }

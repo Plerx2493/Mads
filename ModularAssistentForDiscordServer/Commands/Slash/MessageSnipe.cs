@@ -43,12 +43,16 @@ public class MessageSnipe : MadsBaseApplicationCommand
     {
         await ctx.DeferAsync(true);
         DiscordMessage message;
-
-        var result = edit switch
+        bool result;
+        
+        if (!edit)
         {
-            true => MessageSnipeService.TryGetEditedMessage(ctx.Channel.Id, out message),
-            false => MessageSnipeService.TryGetMessage(ctx.Channel.Id, out message)
-        };
+            result = MessageSnipeService.TryGetMessage(ctx.Channel.Id, out message);
+        }
+        else
+        {
+            result = MessageSnipeService.TryGetEditedMessage(ctx.Channel.Id, out message);
+        }
 
         if (!result)
         {
@@ -58,14 +62,15 @@ public class MessageSnipe : MadsBaseApplicationCommand
         }
 
         var content = message.Content;
-        if (content.Length > 500) content = content.Substring(0, 500) + "...";
+        if (content.Length > 500) content = content.Substring(0, 497) + "...";
+        var member = await ctx.Guild.GetMemberAsync(message.Author.Id);
 
         var embed = new DiscordEmbedBuilder()
             .WithAuthor(
-                $"{message.Author.Username}#{message.Author.Discriminator}" + (edit ? " (Edited)" : ""),
+                $"{member.DisplayName}" + (edit ? " (Edited)" : ""),
                 iconUrl: message.Author.GetAvatarUrl(ImageFormat.Png))
             .WithFooter(
-                $"{(edit ? "Edit" : "Deletion")} sniped by {ctx.User.Username}#{ctx.User.Discriminator}",
+                $"{(edit ? "Edit" : "Deletion")} sniped by {ctx.Member.DisplayName}",
                 ctx.User.AvatarUrl);
 
         if (!string.IsNullOrEmpty(content)) embed.WithDescription(content);
