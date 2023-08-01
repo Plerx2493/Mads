@@ -11,4 +11,4 @@ If you want to self-host this bot you will need a MariaDB instance and apply you
 Feel free to add my instance to your server [here](https://discord.com/oauth2/authorize?client_id=938105479706578945&scope=bot%20applications.commands&permissions=8)
 
 ### Other
-If you want to contact me feel free to send me a dm on Discord: Plerx#0715
+If you want to contact me feel free to send me a dm on Discord: plerx0715
