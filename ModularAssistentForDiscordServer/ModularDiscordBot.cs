@@ -52,8 +52,8 @@ public class ModularDiscordBot
                         .AddDiscordRestClient(_config)
                         .AddMemoryCache(options =>
                         {
-                            options.ExpirationScanFrequency = TimeSpan.FromMinutes(10);
-                            options.SizeLimit = 1024L;
+                            options.ExpirationScanFrequency = TimeSpan.FromMinutes(1);
+                            options.SizeLimit = 4096L;
                         })
                         .AddQuartz(x =>
                         {
@@ -73,10 +73,10 @@ public class ModularDiscordBot
                         })
                         .AddQuartzHostedService(options =>
                         {
-                            // when shutting down we want jobs to complete gracefully
                             options.WaitForJobsToComplete = true;
                         })
-                        .AddSingleton<VolatileMemoryService>()
+                        .AddSingleton<MessageSnipeService>()
+                        .AddHostedService(s => s.GetRequiredService<MessageSnipeService>())
                         .AddSingleton<QuotesService>()
                         .AddSingleton<StarboardService>()
                         .AddHostedService(s => s.GetRequiredService<StarboardService>())

@@ -25,6 +25,7 @@ using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
 using MADS.Entities;
 using MADS.EventListeners;
+using MADS.Services;
 using MADS.JsonModel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
@@ -45,8 +46,7 @@ public class DiscordClientService : IHostedService
     public DiscordClientService
     (
         ConfigJson pConfig,
-        IDbContextFactory<MadsContext> dbDbContextFactory,
-        VolatileMemoryService memoryService
+        IDbContextFactory<MadsContext> dbDbContextFactory
     )
     {
         Log.Warning("DiscordClientService");
@@ -69,9 +69,7 @@ public class DiscordClientService : IHostedService
         DiscordClient = new DiscordClient(discordConfig);
 
         EventListener.GuildDownload(DiscordClient, _dbContextFactory);
-        EventListener.EnableMessageSniper(DiscordClient, memoryService);
         EventListener.AddGuildNotifier(DiscordClient, Logging);
-        EventListener.VoiceTrollListener(DiscordClient, memoryService);
 
         var asm = Assembly.GetExecutingAssembly();
 
