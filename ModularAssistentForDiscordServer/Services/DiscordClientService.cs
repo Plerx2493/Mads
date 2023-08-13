@@ -45,8 +45,7 @@ public class DiscordClientService : IHostedService
     public DiscordClientService
     (
         ConfigJson pConfig,
-        IDbContextFactory<MadsContext> dbDbContextFactory,
-        VolatileMemoryService memoryService
+        IDbContextFactory<MadsContext> dbDbContextFactory
     )
     {
         Log.Warning("DiscordClientService");
@@ -69,9 +68,7 @@ public class DiscordClientService : IHostedService
         DiscordClient = new DiscordClient(discordConfig);
 
         EventListener.GuildDownload(DiscordClient, _dbContextFactory);
-        EventListener.EnableMessageSniper(DiscordClient, memoryService);
         EventListener.AddGuildNotifier(DiscordClient, Logging);
-        EventListener.VoiceTrollListener(DiscordClient, memoryService);
 
         var asm = Assembly.GetExecutingAssembly();
 

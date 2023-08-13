@@ -164,7 +164,16 @@ public class LoggingService
 
             await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, responseBuilder);
 
-            var guildName = e.Interaction.Guild.Name ?? "Dms";
+            string guildName;
+            
+            if (e.Interaction.Guild is null)
+            {
+                guildName = "Dms";
+            }
+            else
+            {
+                guildName = e.Interaction.Guild.Name;
+            }
 
             var discordEmbed = new DiscordEmbedBuilder
             {

@@ -74,14 +74,14 @@ public class RoleSelection : MadsBaseApplicationCommand
         //Get the initial response an wait for a component interaction
         var response = await ctx.GetOriginalResponseAsync();
         var selectResponse = await response.WaitForSelectAsync(ctx.Member, "roleSelectionStart-" + ctx.Channel.Id,
-            TimeSpan.FromSeconds(60));
+            TimeSpan.FromSeconds(60 * 3));
 
         //Notify the user when the interaction times out and abort
         if (selectResponse.TimedOut)
         {
             await ctx.EditResponseAsync(new DiscordWebhookBuilder
             {
-                Content = "Timed out (60 seconds)"
+                Content = "Timed out (180 seconds)"
             });
             return;
         }
