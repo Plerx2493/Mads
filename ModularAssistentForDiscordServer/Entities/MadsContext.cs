@@ -29,6 +29,7 @@ public class MadsContext : DbContext
     public DbSet<StarboardMessageDbEntity> Starboard { get; set; }
     public DbSet<QuoteDbEntity> Quotes { get; set; }
     public DbSet<ReminderDbEntity> Reminders { get; set; }
+    public DbSet<VoiceAlert> VoiceAlerts { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

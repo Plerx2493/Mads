@@ -27,6 +27,11 @@ public class UserEntityConfig : IEntityTypeConfiguration<UserDbEntity>
             .WithOne(x => x.User)
             .HasPrincipalKey(x => x.Id)
             .HasForeignKey(x => x.UserId);
+        
+        builder.HasMany(u => u.VoiceAlerts)
+            .WithOne(x => x.User)
+            .HasPrincipalKey(x => x.Id)
+            .HasForeignKey(x => x.UserId);
 
         builder.HasMany(u => u.Incidents)
             .WithOne(x => x.TargetUser)
