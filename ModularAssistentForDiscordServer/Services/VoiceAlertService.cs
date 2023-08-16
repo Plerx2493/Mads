@@ -51,6 +51,9 @@ public class VoiceAlertService : IHostedService
     {
         if (e.After.Channel is null) return;
         
+        if (e.Before.Channel?.Id == e.After.Channel.Id) return;
+        
+        
         await using var context = _contextFactory.CreateDbContext();
         var alerts = await context.VoiceAlerts
             .Where(x => x.ChannelId == e.After.Channel.Id)
@@ -68,6 +71,7 @@ public class VoiceAlertService : IHostedService
         foreach (var alert in alerts)
         {
             if (e.User.Id == alert.UserId) continue;
+            if (e.Channel.Users.Any(x => x.Id == alert.UserId)) continue;
             try
             {
                 var member = await e.Guild.GetMemberAsync(alert.UserId);
