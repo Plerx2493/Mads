@@ -50,6 +50,7 @@ public class Eval : MadsBaseCommand
             var scriptOptions = ScriptOptions.Default;
             scriptOptions = scriptOptions.WithImports("System", "System.Collections.Generic", "System.Linq",
                 "System.Text", "System.Threading.Tasks", "DSharpPlus", "DSharpPlus.Entities", "DSharpPlus.CommandsNext",
+                "DSharpPlus.Interactivity", "DSharpPlus.Rest", "DSharpPlus.SlashCommands", "DSharpPlus.VoiceNext",
                 "MADS", "Humanizer");
             scriptOptions = scriptOptions.WithReferences(AppDomain.CurrentDomain.GetAssemblies()
                 .Where(assembly =>
@@ -102,13 +103,13 @@ public class TestVariables
         Context = ctx;
     }
 
-    public DiscordMessage Message { get; set; }
-    public DiscordChannel Channel { get; set; }
-    public DiscordGuild Guild { get; set; }
-    public DiscordUser User { get; set; }
-    public DiscordMember Member { get; set; }
-    public CommandContext Context { get; set; }
-    public DiscordClient Client { get; set; }
-    public DiscordClientService ClientService { get; set; }
+    public DiscordMessage Message { get; private set; }
+    public DiscordChannel Channel { get; private set; }
+    public DiscordGuild Guild { get; private set; }
+    public DiscordUser User { get; private set; }
+    public DiscordMember Member { get; private set; }
+    public CommandContext Context { get; private set; }
+    public DiscordClient Client { get; private set; }
+    public DiscordClientService ClientService { get; private set; }
     public IServiceProvider Services => ModularDiscordBot.Services;
 }

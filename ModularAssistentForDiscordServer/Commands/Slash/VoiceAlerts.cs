@@ -26,8 +26,13 @@ namespace MADS.Commands.Slash;
 [SlashCommandGroup("voicealerts", "mangage voicealerts")]
 public class VoiceAlerts : MadsBaseApplicationCommand
 {
-    public VoiceAlertService VoiceAlertService => ModularDiscordBot.Services.GetRequiredService<VoiceAlertService>();
+    private VoiceAlertService _voiceAlertService;
 
+    public VoiceAlerts(VoiceAlertService voiceAlertService)
+    {
+        _voiceAlertService = voiceAlertService;
+    }
+    
     [SlashCommand("add", "add a voicealert")]
     public async Task AddAlert
     (
@@ -47,7 +52,7 @@ public class VoiceAlerts : MadsBaseApplicationCommand
             return;
         }
 
-        var currentAlerts = await VoiceAlertService.GetVoiceAlerts(ctx.User.Id);
+        var currentAlerts = await _voiceAlertService.GetVoiceAlerts(ctx.User.Id);
         if (currentAlerts.Any(x => x.ChannelId == channel.Id))
         {
             var responseIsActive = new DiscordInteractionResponseBuilder()
@@ -58,7 +63,7 @@ public class VoiceAlerts : MadsBaseApplicationCommand
             return;
         }
 
-        await VoiceAlertService.AddVoiceAlertAsync(ctx.User.Id, channel.Id, ctx.Guild.Id, repeat);
+        await _voiceAlertService.AddVoiceAlertAsync(ctx.User.Id, channel.Id, ctx.Guild.Id, repeat);
 
         var response = new DiscordInteractionResponseBuilder()
             .WithContent($"Added <#{channel.Id}> to your VoiceAlerts")
@@ -87,7 +92,7 @@ public class VoiceAlerts : MadsBaseApplicationCommand
             return;
         }
 
-        var currentAlerts = await VoiceAlertService.GetVoiceAlerts(ctx.User.Id);
+        var currentAlerts = await _voiceAlertService.GetVoiceAlerts(ctx.User.Id);
         if (!currentAlerts.Any(x => x.ChannelId == id))
         {
             var responseIsActive = new DiscordInteractionResponseBuilder()
@@ -98,7 +103,7 @@ public class VoiceAlerts : MadsBaseApplicationCommand
             return;
         }
 
-        await VoiceAlertService.RemoveVoiceAlert(ctx.User.Id, id, ctx.Guild.Id);
+        await _voiceAlertService.RemoveVoiceAlert(ctx.User.Id, id, ctx.Guild.Id);
 
         var response = new DiscordInteractionResponseBuilder()
             .WithContent($"Removed <#{channel}> from your VoiceAlerts")
@@ -110,7 +115,7 @@ public class VoiceAlerts : MadsBaseApplicationCommand
     [SlashCommand("list", "list all voicealerts")]
     public async Task ListAlerts(InteractionContext ctx)
     {
-        var alerts = await VoiceAlertService.GetVoiceAlerts(ctx.User.Id);
+        var alerts = await _voiceAlertService.GetVoiceAlerts(ctx.User.Id);
         var builder = new StringBuilder();
         foreach (var alert in alerts)
         {

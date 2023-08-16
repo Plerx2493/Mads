@@ -29,10 +29,13 @@ public class StarboardConfig : MadsBaseApplicationCommand
     private static readonly Regex EmoteRegex = new(@"^<(?<animated>a)?:(?<name>[a-zA-Z0-9_]+?):(?<id>\d+?)>$",
         RegexOptions.ECMAScript | RegexOptions.Compiled);
 
-    public IDbContextFactory<MadsContext> ContextFactory =>
-        ModularDiscordBot.Services.GetRequiredService<IDbContextFactory<MadsContext>>();
+    private IDbContextFactory<MadsContext> _contextFactory;
 
-
+    public StarboardConfig(IDbContextFactory<MadsContext> contextFactory)
+    {
+        _contextFactory = contextFactory;
+    }
+    
     [SlashCommand("Starboard", "Configure Starboard"),
      SlashRequirePermissions(Permissions.ManageGuild),
      SlashRequireGuild]
@@ -49,7 +52,7 @@ public class StarboardConfig : MadsBaseApplicationCommand
     {
         await ctx.DeferAsync(true);
 
-        var db = await ContextFactory.CreateDbContextAsync();
+        var db = await _contextFactory.CreateDbContextAsync();
 
         var guildConfig = db.Configs.First(x => x.DiscordGuildId == ctx.Guild.Id);
 

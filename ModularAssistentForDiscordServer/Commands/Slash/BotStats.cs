@@ -27,15 +27,19 @@ namespace MADS.Commands.Slash;
 
 public class BotStats : MadsBaseApplicationCommand
 {
-    public IDbContextFactory<MadsContext> ContextFactory =>
-        ModularDiscordBot.Services.GetRequiredService<IDbContextFactory<MadsContext>>();
+    private IDbContextFactory<MadsContext> _contextFactory;
+    private DiscordRestClient _discordRestClient;
 
-    public DiscordRestClient DiscordRestClient => ModularDiscordBot.Services.GetRequiredService<DiscordRestClient>();
-
+    public BotStats(IDbContextFactory<MadsContext> contextFactory, DiscordRestClient discordRestClient)
+    {
+        _contextFactory = contextFactory;
+        _discordRestClient = discordRestClient;
+    }
+    
     [SlashCommand("botstats", "Get statistics about the bot")]
     public async Task GetBotStatsAsync(InteractionContext ctx)
     {
-        await using var db = await ContextFactory.CreateDbContextAsync();
+        await using var db = await _contextFactory.CreateDbContextAsync();
         var swDb = new Stopwatch();
         var swRest = new Stopwatch();
 
@@ -44,7 +48,7 @@ public class BotStats : MadsBaseApplicationCommand
         swDb.Stop();
 
         swRest.Start();
-        var __ = await DiscordRestClient.GetChannelAsync(ctx.Channel.Id);
+        var __ = await _discordRestClient.GetChannelAsync(ctx.Channel.Id);
         swRest.Stop();
 
         using var process = Process.GetCurrentProcess();

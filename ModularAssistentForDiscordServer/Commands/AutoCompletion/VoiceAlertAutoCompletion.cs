@@ -23,10 +23,16 @@ namespace MADS.Commands.AutoCompletion;
 
 public class VoiceAlertAutoCompletion : IAutocompleteProvider
 {
+    private VoiceAlertService _voiceAlertService;
+    
+    public VoiceAlertAutoCompletion(IServiceProvider services)
+    {
+        _voiceAlertService = services.GetRequiredService<VoiceAlertService>();
+    }
+    
     public async Task<IEnumerable<DiscordAutoCompleteChoice>> Provider(AutocompleteContext ctx)
     {
-        var factory = ModularDiscordBot.Services.GetRequiredService<VoiceAlertService>();
-        var choices = await factory.GetVoiceAlerts(ctx.User.Id);
+        var choices = await _voiceAlertService.GetVoiceAlerts(ctx.User.Id);
 
         var result = new List<DiscordAutoCompleteChoice>();
         
