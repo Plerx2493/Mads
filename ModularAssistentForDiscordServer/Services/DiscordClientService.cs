@@ -86,7 +86,10 @@ public class DiscordClientService : IHostedService
         CommandsNext.CommandErrored += EventListener.OnCNextErrored;
 
         //Slashcommands
-        SlashCommandsConfiguration slashConfig = new();
+        SlashCommandsConfiguration slashConfig = new()
+        {
+            Services = ModularDiscordBot.Services
+        };
         SlashCommands = DiscordClient.UseSlashCommands(slashConfig);
 #if RELEASE
         SlashCommands.RegisterCommands(asm);

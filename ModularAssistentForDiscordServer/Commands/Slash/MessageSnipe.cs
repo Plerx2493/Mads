@@ -24,9 +24,13 @@ namespace MADS.Commands.Slash;
 
 public class MessageSnipe : MadsBaseApplicationCommand
 {
-    public MessageSnipeService MessageSnipeService =>
-        ModularDiscordBot.Services.GetRequiredService<MessageSnipeService>();
+    private MessageSnipeService _messageSnipeService;
 
+    public MessageSnipe(MessageSnipeService messageSnipeService)
+    {
+        _messageSnipeService = messageSnipeService;
+    }
+    
     [SlashCommand("snipe", "Snipes the last deleted message.")]
     public async Task SnipeAsync(InteractionContext ctx)
     {
@@ -47,11 +51,11 @@ public class MessageSnipe : MadsBaseApplicationCommand
         
         if (!edit)
         {
-            result = MessageSnipeService.TryGetMessage(ctx.Channel.Id, out message);
+            result = _messageSnipeService.TryGetMessage(ctx.Channel.Id, out message);
         }
         else
         {
-            result = MessageSnipeService.TryGetEditedMessage(ctx.Channel.Id, out message);
+            result = _messageSnipeService.TryGetEditedMessage(ctx.Channel.Id, out message);
         }
 
         if (!result)

@@ -28,7 +28,12 @@ namespace MADS.Commands.Slash;
 [SlashCommandGroup("reminder", "mangage reminders")]
 public class Reminder : MadsBaseApplicationCommand
 {
-    public ReminderService ReminderService => ModularDiscordBot.Services.GetRequiredService<ReminderService>();
+    private ReminderService _reminderService;
+    
+    public Reminder(ReminderService reminderService)
+    {
+        _reminderService = reminderService;
+    }
 
     [SlashCommand("add", "add new reminder")]
     public async Task AddReminder
@@ -59,7 +64,7 @@ public class Reminder : MadsBaseApplicationCommand
             IsPrivate = isPrivate
         };
 
-        await ReminderService.AddReminder(newReminder);
+        await _reminderService.AddReminder(newReminder);
 
         await ctx.EditResponseAsync(
             new DiscordWebhookBuilder().WithContent(
@@ -74,7 +79,7 @@ public class Reminder : MadsBaseApplicationCommand
     {
         await ctx.DeferAsync(true);
 
-        var reminders = await ReminderService.GetByUserAsync(ctx.User.Id);
+        var reminders = await _reminderService.GetByUserAsync(ctx.User.Id);
         var remindersTextList = reminders
             .Select(x =>
                 $"```-Id: {x.Id}\n-Remindertext:\n {x.ReminderText}\n-ExecutionTime: {x.ExecutionTime.Humanize()}\n ({x.ExecutionTime.ToUniversalTime()} UTC)```");
@@ -98,7 +103,7 @@ public class Reminder : MadsBaseApplicationCommand
     )
     {
         await ctx.DeferAsync(true);
-        var reminder = await ReminderService.TryGetByIdAsync((ulong) id);
+        var reminder = await _reminderService.TryGetByIdAsync((ulong) id);
 
         if (reminder is null)
         {
@@ -106,7 +111,7 @@ public class Reminder : MadsBaseApplicationCommand
             return;
         }
 
-        var success = await ReminderService.TryDeleteById((ulong) id);
+        var success = await _reminderService.TryDeleteById((ulong) id);
 
         if (!success)
         {
