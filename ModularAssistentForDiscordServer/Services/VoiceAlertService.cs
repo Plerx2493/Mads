@@ -49,12 +49,11 @@ public class VoiceAlertService : IHostedService
     
     public async Task HandleEvent(DiscordClient client, VoiceStateUpdateEventArgs e)
     {
-        if (e.After is null || e.Before is not null) return;
+        if (e.After.Channel is null) return;
         
         await using var context = _contextFactory.CreateDbContext();
-        
         var alerts = await context.VoiceAlerts
-            .Where(x => x.ChannelId == e.After.Channel.Id && x.GuildId == e.Guild.Id)
+            .Where(x => x.ChannelId == e.After.Channel.Id)
             .ToListAsync();
         
         if (!alerts.Any()) return;
@@ -68,21 +67,23 @@ public class VoiceAlertService : IHostedService
         
         foreach (var alert in alerts)
         {
+            //if (e.User.Id == alert.UserId) continue;
             try
             {
                 var member = await e.Guild.GetMemberAsync(alert.UserId);
-                if (member == null)
-                {
-                    continue;
-                }
+                if (member is null) continue;
 
                 await member.SendMessageAsync(embed);
+                
+                if (!alert.IsRepeatable) context.VoiceAlerts.Remove(alert); 
             }
             catch (DiscordException exception)
             {
                 Log.Error(exception, "Failed to send voice alert to {UserId}", alert.UserId);
             }
         }
+        
+        await context.SaveChangesAsync();
     }
     
     public async Task AddVoiceAlertAsync(ulong userId, ulong channelId, ulong guildId, bool isRepeatable = false)

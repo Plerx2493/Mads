@@ -84,7 +84,9 @@ public class ModularDiscordBot
                             new TokenListener("51151", s.GetRequiredService<DiscordClient>(), "/api/v1/mads/token/"))
                         .AddHostedService(s => s.GetRequiredService<TokenListener>())
                         .AddSingleton<ReminderService>()
-                        .AddHostedService(s => s.GetRequiredService<ReminderService>());
+                        .AddHostedService(s => s.GetRequiredService<ReminderService>())
+                        .AddSingleton<VoiceAlertService>()
+                        .AddHostedService(s => s.GetRequiredService<VoiceAlertService>());
 
                     Services = services.BuildServiceProvider();
                 }

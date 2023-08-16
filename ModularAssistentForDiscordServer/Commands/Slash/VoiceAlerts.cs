@@ -16,7 +16,7 @@ using System.Text;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
-using MADS.Entities;
+using MADS.Commands.AutoCompletion;
 using MADS.Extensions;
 using MADS.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -34,24 +34,77 @@ public class VoiceAlerts : MadsBaseApplicationCommand
         InteractionContext ctx,
         [Option("channel", "channel which will be monitored")]
         DiscordChannel channel,
-        [Option("repeat", "repeat the alert")] 
-        bool repeat = false
+        [Option("repeat", "repeat the alert")] bool repeat = false
     )
     {
-        await VoiceAlertService.AddVoiceAlertAsync(ctx.User.Id, channel.Id, ctx.Guild.Id);
+        if (channel.Type is not (ChannelType.Voice or ChannelType.Stage))
+        {
+            var responseIsNotVoice = new DiscordInteractionResponseBuilder()
+                .WithContent($"<#{channel.Id}> is not a voice channel")
+                .AsEphemeral();
+
+            await ctx.CreateResponseAsync(responseIsNotVoice);
+            return;
+        }
+
+        var currentAlerts = await VoiceAlertService.GetVoiceAlerts(ctx.User.Id);
+        if (currentAlerts.Any(x => x.ChannelId == channel.Id))
+        {
+            var responseIsActive = new DiscordInteractionResponseBuilder()
+                .WithContent($"<#{channel.Id}> is already in your VoiceAlerts")
+                .AsEphemeral();
+
+            await ctx.CreateResponseAsync(responseIsActive);
+            return;
+        }
+
+        await VoiceAlertService.AddVoiceAlertAsync(ctx.User.Id, channel.Id, ctx.Guild.Id, repeat);
 
         var response = new DiscordInteractionResponseBuilder()
-            .WithContent($"Added <#{channel.Id}> to your voicealerts")
+            .WithContent($"Added <#{channel.Id}> to your VoiceAlerts")
             .AsEphemeral();
 
         await ctx.CreateResponseAsync(response);
     }
 
-    [SlashCommand("remove", "remove a voicealert")]
-    public async Task RemoveAlert(InteractionContext ctx,
-        [Option("channel", "channel which will not be monitored anymore")] DiscordChannel channel)
+    [SlashCommand("delete", "delete a voicealerts")]
+    public async Task RemoveAlert
+    (
+        InteractionContext ctx,
+        [Option("channel", "channel which will not be monitored anymore", true),
+         Autocomplete(typeof(VoiceAlertAutoCompletion))]
+        string channel
+    )
     {
-        await VoiceAlertService.RemoveVoiceAlert(ctx.User.Id, channel.Id, ctx.Guild.Id);
+        var isId = ulong.TryParse(channel, out var id);
+        if (!isId)
+        {
+            var responseIsNotVoice = new DiscordInteractionResponseBuilder()
+                .WithContent($"\"{channel}\" is not a valid id")
+                .AsEphemeral();
+
+            await ctx.CreateResponseAsync(responseIsNotVoice);
+            return;
+        }
+
+        var currentAlerts = await VoiceAlertService.GetVoiceAlerts(ctx.User.Id);
+        if (!currentAlerts.Any(x => x.ChannelId == id))
+        {
+            var responseIsActive = new DiscordInteractionResponseBuilder()
+                .WithContent($"<#{id}> is not in your VoiceAlerts")
+                .AsEphemeral();
+
+            await ctx.CreateResponseAsync(responseIsActive);
+            return;
+        }
+
+        await VoiceAlertService.RemoveVoiceAlert(ctx.User.Id, id, ctx.Guild.Id);
+
+        var response = new DiscordInteractionResponseBuilder()
+            .WithContent($"Removed <#{channel}> from your VoiceAlerts")
+            .AsEphemeral();
+
+        await ctx.CreateResponseAsync(response);
     }
 
     [SlashCommand("list", "list all voicealerts")]
@@ -61,9 +114,14 @@ public class VoiceAlerts : MadsBaseApplicationCommand
         var builder = new StringBuilder();
         foreach (var alert in alerts)
         {
-            builder.AppendLine($"<#{alert.ChannelId}>");
+            builder.AppendLine($"<#{alert.ChannelId}> {(alert.IsRepeatable ? "repeated" : "")}");
         }
 
-        await ctx.RespondAsync(builder.ToString());
+        if (builder.Length == 0)
+        {
+            builder.AppendLine("You have no VoiceAlerts");
+        }
+
+        await ctx.CreateResponseAsync(builder.ToString(), true);
     }
 }
