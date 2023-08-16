@@ -67,7 +67,7 @@ public class VoiceAlertService : IHostedService
         
         foreach (var alert in alerts)
         {
-            //if (e.User.Id == alert.UserId) continue;
+            if (e.User.Id == alert.UserId) continue;
             try
             {
                 var member = await e.Guild.GetMemberAsync(alert.UserId);
