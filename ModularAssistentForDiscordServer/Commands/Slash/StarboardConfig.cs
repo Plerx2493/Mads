@@ -20,17 +20,22 @@ using DSharpPlus.SlashCommands.Attributes;
 using MADS.Entities;
 using MADS.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.Commands.Slash;
 
 public class StarboardConfig : MadsBaseApplicationCommand
 {
-    public IDbContextFactory<MadsContext> ContextFactory { get; set; }
-
-    private static readonly Regex EmoteRegex = new Regex(@"^<(?<animated>a)?:(?<name>[a-zA-Z0-9_]+?):(?<id>\d+?)>$",
+    private static readonly Regex EmoteRegex = new(@"^<(?<animated>a)?:(?<name>[a-zA-Z0-9_]+?):(?<id>\d+?)>$",
         RegexOptions.ECMAScript | RegexOptions.Compiled);
 
+    private IDbContextFactory<MadsContext> _contextFactory;
 
+    public StarboardConfig(IDbContextFactory<MadsContext> contextFactory)
+    {
+        _contextFactory = contextFactory;
+    }
+    
     [SlashCommand("Starboard", "Configure Starboard"),
      SlashRequirePermissions(Permissions.ManageGuild),
      SlashRequireGuild]
@@ -47,7 +52,7 @@ public class StarboardConfig : MadsBaseApplicationCommand
     {
         await ctx.DeferAsync(true);
 
-        var db = await ContextFactory.CreateDbContextAsync();
+        var db = await _contextFactory.CreateDbContextAsync();
 
         var guildConfig = db.Configs.First(x => x.DiscordGuildId == ctx.Guild.Id);
 
@@ -55,9 +60,7 @@ public class StarboardConfig : MadsBaseApplicationCommand
         {
             var match = EmoteRegex.Match(emojiString);
             if (match.Success)
-            {
                 DiscordEmoji.TryFromGuildEmote(ctx.Client, ulong.Parse(match.Groups["id"].Value), out emoji);
-            }
         }
 
         guildConfig.StarboardChannelId = channel.Id;

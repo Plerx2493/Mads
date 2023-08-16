@@ -18,6 +18,8 @@ using MADS.Entities;
 using MADS.JsonModel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace MADS.Extensions;
 
@@ -26,10 +28,31 @@ public static class ExtensionMethods
     public static IServiceCollection AddDbFactoryDebugOrRelease(this IServiceCollection serviceCollection,
         ConfigJson config)
     {
+        var logger = new LoggerFactory().AddSerilog(new LoggerConfiguration()
+            .WriteTo.Console()
+            .MinimumLevel.Warning()
+            .CreateLogger());
+
         serviceCollection.AddDbContextFactory<MadsContext>(
-            options => options.UseMySql(config.ConnectionString, ServerVersion.AutoDetect(config.ConnectionString))
+            options =>
+            {
+                options.UseMySql(config.ConnectionString, ServerVersion.AutoDetect(config.ConnectionString));
+                options.UseLoggerFactory(logger);
+            }
         );
 
+        return serviceCollection;
+    }
+
+    public static IServiceCollection AddDiscordRestClient(this IServiceCollection serviceCollection,
+        ConfigJson config)
+    {
+        var discordRestConfig = new DiscordConfiguration
+        {
+            Token = config.Token
+        };
+
+        serviceCollection.AddSingleton(new DiscordRestClient(discordRestConfig));
         return serviceCollection;
     }
 
@@ -57,7 +80,7 @@ public static class ExtensionMethods
         var userMention = new UserMention(user);
         var embed = new DiscordEmbedBuilder();
 
-        embed.WithTitle($"{reminder.GetTimestamp()} you wanted to be reminded:")
+        embed.WithTitle($"{reminder.GetCreationTimestamp()} you wanted to be reminded:")
             .WithDescription(reminder.ReminderText)
             .WithFooter("Id: " + reminder.Id)
             .WithColor(DiscordColor.Green);
@@ -68,12 +91,12 @@ public static class ExtensionMethods
         return message;
     }
 
-    public static string GetTimestamp(this ReminderDbEntity reminder)
+    public static string GetExecutionTimestamp(this ReminderDbEntity reminder)
     {
         var timespan = reminder.ExecutionTime - DateTime.UtcNow;
         return Formatter.Timestamp(timespan);
     }
-
+    
     internal static CachedMessage ToCached(this DiscordMessage message)
     {
         return new CachedMessage()
@@ -84,5 +107,11 @@ public static class ExtensionMethods
             Guild = (ulong) message.Channel.GuildId,
             CreatedAt = message.Timestamp
         };
+    }
+    
+    public static string GetCreationTimestamp(this ReminderDbEntity reminder)
+    {
+        var timespan = reminder.CreationTime - DateTime.UtcNow;
+        return Formatter.Timestamp(timespan);
     }
 }

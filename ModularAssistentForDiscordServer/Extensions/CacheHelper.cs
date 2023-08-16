@@ -12,21 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using DSharpPlus.SlashCommands;
-using MADS.Extensions;
+namespace MADS.Extensions;
 
-namespace MADS.Commands.Slash;
-
-public class NoBtches : MadsBaseApplicationCommand
+public static class CacheHelper
 {
-    [SlashCommand("nobtches", "nobtches api")]
-    public async Task PingCommand
-    (
-        InteractionContext ctx,
-        [Option("imageText", "Text on image")] string imageText
-    )
+    public static string GetMessageSnipeKey(ulong channelId)
     {
-        imageText = imageText.Replace(" ", "%20").Replace("?", "%3F");
-        await ctx.CreateResponseAsync("https://api.no-bitch.es/" + imageText);
+        return $"snipedMessage_{channelId}";
+    }
+
+    public static string GetMessageEditSnipeKey(ulong channelId)
+    {
+        return $"snipedMessage_edit_{channelId}";
     }
 }

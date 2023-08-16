@@ -12,21 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using DSharpPlus.SlashCommands;
-using MADS.Extensions;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace MADS.Commands.Slash;
+namespace MADS.Entities;
 
-public class NoBtches : MadsBaseApplicationCommand
+public class VoiceAlert
 {
-    [SlashCommand("nobtches", "nobtches api")]
-    public async Task PingCommand
-    (
-        InteractionContext ctx,
-        [Option("imageText", "Text on image")] string imageText
-    )
-    {
-        imageText = imageText.Replace(" ", "%20").Replace("?", "%3F");
-        await ctx.CreateResponseAsync("https://api.no-bitch.es/" + imageText);
-    }
+    [Column("id"), Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public ulong AlertId { get; set; }
+    
+    [Column("channel_id")]
+    public ulong ChannelId { get; set; }
+    
+    [Column("guild_id")]
+    public ulong GuildId { get; set; }
+
+    [Column("user_id")]
+    public ulong UserId { get; set; }
+    
+    [Column("is_repeatable")]
+    public bool IsRepeatable { get; set; }
+    
+    public UserDbEntity User { get; set; }
 }

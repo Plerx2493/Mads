@@ -31,110 +31,59 @@ public static class ActionDiscordButton
         switch (action)
         {
             case ActionDiscordButtonEnum.BanUser:
-                if (args.Length != 1)
-                {
-                    throw new ArgumentException("Only one id possible");
-                }
-                if (args[0].GetType() != typeof(ulong))
-                {
-                    throw new ArgumentException("Please provide a id (ulong)");
-                }
-                actionCode = (int)ActionDiscordButtonEnum.BanUser;
+                if (args.Length != 1) throw new ArgumentException("Only one id possible");
+                if (args[0].GetType() != typeof(ulong)) throw new ArgumentException("Please provide a id (ulong)");
+                actionCode = (int) ActionDiscordButtonEnum.BanUser;
                 customId += actionCode + ":" + args[0];
                 break;
 
             case ActionDiscordButtonEnum.KickUser:
-                if (args.Length != 1)
-                {
-                    throw new ArgumentException("Only one id possible");
-                }
-                if (args[0].GetType() != typeof(ulong))
-                {
-                    throw new ArgumentException("Please provide a id (ulong)");
-                }
-                actionCode = (int)ActionDiscordButtonEnum.BanUser;
+                if (args.Length != 1) throw new ArgumentException("Only one id possible");
+                if (args[0].GetType() != typeof(ulong)) throw new ArgumentException("Please provide a id (ulong)");
+                actionCode = (int) ActionDiscordButtonEnum.BanUser;
                 customId += actionCode + ":" + args[0];
                 break;
 
             case ActionDiscordButtonEnum.GetIdUser:
-                if (args.Length != 1)
-                {
-                    throw new ArgumentException("Only one id possible");
-                }
-                if (args[0].GetType() != typeof(ulong))
-                {
-                    throw new ArgumentException("Please provide a id (ulong)");
-                }
-                actionCode = (int)ActionDiscordButtonEnum.GetIdUser;
+                if (args.Length != 1) throw new ArgumentException("Only one id possible");
+                if (args[0].GetType() != typeof(ulong)) throw new ArgumentException("Please provide a id (ulong)");
+                actionCode = (int) ActionDiscordButtonEnum.GetIdUser;
                 customId += actionCode + ":" + args[0];
                 break;
 
             case ActionDiscordButtonEnum.GetIdGuild:
-                if (args.Length != 1)
-                {
-                    throw new ArgumentException("Only one id possible");
-                }
-                if (args[0].GetType() != typeof(ulong))
-                {
-                    throw new ArgumentException("Please provide a id (ulong)");
-                }
-                actionCode = (int)ActionDiscordButtonEnum.GetIdGuild;
+                if (args.Length != 1) throw new ArgumentException("Only one id possible");
+                if (args[0].GetType() != typeof(ulong)) throw new ArgumentException("Please provide a id (ulong)");
+                actionCode = (int) ActionDiscordButtonEnum.GetIdGuild;
                 customId += actionCode + ":" + args[0];
                 break;
 
             case ActionDiscordButtonEnum.GetIdChannel:
-                if (args.Length != 1)
-                {
-                    throw new ArgumentException("Only one id possible");
-                }
-                if (args[0].GetType() != typeof(ulong))
-                {
-                    throw new ArgumentException("Please provide a id (ulong)");
-                }
-                actionCode = (int)ActionDiscordButtonEnum.GetIdChannel;
+                if (args.Length != 1) throw new ArgumentException("Only one id possible");
+                if (args[0].GetType() != typeof(ulong)) throw new ArgumentException("Please provide a id (ulong)");
+                actionCode = (int) ActionDiscordButtonEnum.GetIdChannel;
                 customId += actionCode + ":" + args[0];
                 break;
 
             case ActionDiscordButtonEnum.MoveVoiceChannel:
-                if (args.Length != 2)
-                {
-                    throw new ArgumentException("Only 2 ids possible");
-                }
-                if (args[0].GetType() != typeof(ulong))
-                {
-                    throw new ArgumentException("Please provide 2 ids (ulong)");
-                }
-                if (args[1].GetType() != typeof(ulong))
-                {
-                    throw new ArgumentException("Please provide 2 ids (ulong)");
-                }
-                actionCode = (int)ActionDiscordButtonEnum.MoveVoiceChannel;
+                if (args.Length != 2) throw new ArgumentException("Only 2 ids possible");
+                if (args[0].GetType() != typeof(ulong)) throw new ArgumentException("Please provide 2 ids (ulong)");
+                if (args[1].GetType() != typeof(ulong)) throw new ArgumentException("Please provide 2 ids (ulong)");
+                actionCode = (int) ActionDiscordButtonEnum.MoveVoiceChannel;
                 customId += actionCode + ":" + args[0] + ":" + args[1];
                 break;
 
             case ActionDiscordButtonEnum.DeleteOneUserOnly:
-                if (args.Length != 1)
-                {
-                    throw new ArgumentException("Only 1 id possible");
-                }
-                if (args[0].GetType() != typeof(ulong))
-                {
-                    throw new ArgumentException("Please provide 1 id (ulong)");
-                }
-                actionCode = (int)ActionDiscordButtonEnum.DeleteOneUserOnly;
+                if (args.Length != 1) throw new ArgumentException("Only 1 id possible");
+                if (args[0].GetType() != typeof(ulong)) throw new ArgumentException("Please provide 1 id (ulong)");
+                actionCode = (int) ActionDiscordButtonEnum.DeleteOneUserOnly;
                 customId += actionCode + ":" + args[0];
                 break;
 
             case ActionDiscordButtonEnum.AnswerDmChannel:
-                if (args.Length != 1)  
-                {
-                    throw new ArgumentException("Only 1 id possible");
-                }
-                if (args[0].GetType() != typeof(ulong))
-                {
-                    throw new ArgumentException("Please provide 1 id (ulong)");
-                }
-                actionCode = (int)ActionDiscordButtonEnum.AnswerDmChannel;
+                if (args.Length != 1) throw new ArgumentException("Only 1 id possible");
+                if (args[0].GetType() != typeof(ulong)) throw new ArgumentException("Please provide 1 id (ulong)");
+                actionCode = (int) ActionDiscordButtonEnum.AnswerDmChannel;
                 customId += actionCode + ":" + args[0];
                 break;
 

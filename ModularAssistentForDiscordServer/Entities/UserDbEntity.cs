@@ -29,6 +29,8 @@ public class UserDbEntity
     public int Discriminator { get; set; }
 
     public List<IncidentDbEntity> Incidents { get; set; }
-    
+
     public List<ReminderDbEntity> Reminders { get; set; }
+    
+    public List<VoiceAlert> VoiceAlerts { get; set; }
 }

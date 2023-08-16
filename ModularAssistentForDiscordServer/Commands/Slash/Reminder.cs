@@ -21,13 +21,19 @@ using MADS.Commands.AutoCompletion;
 using MADS.Entities;
 using MADS.Extensions;
 using MADS.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.Commands.Slash;
 
 [SlashCommandGroup("reminder", "mangage reminders")]
 public class Reminder : MadsBaseApplicationCommand
 {
-    public ReminderService ReminderService;
+    private ReminderService _reminderService;
+    
+    public Reminder(ReminderService reminderService)
+    {
+        _reminderService = reminderService;
+    }
 
     [SlashCommand("add", "add new reminder")]
     public async Task AddReminder
@@ -35,21 +41,16 @@ public class Reminder : MadsBaseApplicationCommand
         InteractionContext ctx,
         [Option("timespan", "when the reminder should trigger")]
         TimeSpan? timeSpan,
-        [Option("text", "text")] string text
+        [Option("text", "text")] string text,
+        [Option("private", "Sets if the reminder should be executed in your DMs")]
+        bool isPrivate = false
     )
     {
         await ctx.DeferAsync(true);
-        
+
         if (timeSpan is null)
         {
             await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Invalid timespan (5s, 3m, 7h, 2d)"));
-            return;
-        }
-
-        if (timeSpan < TimeSpan.FromSeconds(30))
-        {
-            await ctx.EditResponseAsync(
-                new DiscordWebhookBuilder().WithContent("Can not create reminder with a timespan under 30 seconds"));
             return;
         }
 
@@ -60,10 +61,10 @@ public class Reminder : MadsBaseApplicationCommand
             CreationTime = DateTime.UtcNow,
             ExecutionTime = DateTime.UtcNow + timeSpan.Value,
             ReminderText = text,
-            IsPrivate = false
+            IsPrivate = isPrivate
         };
 
-        ReminderService.AddReminder(newReminder);
+        await _reminderService.AddReminder(newReminder);
 
         await ctx.EditResponseAsync(
             new DiscordWebhookBuilder().WithContent(
@@ -78,9 +79,10 @@ public class Reminder : MadsBaseApplicationCommand
     {
         await ctx.DeferAsync(true);
 
-        var reminders = await ReminderService.GetByUserAsync(ctx.User.Id);
+        var reminders = await _reminderService.GetByUserAsync(ctx.User.Id);
         var remindersTextList = reminders
-            .Select(x => $"```-Id: {x.Id}\n-Remindertext:\n{x.ReminderText}\n-ExecutionTime: {(x.ExecutionTime).Humanize()}```");
+            .Select(x =>
+                $"```-Id: {x.Id}\n-Remindertext:\n {x.ReminderText}\n-ExecutionTime: {x.ExecutionTime.Humanize()}\n ({x.ExecutionTime.ToUniversalTime()} UTC)```");
 
         var reminderText = new StringBuilder().AppendJoin("\n", remindersTextList);
 
@@ -95,13 +97,13 @@ public class Reminder : MadsBaseApplicationCommand
     public async Task DeleteById
     (
         InteractionContext ctx,
-        [Autocomplete(typeof(ReminderAutoCompletion))]
-        [Option("id", "id of the given reminder which should be deleted", true)]
+        [Autocomplete(typeof(ReminderAutoCompletion)),
+         Option("id", "id of the given reminder which should be deleted", true)]
         long id
     )
     {
         await ctx.DeferAsync(true);
-        var reminder = await ReminderService.TryGetByIdAsync((ulong) id);
+        var reminder = await _reminderService.TryGetByIdAsync((ulong) id);
 
         if (reminder is null)
         {
@@ -109,7 +111,7 @@ public class Reminder : MadsBaseApplicationCommand
             return;
         }
 
-        var success = await ReminderService.TryDeleteById((ulong) id);
+        var success = await _reminderService.TryDeleteById((ulong) id);
 
         if (!success)
         {
@@ -121,7 +123,7 @@ public class Reminder : MadsBaseApplicationCommand
         var embed = new DiscordEmbedBuilder()
             .WithTitle("Reminder removed")
             .WithDescription(
-                $"```-Id: {reminder.Id}\n-Remindertext:\n{reminder.ReminderText}```\nWould have fired {reminder.GetTimestamp()}");
+                $"```-Id: {reminder.Id}\n-Remindertext:\n{reminder.ReminderText}```\nWould have fired {reminder.GetExecutionTimestamp()}");
 
         await ctx.EditResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
     }

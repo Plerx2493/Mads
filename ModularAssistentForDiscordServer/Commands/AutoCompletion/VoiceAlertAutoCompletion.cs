@@ -15,27 +15,33 @@
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using MADS.Entities;
+using MADS.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.Commands.AutoCompletion;
 
-public class ReminderAutoCompletion : IAutocompleteProvider
+public class VoiceAlertAutoCompletion : IAutocompleteProvider
 {
-    private IDbContextFactory<MadsContext> _factory;
+    private VoiceAlertService _voiceAlertService;
     
-    public ReminderAutoCompletion(IServiceProvider services)
+    public VoiceAlertAutoCompletion(IServiceProvider services)
     {
-        _factory = services.GetRequiredService<IDbContextFactory<MadsContext>>();
+        _voiceAlertService = services.GetRequiredService<VoiceAlertService>();
     }
     
     public async Task<IEnumerable<DiscordAutoCompleteChoice>> Provider(AutocompleteContext ctx)
     {
-        await using var db = await _factory.CreateDbContextAsync();
-        var choices = db.Reminders
-            .Where(x => x.UserId == ctx.User.Id)
-            .Select(x => new DiscordAutoCompleteChoice(x.Id.ToString(), x.Id.ToString()))
-            .ToList();
-        return choices;
+        var choices = await _voiceAlertService.GetVoiceAlerts(ctx.User.Id);
+
+        var result = new List<DiscordAutoCompleteChoice>();
+        
+        foreach (var choice in choices)
+        {
+            var chn = ctx.Guild.GetChannel(choice.ChannelId);
+            result.Add(new DiscordAutoCompleteChoice(chn.Name, choice.ChannelId.ToString()));
+        }
+        
+        return result;
     }
 }

@@ -14,13 +14,15 @@
 
 using System.Diagnostics;
 using DSharpPlus.CommandsNext;
+using MADS.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.Extensions;
 
 public class MadsBaseCommand : BaseCommandModule
 {
-    private readonly Stopwatch         _executionTimer = new();
-    public           ModularDiscordBot CommandService { get; set; }
+    private readonly Stopwatch _executionTimer = new();
+    public DiscordClientService CommandService => ModularDiscordBot.Services.GetRequiredService<DiscordClientService>();
 
     public override Task BeforeExecutionAsync(CommandContext ctx)
     {
@@ -38,13 +40,13 @@ public class MadsBaseCommand : BaseCommandModule
 
         return Task.FromResult(true);
     }
-    
+
     public async Task IntendedWait(int milliseconds)
     {
         _executionTimer.Stop();
 
         await Task.Delay(milliseconds);
-        
+
         _executionTimer.Start();
     }
 }

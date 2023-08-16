@@ -17,7 +17,7 @@ using Newtonsoft.Json;
 
 namespace MADS.JsonModel;
 
-public struct ConfigJson
+public class ConfigJson
 {
     [JsonProperty("token")]
     public string Token { get; set; }
@@ -30,6 +30,9 @@ public struct ConfigJson
 
     [JsonProperty("databaseConnectionString")]
     public string ConnectionString { get; set; }
+
+    [JsonProperty("databaseConnectionStringQuartz")]
+    public string ConnectionStringQuartz { get; set; }
 
     [JsonProperty("discordWebhook")]
     public string DiscordWebhook { get; set; }

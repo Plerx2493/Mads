@@ -18,14 +18,20 @@ using DSharpPlus.SlashCommands.Attributes;
 using MADS.Entities;
 using MADS.Extensions;
 using MADS.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.Commands.Slash;
 
 [SlashCommandGroup("Quotes", "Commands related to adding and retrieving quotes"), SlashRequireGuild]
 public class Quotes : MadsBaseApplicationCommand
 {
-    public QuotesService QuotesService { get; set; }
+    private QuotesService _quotesService;
 
+    public Quotes(QuotesService quotesService)
+    {
+        _quotesService = quotesService;
+    }
+    
     [SlashCommand("add", "Add a quote form a user")]
     public async Task AddQuoteUser
     (
@@ -37,7 +43,7 @@ public class Quotes : MadsBaseApplicationCommand
         await ctx.DeferAsync(true);
 
 
-        var newQuote = new QuoteDbEntity()
+        var newQuote = new QuoteDbEntity
         {
             Content = content,
             CreatedAt = DateTime.Now,
@@ -47,7 +53,7 @@ public class Quotes : MadsBaseApplicationCommand
         };
 
 
-        QuotesService.AddQuote(newQuote);
+        _quotesService.AddQuote(newQuote);
 
         var embed = await newQuote.GetEmbedAsync(ctx.Client);
 
@@ -62,7 +68,7 @@ public class Quotes : MadsBaseApplicationCommand
     {
         await ctx.DeferAsync(true);
 
-        var quote = await QuotesService.GetRndGuildAsync(ctx.Guild.Id);
+        var quote = await _quotesService.GetRndGuildAsync(ctx.Guild.Id);
 
         var embed = await quote.GetEmbedAsync(ctx.Client);
 

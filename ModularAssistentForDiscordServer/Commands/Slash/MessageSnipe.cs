@@ -18,57 +18,66 @@ using DSharpPlus.SlashCommands;
 using MADS.CustomComponents;
 using MADS.Extensions;
 using MADS.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.Commands.Slash;
 
 public class MessageSnipe : MadsBaseApplicationCommand
 {
-    public VolatileMemoryService MemoryService;
+    private MessageSnipeService _messageSnipeService;
 
-    [SlashCommand("snipe", "Snipes the last deleted message.")]
-    public Task SnipeAsync(InteractionContext ctx)
+    public MessageSnipe(MessageSnipeService messageSnipeService)
     {
-        return DoSnipeAsync(ctx, false);
+        _messageSnipeService = messageSnipeService;
+    }
+    
+    [SlashCommand("snipe", "Snipes the last deleted message.")]
+    public async Task SnipeAsync(InteractionContext ctx)
+    {
+        await DoSnipeAsync(ctx, false);
     }
 
     [SlashCommand("snipeedit", "Snipes the last edited message.")]
-    public Task SnipeEditAsync(InteractionContext ctx)
+    public async Task SnipeEditAsync(InteractionContext ctx)
     {
-        return DoSnipeAsync(ctx, true);
+        await DoSnipeAsync(ctx, true);
     }
 
     private async Task DoSnipeAsync(InteractionContext ctx, bool edit)
     {
+        await ctx.DeferAsync(true);
         DiscordMessage message;
-
-        var result = edit switch
+        bool result;
+        
+        if (!edit)
         {
-            true => MemoryService.MessageSnipe.TryGetEditedMessage(ctx.Channel.Id, out message),
-            false => MemoryService.MessageSnipe.TryGetMessage(ctx.Channel.Id, out message)
-        };
+            result = _messageSnipeService.TryGetMessage(ctx.Channel.Id, out message);
+        }
+        else
+        {
+            result = _messageSnipeService.TryGetEditedMessage(ctx.Channel.Id, out message);
+        }
 
         if (!result)
         {
-            await ctx.CreateResponseAsync(
-                "⚠️ No message to snipe! Either nothing was deleted, or the message has expired (12 hours)!", true);
+            await ctx.EditResponseAsync(
+                new DiscordWebhookBuilder().WithContent("⚠️ No message to snipe! Either nothing was deleted, or the message has expired (12 hours)!"));
             return;
         }
 
         var content = message.Content;
-        if (content.Length > 500) content = content.Substring(0, 500) + "...";
+        if (content.Length > 500) content = content.Substring(0, 497) + "...";
+        var member = await ctx.Guild.GetMemberAsync(message.Author.Id);
 
         var embed = new DiscordEmbedBuilder()
-                    .WithAuthor(
-                        $"{message.Author.Username}#{message.Author.Discriminator}" + (edit ? " (Edited)" : ""),
-                        iconUrl: message.Author.GetAvatarUrl(ImageFormat.Png))
-                    .WithFooter(
-                        $"{(edit ? "Edit" : "Deletion")} sniped by {ctx.User.Username}#{ctx.User.Discriminator}",
-                        ctx.User.AvatarUrl);
+            .WithAuthor(
+                $"{member.DisplayName}" + (edit ? " (Edited)" : ""),
+                iconUrl: message.Author.GetAvatarUrl(ImageFormat.Png))
+            .WithFooter(
+                $"{(edit ? "Edit" : "Deletion")} sniped by {ctx.Member.DisplayName}",
+                ctx.User.AvatarUrl);
 
-        if (!string.IsNullOrEmpty(content))
-        {
-            embed.WithDescription(content);
-        }
+        if (!string.IsNullOrEmpty(content)) embed.WithDescription(content);
 
         embed.WithTimestamp(message.Id);
 
@@ -80,17 +89,13 @@ public class MessageSnipe : MadsBaseApplicationCommand
         {
             var attachment = attachments.ElementAt(i);
             if (i == 0)
-            {
                 embed.WithThumbnail(attachment.Url);
-            }
             else
-            {
                 embeds.Add(new DiscordEmbedBuilder()
-                           .WithTitle("Additional Image").WithThumbnail(attachment.Url));
-            }
+                    .WithTitle("Additional Image").WithThumbnail(attachment.Url));
         }
 
-        var response = new DiscordInteractionResponseBuilder()
+        var response = new DiscordWebhookBuilder()
             .AddEmbeds(embeds.Prepend(embed).Select(x => x.Build()));
 
         var btn = new DiscordButtonComponent(ButtonStyle.Danger, "placeholder", "Delete (Author only)",
@@ -98,13 +103,13 @@ public class MessageSnipe : MadsBaseApplicationCommand
         btn = btn.AsActionButton(ActionDiscordButtonEnum.DeleteOneUserOnly, message.Author.Id);
 
         response.AddComponents(btn);
-        
+
         if (edit)
         {
             var btn1 = new DiscordLinkButtonComponent(message.JumpLink.ToString(), "Go to message");
             response.AddComponents(btn1);
         }
 
-        await ctx.CreateResponseAsync(response);
+        await ctx.EditResponseAsync(response);
     }
 }

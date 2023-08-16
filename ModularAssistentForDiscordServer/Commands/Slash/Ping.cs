@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using DSharpPlus.SlashCommands;
-using DSharpPlus.SlashCommands.Attributes;
 using Humanizer;
 using MADS.Extensions;
 
@@ -35,9 +34,5 @@ public class Ping : MadsBaseApplicationCommand
             .AddField("Websocket ping", $"{ctx.Client.Ping} ms");
 
         await ctx.CreateResponseAsync(discordEmbedBuilder, true);
-
-        await IntendedWait(10_000);
-        
-        await ctx.DeleteResponseAsync();
     }
 }

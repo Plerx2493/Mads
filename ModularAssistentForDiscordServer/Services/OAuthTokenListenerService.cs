@@ -37,8 +37,8 @@ public class TokenListener : IDisposable, IHostedService
 
     private static HttpListener _listener;
     private static string _url;
+    private readonly DiscordClient _client;
     private Thread _listenTask;
-    private DiscordClient _client;
 
     public TokenListener(string port, DiscordClient client, string path = "/")
     {
@@ -53,6 +53,29 @@ public class TokenListener : IDisposable, IHostedService
         _listener.Abort();
     }
 
+    public Task StartAsync(CancellationToken cancellationToken)
+    {
+        _listener.Start();
+        _client.Logger.LogInformation("Listening for connections on {Url}", _url);
+
+        _listenTask = new Thread(() => _ = HandleIncomingConnections(cancellationToken))
+        {
+            IsBackground = true
+        };
+        _listenTask.Start();
+
+
+        return Task.CompletedTask;
+    }
+
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        _listener.Abort();
+        _listenTask.Interrupt();
+        _client.Logger.LogInformation("Tokenlistener stopped");
+        return Task.CompletedTask;
+    }
+
     private static async Task HandleIncomingConnections(CancellationToken token)
     {
         while (!token.IsCancellationRequested)
@@ -65,7 +88,7 @@ public class TokenListener : IDisposable, IHostedService
             var resp = ctx.Response;
 
             //TODO add token saving
-            //var userToken = req.QueryString.Get("code");
+            var userToken = req.QueryString.Get("code");
 
             // Write the response info
             var data = Encoding.UTF8.GetBytes(PageData);
@@ -79,29 +102,5 @@ public class TokenListener : IDisposable, IHostedService
 
             resp.Close();
         }
-    }
-
-    public Task StartAsync(CancellationToken cancellationToken)
-    {
-        _listener.Start();
-        _client.Logger.LogInformation("Listening for connections on {url}", _url);
-        
-        _listenTask = new Thread(async () => await HandleIncomingConnections(cancellationToken)) 
-        {
-            
-            IsBackground = true
-        };
-        _listenTask.Start();
-
-        
-        return Task.CompletedTask;
-    }
-
-    public Task StopAsync(CancellationToken cancellationToken)
-    {
-        _listener.Abort();
-        _listenTask.Interrupt();
-        _client.Logger.LogInformation("Tokenlistener stopped");
-        return Task.CompletedTask;
     }
 }
