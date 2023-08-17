@@ -50,14 +50,7 @@ public class VoiceAlertService : IHostedService
     public async Task HandleEvent(DiscordClient client, VoiceStateUpdateEventArgs e)
     {
         if (e.After.Channel is null) return;
-
-        if (e.Before is not null)
-        {
-            if (e.Before.Channel is not null)
-            {
-                if (e.Before.Channel?.Id == e.After.Channel.Id) return;
-            }
-        }
+        if (e.Before?.Channel?.Id == e.After.Channel.Id) return;
         
         await using var context = _contextFactory.CreateDbContext();
         var alerts = await context.VoiceAlerts
