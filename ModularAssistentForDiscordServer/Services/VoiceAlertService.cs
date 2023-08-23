@@ -70,6 +70,11 @@ public class VoiceAlertService : IHostedService
         {
             if (e.User.Id == alert.UserId) continue;
             if (e.Channel.Users.Any(x => x.Id == alert.UserId)) continue;
+            if (alert.MinTimeBetweenAlerts is null)
+            {
+                if (alert.LastAlert is not null && alert.LastAlert + alert.MinTimeBetweenAlerts > DateTimeOffset.UtcNow) continue;
+            };
+            
             try
             {
                 var member = await e.Guild.GetMemberAsync(alert.UserId);
@@ -88,7 +93,7 @@ public class VoiceAlertService : IHostedService
         await context.SaveChangesAsync();
     }
     
-    public async Task AddVoiceAlertAsync(ulong userId, ulong channelId, ulong guildId, bool isRepeatable = false)
+    public async Task AddVoiceAlertAsync(ulong userId, ulong channelId, ulong guildId, bool isRepeatable = false, TimeSpan minTimeBetweenAlerts = new())
     {
         await using var context = _contextFactory.CreateDbContext();
         var user = await context.Users
@@ -111,6 +116,12 @@ public class VoiceAlertService : IHostedService
             UserId = userId,
             IsRepeatable = isRepeatable
         };
+        
+        if (minTimeBetweenAlerts != TimeSpan.Zero)
+        {
+            alert.MinTimeBetweenAlerts = minTimeBetweenAlerts;
+        }
+        
         await context.VoiceAlerts.AddAsync(alert);
         await context.SaveChangesAsync();
     }

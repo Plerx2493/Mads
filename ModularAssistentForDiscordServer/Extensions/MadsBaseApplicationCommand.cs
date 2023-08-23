@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System.Diagnostics;
+using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using MADS.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +23,7 @@ namespace MADS.Extensions;
 [SlashModuleLifespan(SlashModuleLifespan.Transient)]
 public class MadsBaseApplicationCommand : ApplicationCommandModule
 {
+    private InteractionContext _ctx;
     private readonly Stopwatch _executionTimer = new();
     public DiscordClientService CommandService => ModularDiscordBot.Services.GetRequiredService<DiscordClientService>();
 
@@ -65,5 +67,59 @@ public class MadsBaseApplicationCommand : ApplicationCommandModule
         await Task.Delay(milliseconds);
 
         _executionTimer.Start();
+    }
+    
+    protected async Task CreateResponse_Error(string message, bool isEphemeral = false)
+    {
+        var embed = new DiscordEmbedBuilder()
+            .WithTitle("Error")
+            .WithDescription(message)
+            .WithColor(DiscordColor.Red);
+        
+        var response = new DiscordInteractionResponseBuilder()
+            .AddEmbed(embed)
+            .AsEphemeral(isEphemeral);
+
+        await _ctx.CreateResponseAsync(response);
+    }
+    
+    protected async Task CreateResponse_Success(string message, bool isEphemeral = false)
+    {
+        var embed = new DiscordEmbedBuilder()
+            .WithTitle("Success")
+            .WithDescription(message)
+            .WithColor(DiscordColor.Green);
+        
+        var response = new DiscordInteractionResponseBuilder()
+            .AddEmbed(embed)
+            .AsEphemeral(isEphemeral);
+
+        await _ctx.CreateResponseAsync(response);
+    }
+
+    protected async Task EditResponse_Error(string message)
+    {
+        var embed = new DiscordEmbedBuilder()
+            .WithTitle("Error")
+            .WithDescription(message)
+            .WithColor(DiscordColor.Red);
+        
+        var response = new DiscordWebhookBuilder()
+            .AddEmbed(embed);
+
+        await _ctx.EditResponseAsync(response);
+    }
+
+    protected async Task EditResponse_Success(string message)
+    {
+        var embed = new DiscordEmbedBuilder()
+            .WithTitle("Success")
+            .WithDescription(message)
+            .WithColor(DiscordColor.Green);
+
+        var response = new DiscordWebhookBuilder()
+            .AddEmbed(embed);
+
+        await _ctx.EditResponseAsync(response);
     }
 }

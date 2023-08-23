@@ -14,6 +14,7 @@
 
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using DSharpPlus.Entities;
 
 namespace MADS.Entities;
 
@@ -33,6 +34,12 @@ public class VoiceAlert
     
     [Column("is_repeatable")]
     public bool IsRepeatable { get; set; }
+    
+    [Column("last_alert")]
+    public DateTimeOffset? LastAlert { get; set; }
+    
+    [Column("time_between")]
+    public TimeSpan? MinTimeBetweenAlerts { get; set; }
     
     public UserDbEntity User { get; set; }
 }

@@ -39,37 +39,34 @@ public class VoiceAlerts : MadsBaseApplicationCommand
         InteractionContext ctx,
         [Option("channel", "channel which will be monitored")]
         DiscordChannel channel,
-        [Option("repeat", "repeat the alert")] bool repeat = false
+        [Option("minTimeBetween", "time which has to pass between alerts")] 
+        TimeSpan? minTimeBetween,
+        [Option("repeat", "repeat the alert")] 
+        bool repeat = false
     )
     {
         if (channel.Type is not (ChannelType.Voice or ChannelType.Stage))
         {
-            var responseIsNotVoice = new DiscordInteractionResponseBuilder()
-                .WithContent($"<#{channel.Id}> is not a voice channel")
-                .AsEphemeral();
-
-            await ctx.CreateResponseAsync(responseIsNotVoice);
+            await CreateResponse_Error($"<#{channel.Id}> is not a voice channel", true);
+            return;
+        }
+        
+        if (minTimeBetween is null)
+        {
+            await CreateResponse_Error("Invalid timespan (5s, 3m, 7h, 2d) - Use 0s if you want to get a alert everytime (Warning: This could lead to Spam)", true);
             return;
         }
 
         var currentAlerts = await _voiceAlertService.GetVoiceAlerts(ctx.User.Id);
         if (currentAlerts.Any(x => x.ChannelId == channel.Id))
         {
-            var responseIsActive = new DiscordInteractionResponseBuilder()
-                .WithContent($"<#{channel.Id}> is already in your VoiceAlerts")
-                .AsEphemeral();
-
-            await ctx.CreateResponseAsync(responseIsActive);
+            await CreateResponse_Error($"<#{channel.Id}> is already in your VoiceAlerts", true);
             return;
         }
 
-        await _voiceAlertService.AddVoiceAlertAsync(ctx.User.Id, channel.Id, ctx.Guild.Id, repeat);
+        await _voiceAlertService.AddVoiceAlertAsync(ctx.User.Id, channel.Id, ctx.Guild.Id, repeat, minTimeBetween.Value);
 
-        var response = new DiscordInteractionResponseBuilder()
-            .WithContent($"Added <#{channel.Id}> to your VoiceAlerts")
-            .AsEphemeral();
-
-        await ctx.CreateResponseAsync(response);
+        await CreateResponse_Success($"Added <#{channel.Id}> to your VoiceAlerts", true);
     }
 
     [SlashCommand("delete", "delete a voicealerts")]
@@ -84,32 +81,20 @@ public class VoiceAlerts : MadsBaseApplicationCommand
         var isId = ulong.TryParse(channel, out var id);
         if (!isId)
         {
-            var responseIsNotVoice = new DiscordInteractionResponseBuilder()
-                .WithContent($"\"{channel}\" is not a valid id")
-                .AsEphemeral();
-
-            await ctx.CreateResponseAsync(responseIsNotVoice);
+            await CreateResponse_Error($"**{channel}** is not a valid id", true);
             return;
         }
 
         var currentAlerts = await _voiceAlertService.GetVoiceAlerts(ctx.User.Id);
         if (!currentAlerts.Any(x => x.ChannelId == id))
         {
-            var responseIsActive = new DiscordInteractionResponseBuilder()
-                .WithContent($"<#{id}> is not in your VoiceAlerts")
-                .AsEphemeral();
-
-            await ctx.CreateResponseAsync(responseIsActive);
+            await CreateResponse_Error($"<#{id}> is not in your VoiceAlerts", true);
             return;
         }
 
         await _voiceAlertService.RemoveVoiceAlert(ctx.User.Id, id, ctx.Guild.Id);
 
-        var response = new DiscordInteractionResponseBuilder()
-            .WithContent($"Removed <#{channel}> from your VoiceAlerts")
-            .AsEphemeral();
-
-        await ctx.CreateResponseAsync(response);
+        await CreateResponse_Success($"Removed <#{channel}> from your VoiceAlerts", true);
     }
 
     [SlashCommand("list", "list all voicealerts")]
