@@ -25,7 +25,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.Commands.Slash;
 
-public class BotStats : MadsBaseApplicationCommand
+public sealed class BotStats : MadsBaseApplicationCommand
 {
     private IDbContextFactory<MadsContext> _contextFactory;
     private DiscordRestClient _discordRestClient;

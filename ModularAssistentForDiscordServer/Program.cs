@@ -28,7 +28,7 @@ namespace MADS;
 
 internal static class MainProgram
 {
-    public static void Main()
+    public async static Task Main()
     {
         Log.Logger = new LoggerConfiguration()
             .WriteTo.Console()
@@ -55,17 +55,14 @@ internal static class MainProgram
         //Create a discordWebhookClient and add the debug webhook from the config.json
         var webhookClient = new DiscordWebhookClient();
         var webhookUrl = new Uri(config.DiscordWebhook);
-        webhookClient.AddWebhookAsync(webhookUrl).GetAwaiter().GetResult();
-
-        //loop while the bot shouldn't be canceled
-        //while (!cancellationSource.IsCancellationRequested)
-        //{
+        await webhookClient.AddWebhookAsync(webhookUrl);
+        
         //Create a new instance of the bot
         ModularDiscordBot modularDiscordBot = new();
         //execute the bot and catch uncaught exceptions
         try
         {
-            modularDiscordBot.RunAsync(cancellationSource.Token).GetAwaiter().GetResult();
+            await modularDiscordBot.RunAsync(cancellationSource.Token);
         }
         catch (Exception e)
         {
@@ -73,15 +70,8 @@ internal static class MainProgram
 
             var _ = LogToWebhookAsync(e);
         }
-
-        try
-        {
-            Task.Delay(10_000, cancellationSource.Token).GetAwaiter().GetResult();
-        }
-        catch (TaskCanceledException)
-        {
-        }
-        //}
+        
+        cancellationSource.Token.WaitHandle.WaitOne();
     }
 
     private static bool ValidateConfig()

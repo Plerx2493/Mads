@@ -23,7 +23,7 @@ using MADS.Extensions;
 
 namespace MADS.Commands.Slash;
 
-public class MoveEmoji : MadsBaseApplicationCommand
+public sealed class MoveEmoji : MadsBaseApplicationCommand
 {
     private const string EmojiRegex = @"<a?:(.+?):(\d+)>";
 
@@ -38,7 +38,7 @@ public class MoveEmoji : MadsBaseApplicationCommand
 
         if (!matches.Any())
         {
-            await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("There are no emojis in your input"));
+            await EditResponse_Error("There are no emojis in your input");
             return;
         }
 
@@ -47,7 +47,10 @@ public class MoveEmoji : MadsBaseApplicationCommand
         var animated = matches[0].Value.StartsWith("<a");
 
         if (!ulong.TryParse(split, out var emojiId))
-            await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("⚠️ Failed to fetch your new emoji."));
+        {
+            await EditResponse_Error("⚠️ Failed to fetch your new emoji.");
+            return;
+        }
 
         List<DiscordGuild> guilds = new();
 
@@ -63,8 +66,7 @@ public class MoveEmoji : MadsBaseApplicationCommand
 
         if (!guilds.Any())
         {
-            await ctx.EditResponseAsync(
-                new DiscordWebhookBuilder().WithContent("There are no guilds where you are able to add emojis"));
+            await EditResponse_Error("There are no guilds where you are able to add emojis");
             return;
         }
 
@@ -104,7 +106,7 @@ public class MoveEmoji : MadsBaseApplicationCommand
             await CopyEmoji(ctx.Client, emojiName, emojiId, animated, guildId);
         }
 
-        await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("End"));
+        await EditResponse_Success("Emoji moved");
     }
 
     private static async Task CopyEmoji(DiscordClient client, string name, ulong id, bool animated, ulong targetGuild)

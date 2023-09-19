@@ -24,7 +24,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace MADS.Commands.Slash;
 
 [SlashCommandGroup("voicealerts", "mangage voicealerts")]
-public class VoiceAlerts : MadsBaseApplicationCommand
+public sealed class VoiceAlerts : MadsBaseApplicationCommand
 {
     private VoiceAlertService _voiceAlertService;
 

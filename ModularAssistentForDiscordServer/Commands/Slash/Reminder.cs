@@ -26,7 +26,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace MADS.Commands.Slash;
 
 [SlashCommandGroup("reminder", "mangage reminders")]
-public class Reminder : MadsBaseApplicationCommand
+public sealed class Reminder : MadsBaseApplicationCommand
 {
     private ReminderService _reminderService;
     
@@ -50,7 +50,7 @@ public class Reminder : MadsBaseApplicationCommand
 
         if (timeSpan is null)
         {
-            await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Invalid timespan (5s, 3m, 7h, 2d)"));
+            await EditResponse_Error("Invalid timespan (5s, 3m, 7h, 2d)");
             return;
         }
 
@@ -66,9 +66,7 @@ public class Reminder : MadsBaseApplicationCommand
 
         await _reminderService.AddReminder(newReminder);
 
-        await ctx.EditResponseAsync(
-            new DiscordWebhookBuilder().WithContent(
-                $"Reminder created. I will remind you in {Formatter.Timestamp(timeSpan.Value)}"));
+        await EditResponse_Success($"Reminder created. I will remind you in {Formatter.Timestamp(timeSpan.Value)}");
     }
 
     [SlashCommand("list", "list your Reminder")]
@@ -107,7 +105,7 @@ public class Reminder : MadsBaseApplicationCommand
 
         if (reminder is null)
         {
-            await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Reminder does not exsists"));
+            await EditResponse_Error("Reminder does not exists");
             return;
         }
 
@@ -115,8 +113,7 @@ public class Reminder : MadsBaseApplicationCommand
 
         if (!success)
         {
-            await ctx.EditResponseAsync(
-                new DiscordWebhookBuilder().WithContent("Something went wrong. Please try again"));
+            await EditResponse_Error("Something went wrong. Please try again");
             return;
         }
 

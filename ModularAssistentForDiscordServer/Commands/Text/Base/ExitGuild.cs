@@ -34,4 +34,11 @@ public class ExitGuild : MadsBaseCommand
         await ctx.Message.DeleteAsync();
         await ctx.Guild.LeaveAsync();
     }
+    
+    [Command("test"), Description("Leave given server"), RequireGuild, Hidden, RequireOwner]
+    public async Task Test(CommandContext ctx)
+    {
+        var usr1 = await ctx.Client.GetUserAsync(262722553380864011);
+        await ctx.RespondAsync(usr1.Username);
+    }
 }

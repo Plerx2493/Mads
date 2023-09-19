@@ -18,10 +18,11 @@ using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.Attributes;
 using MADS.Extensions;
+using Serilog;
 
 namespace MADS.Commands.Slash;
 
-public class RoleSelection : MadsBaseApplicationCommand
+public sealed class RoleSelection : MadsBaseApplicationCommand
 {
     [SlashCommand("RoleSelection", "Use this command in the channel the message should be posted"),
      SlashRequirePermissions(Permissions.ManageRoles),

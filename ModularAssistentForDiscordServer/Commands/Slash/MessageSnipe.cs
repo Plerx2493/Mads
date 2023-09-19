@@ -22,7 +22,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.Commands.Slash;
 
-public class MessageSnipe : MadsBaseApplicationCommand
+public sealed class MessageSnipe : MadsBaseApplicationCommand
 {
     private MessageSnipeService _messageSnipeService;
 
@@ -60,8 +60,7 @@ public class MessageSnipe : MadsBaseApplicationCommand
 
         if (!result)
         {
-            await ctx.EditResponseAsync(
-                new DiscordWebhookBuilder().WithContent("⚠️ No message to snipe! Either nothing was deleted, or the message has expired (12 hours)!"));
+            await EditResponse_Error("⚠️ No message to snipe! Either nothing was deleted, or the message has expired (12 hours)!");
             return;
         }
 

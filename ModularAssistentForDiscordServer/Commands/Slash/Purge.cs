@@ -20,7 +20,7 @@ using MADS.Extensions;
 
 namespace MADS.Commands.Slash;
 
-public class Purge : MadsBaseApplicationCommand
+public sealed class Purge : MadsBaseApplicationCommand
 {
     [SlashCommand("purge", "Purges messages"),
      SlashRequirePermissions(Permissions.ManageMessages),
@@ -32,7 +32,7 @@ public class Purge : MadsBaseApplicationCommand
     {
         if (amount > 100)
         {
-            await ctx.CreateResponseAsync("You cannot purge more than 100 messages at once", true);
+            await CreateResponse_Error("You cannot purge more than 100 messages at once", true);
             return;
         }
 

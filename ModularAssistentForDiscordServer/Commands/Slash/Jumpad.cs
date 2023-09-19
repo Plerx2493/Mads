@@ -21,7 +21,7 @@ using MADS.Extensions;
 namespace MADS.Commands.Slash;
 
 [GuildOnly]
-public class Jumppad : MadsBaseApplicationCommand
+public sealed class Jumppad : MadsBaseApplicationCommand
 {
     [SlashCommand("jumppad", "Create a jumppad button"), SlashCommandPermissions(Permissions.MoveMembers)]
     public async Task Test

@@ -23,7 +23,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace MADS.Commands.Slash;
 
 [SlashCommandGroup("Quotes", "Commands related to adding and retrieving quotes"), SlashRequireGuild]
-public class Quotes : MadsBaseApplicationCommand
+public sealed class Quotes : MadsBaseApplicationCommand
 {
     private QuotesService _quotesService;
 

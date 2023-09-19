@@ -24,7 +24,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.Commands.Slash;
 
-public class StarboardConfig : MadsBaseApplicationCommand
+public sealed class StarboardConfig : MadsBaseApplicationCommand
 {
     private static readonly Regex EmoteRegex = new(@"^<(?<animated>a)?:(?<name>[a-zA-Z0-9_]+?):(?<id>\d+?)>$",
         RegexOptions.ECMAScript | RegexOptions.Compiled);

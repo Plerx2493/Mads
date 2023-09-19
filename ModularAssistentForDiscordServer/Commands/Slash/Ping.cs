@@ -18,7 +18,7 @@ using MADS.Extensions;
 
 namespace MADS.Commands.Slash;
 
-public class Ping : MadsBaseApplicationCommand
+public sealed class Ping : MadsBaseApplicationCommand
 {
     [SlashCommand("ping", "Get the bot's ping")]
     public async Task PingCommand(InteractionContext ctx)

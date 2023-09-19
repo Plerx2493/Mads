@@ -20,7 +20,7 @@ using MADS.Extensions;
 
 namespace MADS.Commands.Slash;
 
-public class About : MadsBaseApplicationCommand
+public sealed class About : MadsBaseApplicationCommand
 {
     [SlashCommand("about", "Infos about the bot")]
     public async Task AboutCommand(InteractionContext ctx)

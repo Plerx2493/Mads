@@ -129,7 +129,7 @@ public class DiscordClientService : IHostedService
         var context = await _dbContextFactory.CreateDbContextAsync();
         if ((await context.Database.GetPendingMigrationsAsync()).Any())
             await context.Database.MigrateAsync();
-
+        
         DiscordActivity act = new("over some Servers", ActivityType.Watching);
 
 

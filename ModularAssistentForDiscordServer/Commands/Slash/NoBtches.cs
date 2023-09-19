@@ -17,7 +17,7 @@ using MADS.Extensions;
 
 namespace MADS.Commands.Slash;
 
-public class NoBtches : MadsBaseApplicationCommand
+public sealed class NoBtches : MadsBaseApplicationCommand
 {
     [SlashCommand("nobtches", "nobtches api")]
     public async Task PingCommand
