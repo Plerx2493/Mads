@@ -37,29 +37,29 @@ internal class ModerationService
             .RegisterPostEvictionCallback(PostEvictionCallback);
     }
 
-    public async Task handleMessage(DiscordMessage message)
+    public async Task HandleMessage(DiscordMessage message)
     {
         if (message.Channel.Guild is null) return;
         if (message.Author.IsBot) return;
         if (message.WebhookMessage) return;
-        var key = createMessageKey(message);
+        var key = CreateMessageKey(message);
         var cachedRecord = message.ToCached();
 
-        var guildKey = createMessageKey(message.Channel.Guild.Id);
+        var guildKey = CreateMessageKey(message.Channel.Guild.Id);
         var messagesInGuild = _messageKeys
             .Where(x => x.StartsWith(guildKey))
             .Select(x => _cache.Get<CachedMessage>(x))
+            .Where(x => x.Content.Equals(cachedRecord.Content))
             .ToList();
 
-        var channelKey = createMessageKey(message.Channel.Guild.Id, message.ChannelId);
+        var channelKey = CreateMessageKey(message.Channel.Guild.Id, message.ChannelId);
         var messagesInChannel = _messageKeys
             .Where(x => x.StartsWith(channelKey))
             .Select(x => _cache.Get<CachedMessage>(x))
+            .Where(x => x.Content.Equals(cachedRecord.Content))
             .ToList();
 
-        var sameContent = messagesInGuild.Where(x => x.Content.Normalize().ToLower().Trim().Equals(message.Content));
-
-        if (sameContent.Count() > 2)
+        if (messagesInGuild.Count() > 2)
         {
             await message.DeleteAsync();
             return;
@@ -68,9 +68,9 @@ internal class ModerationService
         
     }
 
-    public async Task handleMessageDeletion(DiscordMessage message)
+    public void HandleMessageDeletion(DiscordMessage message)
     {
-        var key = createMessageKey(message);
+        var key = CreateMessageKey(message);
         _messageKeys.Remove(key);
         _cache.Remove(key);
     }
@@ -80,17 +80,17 @@ internal class ModerationService
         _messageKeys.Remove((string) key);
     }
 
-    private string createMessageKey(DiscordMessage message)
+    private string CreateMessageKey(DiscordMessage message)
     {
         return $"mod:message:{message.Channel.Guild}:{message.Channel}:{message.Id}";
     }
 
-    private string createMessageKey(ulong guild)
+    private string CreateMessageKey(ulong guild)
     {
         return $"mod:message:{guild}";
     }
 
-    private string createMessageKey(ulong guild, ulong channel)
+    private string CreateMessageKey(ulong guild, ulong channel)
     {
         return $"mod:message:{guild}:{channel}";
     }

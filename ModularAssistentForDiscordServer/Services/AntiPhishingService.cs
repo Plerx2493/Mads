@@ -55,8 +55,8 @@ public class AntiPhishingService
 
         var httpHandler = new HttpClientHandler
         {
-            UseCookies = false
-            //AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip
+            UseCookies = false,
+            AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip
         };
 
         _antiFishClient = new HttpClient(httpHandler)
@@ -93,12 +93,27 @@ public class AntiPhishingService
 
     private async Task HandleMessage(DiscordClient sender, MessageCreateEventArgs args)
     {
-        var _ = Task.Run(() => CheckLinksAsync(args.Message));
+        var links = await CheckLinksAsync(args.Message);
         var invites = await CheckServerAsync(args.Message);
         
-        if (invites == null) return;
-
-        args.Message.Channel.SendMessageAsync("Test");
+        if (invites is not null)
+        {
+            foreach (var invite in invites)
+            {
+                if (invite is null) continue;
+                
+                if (invite.IsMatch)
+                {
+                    await args.Message.RespondAsync($"This message contains at least one link to a suspicious server ({invite.Reason})");
+                    break;
+                }
+            }
+        }
+        
+        if (links is not null && links.IsMatch)
+        {
+            await args.Message.RespondAsync("This message contains at least one link to a suspicious website");
+        }
     }
 
     private async Task<AntiFishResponse?> CheckLinksAsync(DiscordMessage message)
