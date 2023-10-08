@@ -49,7 +49,8 @@ public static class ExtensionMethods
     {
         var discordRestConfig = new DiscordConfiguration
         {
-            Token = config.Token
+            Token = config.Token,
+            LoggerFactory = new LoggerFactory().AddSerilog()
         };
 
         serviceCollection.AddSingleton(new DiscordRestClient(discordRestConfig));

@@ -15,7 +15,9 @@
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.Entities;
 using MADS.Extensions;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.Commands.Text.Base;
 
@@ -36,9 +38,22 @@ public class ExitGuild : MadsBaseCommand
     }
     
     [Command("test"), Description("Leave given server"), RequireGuild, Hidden, RequireOwner]
-    public async Task Test(CommandContext ctx)
+    public async Task Test(CommandContext ctx, DiscordChannel chnl, int limit)
     {
-        var usr1 = await ctx.Client.GetUserAsync(262722553380864011);
-        await ctx.RespondAsync(usr1.Username);
+        var client = ModularDiscordBot.Services.GetRequiredService<DiscordRestClient>();
+        var channel = await client.GetChannelAsync(chnl.Id);
+        var messages = channel.GetMessagesAfterAsync(ctx.Message.Id + 1221);
+
+        messages.ToBlockingEnumerable().Count();
+        
+        
+        int i = 0;
+        await foreach (var message in messages)
+        {
+            i++;
+        }
+        
+        await ctx.RespondAsync($"Found {i} messages");
+        
     }
 }

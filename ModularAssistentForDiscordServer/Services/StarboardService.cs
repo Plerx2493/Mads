@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #nullable enable
+using System.Collections.Concurrent;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
@@ -28,14 +29,13 @@ public class StarboardService : IHostedService
 {
     private readonly DiscordClient _client;
     private readonly IDbContextFactory<MadsContext> _dbFactory;
-    private readonly Queue<DiscordReactionUpdateEvent> _messageQueue;
-    private bool _active;
+    private readonly BlockingCollection<DiscordReactionUpdateEvent> _messageQueue;
+    private bool _stopped;
 
     public StarboardService(DiscordClientService client, IDbContextFactory<MadsContext> dbFactory)
     {
         _client = client.DiscordClient;
-        _messageQueue = new Queue<DiscordReactionUpdateEvent>();
-        _active = false;
+        _messageQueue = new();
         _dbFactory = dbFactory;
     }
 
@@ -45,6 +45,7 @@ public class StarboardService : IHostedService
         _client.MessageReactionRemoved += HandleReactionRemoved;
         _client.MessageReactionsCleared += HandleReactionsCleared;
         _client.MessageReactionRemovedEmoji += HandleReactionEmojiRemoved;
+         var _ = HandleQueue();
         _client.Logger.LogInformation("Starboard active");
         return Task.CompletedTask;
     }
@@ -55,6 +56,7 @@ public class StarboardService : IHostedService
         _client.MessageReactionRemoved -= HandleReactionRemoved;
         _client.MessageReactionsCleared -= HandleReactionsCleared;
         _client.MessageReactionRemovedEmoji -= HandleReactionEmojiRemoved;
+        _stopped = true;
         _client.Logger.LogInformation("Starboard stopped");
         return Task.CompletedTask;
     }
@@ -67,9 +69,7 @@ public class StarboardService : IHostedService
             EventArgs = e,
             Type = DiscordReactionUpdateType.ReactionAdded
         };
-
-        _messageQueue.Enqueue(msg);
-        var _ = Task.Run(HandleQueue);
+        _messageQueue.Add(msg);
         return Task.CompletedTask;
     }
 
@@ -81,9 +81,7 @@ public class StarboardService : IHostedService
             EventArgs = e,
             Type = DiscordReactionUpdateType.ReactionRemoved
         };
-
-        _messageQueue.Enqueue(msg);
-        var _ = HandleQueue();
+        _messageQueue.Add(msg);
         return Task.CompletedTask;
     }
 
@@ -95,9 +93,7 @@ public class StarboardService : IHostedService
             EventArgs = e,
             Type = DiscordReactionUpdateType.ReactionsCleard
         };
-
-        _messageQueue.Enqueue(msg);
-        var _ = HandleQueue();
+        _messageQueue.Add(msg);
         return Task.CompletedTask;
     }
 
@@ -109,31 +105,26 @@ public class StarboardService : IHostedService
             EventArgs = e,
             Type = DiscordReactionUpdateType.ReactionEmojiRemoved
         };
-
-        _messageQueue.Enqueue(msg);
-        var _ = HandleQueue();
+        _messageQueue.Add(msg);
         return Task.CompletedTask;
     }
 
     private async Task HandleQueue()
     {
-        if (_active) return;
-        _active = true;
-
-
-        while (_messageQueue.Any())
+        while (!_stopped)
+        {
             try
             {
-                var msg = _messageQueue.Dequeue();
+                ModularDiscordBot.Logger.LogTrace("StarboardService: waiting for message");
+                var msg = _messageQueue.Take();
+                ModularDiscordBot.Logger.LogTrace("StarboardService: message received");
                 await HandleEvent(msg);
             }
             catch (Exception e)
             {
-                await MainProgram.LogToWebhookAsync(e);
+                ModularDiscordBot.Logger.LogError($"{nameof(StarboardService)}: " + e.Message + "\n" + e.StackTrace);
             }
-
-
-        _active = false;
+        }
     }
 
     private async Task HandleEvent(DiscordReactionUpdateEvent e)
@@ -147,10 +138,11 @@ public class StarboardService : IHostedService
         }
 
 
-        var db = await _dbFactory.CreateDbContextAsync();
+        using MadsContext db = await _dbFactory.CreateDbContextAsync();
 
-        var guildSettings = db.Configs.First(x => x.DiscordGuildId == e.Message.Channel.GuildId);
+        var guildSettings = db.Configs.FirstOrDefault(x => x.DiscordGuildId == e.Message.Channel.GuildId);
 
+        if (guildSettings is null) return;
         if (!guildSettings.StarboardActive) return;
 
         if (guildSettings.StarboardEmojiId == null
@@ -217,26 +209,13 @@ public class StarboardService : IHostedService
         }
 
 
-        StarboardMessageDbEntity? starData = null;
-        bool isNew;
-        try
-        {
-            starData = db.Starboard.First(
-                x => x.DiscordMessageId == e.Message.Id && x.DiscordChannelId == e.Message.ChannelId
-            );
-            if (e.Type is DiscordReactionUpdateType.ReactionAdded)
-                starData.Stars++;
-            else
-                starData.Stars--;
+        StarboardMessageDbEntity? starData;
+        var isNew = false;
+        starData = db.Starboard.FirstOrDefault(x =>
+            x.DiscordMessageId == e.Message.Id && x.DiscordChannelId == e.Message.ChannelId);
 
-            isNew = false;
-        }
-        catch (Exception)
+        if (starData is null)
         {
-            isNew = true;
-        }
-
-        if (isNew)
             starData = new StarboardMessageDbEntity
             {
                 DiscordChannelId = e.Message.ChannelId,
@@ -244,14 +223,19 @@ public class StarboardService : IHostedService
                 DiscordGuildId = e.Message.Channel.Guild.Id,
                 Stars = 1
             };
-
-        if (starData is null) throw new ArgumentNullException();
-
+            isNew = true;
+        }
+        
+        if (e.Type is DiscordReactionUpdateType.ReactionAdded)
+            starData.Stars++;
+        else
+            starData.Stars--;
+        
         if (isNew)
             db.Starboard.Add(starData);
         else
             db.Starboard.Update(starData);
-
+        
         await db.SaveChangesAsync();
 
         if (starData.Stars < guildSettings.StarboardThreshold)
@@ -259,72 +243,69 @@ public class StarboardService : IHostedService
             if (isNew) return;
             if (starData.StarboardMessageId != 0)
                 await DeleteStarboardMessage(starData);
-
-
-            if (starData.Stars == 0 && !isNew)
+            
+            if (starData.Stars < 1 && !isNew)
                 db.Starboard.Remove(starData);
 
             await db.SaveChangesAsync();
-            await db.DisposeAsync();
             return;
         }
 
         if (starData.StarboardMessageId == 0)
         {
             await CreateStarboardMessage(starData, guildSettings, discordEmoji);
-            await db.DisposeAsync();
             return;
         }
 
         await UpdateStarboardMessage(starData, discordEmoji);
-        await db.DisposeAsync();
     }
 
     private async Task DeleteStarboardMessage(StarboardMessageDbEntity starData)
     {
         DiscordMessage message;
-
+        DiscordChannel channel;
         try
         {
-            message = await _client.GetChannelAsync(starData.StarboardChannelId).Result
-                .GetMessageAsync(starData.StarboardMessageId);
+            channel = await _client.GetChannelAsync(starData.StarboardChannelId);
+            message = await channel.GetMessageAsync(starData.StarboardMessageId);
         }
         catch (Exception)
         {
-            Console.WriteLine("StarboardMessage not found");
-            throw;
+            ModularDiscordBot.Logger.LogError("StarboardMessage not found");
+            return;
         }
 
         await message.DeleteAsync();
 
-        var db = await _dbFactory.CreateDbContextAsync();
+        using var db = await _dbFactory.CreateDbContextAsync();
 
-        var starDataOld = db.Starboard.First(
+        var starDataOld = db.Starboard.FirstOrDefault(
             x => x.DiscordMessageId == starData.DiscordMessageId && x.DiscordChannelId == starData.DiscordChannelId
         );
-
+        
+        if (starDataOld is null) return;
+        
         starDataOld.StarboardMessageId = 0;
         starDataOld.StarboardChannelId = 0;
         starDataOld.StarboardGuildId = 0;
 
         db.Update(starDataOld);
         await db.SaveChangesAsync();
-        await db.DisposeAsync();
     }
 
     private async Task UpdateStarboardMessage(StarboardMessageDbEntity starData, DiscordEmoji emoji)
     {
         DiscordMessage message;
-
+        DiscordChannel channel;
         try
         {
-            message = await _client.GetChannelAsync(starData.StarboardChannelId).Result
-                .GetMessageAsync(starData.StarboardMessageId);
+            channel = await _client.GetChannelAsync(starData.StarboardChannelId);
+            message = await channel.GetMessageAsync(starData.StarboardMessageId);
         }
         catch (Exception)
         {
-            Console.WriteLine("StarboardMessage not found");
-            throw;
+            ModularDiscordBot.Logger.LogError("StarboardMessage not found");
+            return;
         }
 
         await message.ModifyAsync(await BuildStarboardMessage(starData, emoji));
@@ -343,11 +324,13 @@ public class StarboardService : IHostedService
 
         var starboardMessage = await starboardChannel.SendMessageAsync(starboardMessageBuilder);
 
-        var db = await _dbFactory.CreateDbContextAsync();
+        using var db = await _dbFactory.CreateDbContextAsync();
 
-        var starDataOld = db.Starboard.First(
+        var starDataOld = db.Starboard.FirstOrDefault(
             x => x.DiscordMessageId == starData.DiscordMessageId && x.DiscordChannelId == starData.DiscordChannelId
         );
+        
+        if (starDataOld is null) return;
 
         starDataOld.StarboardMessageId = starboardMessage.Id;
         starDataOld.StarboardChannelId = starboardMessage.ChannelId;
@@ -355,7 +338,6 @@ public class StarboardService : IHostedService
 
         db.Update(starDataOld);
         await db.SaveChangesAsync();
-        await db.DisposeAsync();
     }
 
     private async Task<DiscordMessageBuilder> BuildStarboardMessage
@@ -365,15 +347,15 @@ public class StarboardService : IHostedService
     )
     {
         DiscordMessage message;
-
+        DiscordChannel channel;
         try
         {
-            message = await _client.GetChannelAsync(starData.DiscordChannelId).Result
-                .GetMessageAsync(starData.DiscordMessageId);
+            channel = await _client.GetChannelAsync(starData.DiscordChannelId);
+            message = await channel.GetMessageAsync(starData.DiscordMessageId);
         }
         catch (Exception)
         {
-            Console.WriteLine("starred message not found");
+            ModularDiscordBot.Logger.LogError("StarboardMessage not found");
             throw;
         }
 

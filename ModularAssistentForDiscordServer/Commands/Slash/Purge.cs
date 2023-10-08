@@ -39,10 +39,12 @@ public sealed class Purge : MadsBaseApplicationCommand
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource,
             new DiscordInteractionResponseBuilder());
         var response = await ctx.GetOriginalResponseAsync();
-
-        var messagesApi = await ctx.Channel.GetMessagesAsync((int) amount);
+        
         List<DiscordMessage> messages = new();
-        messages.AddRange(messagesApi);
+        await foreach (var msg in ctx.Channel.GetMessagesAsync((int) amount))
+        {
+            messages.Add(msg);
+        }
 
         messages.RemoveAll(x => (DateTime.UtcNow - x.Timestamp).TotalDays >= 14);
         messages.Remove(response);

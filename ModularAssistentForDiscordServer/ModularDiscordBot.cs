@@ -28,6 +28,7 @@ public class ModularDiscordBot
 {
     public static IServiceProvider Services;
     public static DateTimeOffset StartTime = DateTimeOffset.Now;
+    public static ILogger<ModularDiscordBot> Logger;
     private readonly ConfigJson _config;
 
     public ModularDiscordBot()
@@ -89,6 +90,7 @@ public class ModularDiscordBot
                         .AddHostedService(s => s.GetRequiredService<VoiceAlertService>());
 
                     Services = services.BuildServiceProvider();
+                    Logger = Services.GetRequiredService<ILogger<ModularDiscordBot>>();
                 }
             )
             .RunConsoleAsync();
