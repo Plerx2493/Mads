@@ -29,6 +29,7 @@ public class MadsBaseApplicationCommand : ApplicationCommandModule
 
     public override Task<bool> BeforeSlashExecutionAsync(InteractionContext ctx)
     {
+        _ctx = ctx;
         _executionTimer.Restart();
 
         return Task.FromResult(true);
