@@ -45,7 +45,7 @@ public class StarboardService : IHostedService
         _client.MessageReactionRemoved += HandleReactionRemoved;
         _client.MessageReactionsCleared += HandleReactionsCleared;
         _client.MessageReactionRemovedEmoji += HandleReactionEmojiRemoved;
-         var _ = HandleQueue();
+        StartHandleQueue();
         _client.Logger.LogInformation("Starboard active");
         return Task.CompletedTask;
     }
@@ -109,22 +109,26 @@ public class StarboardService : IHostedService
         return Task.CompletedTask;
     }
 
-    private async Task HandleQueue()
+    private void StartHandleQueue()
     {
-        while (!_stopped)
+        Task.Run(async () =>
         {
-            try
+            while (!_stopped)
             {
-                ModularDiscordBot.Logger.LogTrace("StarboardService: waiting for message");
-                var msg = _messageQueue.Take();
-                ModularDiscordBot.Logger.LogTrace("StarboardService: message received");
-                await HandleEvent(msg);
+                try
+                {
+                    ModularDiscordBot.Logger.LogTrace("StarboardService: waiting for message");
+                    var msg = _messageQueue.Take();
+                    ModularDiscordBot.Logger.LogTrace("StarboardService: message received");
+                    await HandleEvent(msg);
+                }
+                catch (Exception e)
+                {
+                    ModularDiscordBot.Logger.LogError($"{nameof(StarboardService)}: " + e.Message + "\n" +
+                                                      e.StackTrace);
+                }
             }
-            catch (Exception e)
-            {
-                ModularDiscordBot.Logger.LogError($"{nameof(StarboardService)}: " + e.Message + "\n" + e.StackTrace);
-            }
-        }
+        });
     }
 
     private async Task HandleEvent(DiscordReactionUpdateEvent e)

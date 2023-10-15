@@ -65,10 +65,9 @@ public class ModularDiscordBot
                                     opt.ConnectionString = _config.ConnectionStringQuartz;
                                     opt.TablePrefix = "QRTZ_";
                                 });
-                                options.UseJsonSerializer();
+                                options.UseNewtonsoftJsonSerializer();
                             });
                             x.InterruptJobsOnShutdownWithWait = true;
-                            x.UseMicrosoftDependencyInjectionJobFactory();
                             x.UseSimpleTypeLoader();
                             x.SchedulerName = "reminder-scheduler";
                         })

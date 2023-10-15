@@ -122,6 +122,8 @@ public class VoiceAlertService : IHostedService
             alert.MinTimeBetweenAlerts = minTimeBetweenAlerts;
         }
         
+        Log.Information("Voicealert added");
+        
         await context.VoiceAlerts.AddAsync(alert);
         await context.SaveChangesAsync();
     }

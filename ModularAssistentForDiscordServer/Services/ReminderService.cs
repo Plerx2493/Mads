@@ -68,7 +68,6 @@ public class ReminderService : IHostedService
         _client.Logger.LogInformation("Reminders stopped");
     }
 
-
     private async Task DispatchReminder(ReminderDbEntity reminder)
     {
         DiscordChannel channel;
@@ -92,8 +91,10 @@ public class ReminderService : IHostedService
         await db.SaveChangesAsync();
 
         var dbEntity =
-            db.Reminders.First(x => x.UserId == reminder.UserId && x.ExecutionTime == reminder.ExecutionTime);
+            db.Reminders.FirstOrDefault(x => x.UserId == reminder.UserId && x.ExecutionTime == reminder.ExecutionTime);
 
+        ArgumentNullException.ThrowIfNull(dbEntity);
+        
         var jobKey = new JobKey($"reminder-{dbEntity.Id}", "reminders");
         var triggerKey = new TriggerKey($"reminder-trigger-{dbEntity.Id}", "reminders");
 
@@ -123,14 +124,7 @@ public class ReminderService : IHostedService
 
         ReminderDbEntity reminder;
 
-        try
-        {
-            reminder = db.Reminders.First(x => x.Id == reminderId);
-        }
-        catch (InvalidOperationException)
-        {
-            return false;
-        }
+        reminder = db.Reminders.FirstOrDefault(x => x.Id == reminderId);
 
         if (reminder is null) return false;
 
@@ -147,14 +141,7 @@ public class ReminderService : IHostedService
         await using var db = await _dbContextFactory.CreateDbContextAsync();
 
         ReminderDbEntity reminder;
-        try
-        {
-            reminder = db.Reminders.First(x => x.Id == id);
-        }
-        catch (InvalidOperationException)
-        {
-            return null;
-        }
+        reminder = db.Reminders.FirstOrDefault(x => x.Id == id);
 
         return reminder;
     }
@@ -183,7 +170,7 @@ public class ReminderService : IHostedService
                 return;
             }
 
-            Log.Warning("Dispatching reminder id: {Id}", reminder.Id);
+            Log.Information("Dispatching reminder id: {Id}", reminder.Id);
 
             await _reminder.DispatchReminder(reminder);
         }
