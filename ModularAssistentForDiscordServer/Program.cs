@@ -23,6 +23,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
+using Serilog.Events;
 
 namespace MADS;
 
@@ -32,6 +33,7 @@ internal static class MainProgram
     {
         Log.Logger = new LoggerConfiguration()
             .WriteTo.Console()
+            .MinimumLevel.Override("Quartz", LogEventLevel.Warning)
             .CreateLogger();
 
         //Create cancellationToken and hook the cancelKey

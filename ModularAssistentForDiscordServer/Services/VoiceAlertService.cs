@@ -29,6 +29,8 @@ public class VoiceAlertService : IHostedService
     private readonly IDbContextFactory<MadsContext> _contextFactory;
     private readonly DiscordClient _discordClient;
     
+    private static ILogger _logger = Log.ForContext<VoiceAlertService>();
+    
     public VoiceAlertService(IDbContextFactory<MadsContext> contextFactory, DiscordClientService discordClientService)
     {
         _discordClient = discordClientService.DiscordClient;
@@ -86,7 +88,7 @@ public class VoiceAlertService : IHostedService
             }
             catch (DiscordException exception)
             {
-                Log.Error(exception, "Failed to send voice alert to {UserId}", alert.UserId);
+                _logger.Error(exception, "Failed to send voice alert to {UserId}", alert.UserId);
             }
         }
         
@@ -122,7 +124,7 @@ public class VoiceAlertService : IHostedService
             alert.MinTimeBetweenAlerts = minTimeBetweenAlerts;
         }
         
-        Log.Information("Voicealert added");
+        _logger.Information("Voicealert added");
         
         await context.VoiceAlerts.AddAsync(alert);
         await context.SaveChangesAsync();

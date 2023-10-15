@@ -22,6 +22,7 @@ using Microsoft.Extensions.Logging;
 using Quartz;
 using Serilog;
 
+
 namespace MADS;
 
 public class ModularDiscordBot

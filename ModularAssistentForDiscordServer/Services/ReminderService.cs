@@ -22,6 +22,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Quartz;
 using Serilog;
+using ILogger = Serilog.ILogger;
 
 namespace MADS.Services;
 
@@ -34,6 +35,8 @@ public class ReminderService : IHostedService
     private bool _isDisposed;
     private bool _isRunning;
     private readonly DiscordRestClient _restClient;
+    
+    private static ILogger _logger = Log.ForContext<ReminderService>();
 
     public ReminderService(IDbContextFactory<MadsContext> dbContextFactory, ISchedulerFactory schedulerFactory,
         DiscordClient client, DiscordRestClient rest)
@@ -55,7 +58,7 @@ public class ReminderService : IHostedService
         if (ReminderScheduler == null) throw new NullReferenceException();
         await ReminderScheduler.Start();
         _isRunning = true;
-        _client.Logger.LogInformation("Reminders active");
+        _logger.Information("Reminders active");
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
@@ -65,7 +68,7 @@ public class ReminderService : IHostedService
         _isDisposed = true;
         _isRunning = false;
         await ReminderScheduler.Shutdown();
-        _client.Logger.LogInformation("Reminders stopped");
+        _logger.Information("Reminders stopped");
     }
 
     private async Task DispatchReminder(ReminderDbEntity reminder)
@@ -165,12 +168,12 @@ public class ReminderService : IHostedService
 
             if (reminder is null)
             {
-                Log.Warning("Tried to dispatch a nonexistent reminder: {Id} ",
+                _logger.Warning("Tried to dispatch a nonexistent reminder: {Id} ",
                     Convert.ToUInt64(dataMap.Get("reminderId")));
                 return;
             }
 
-            Log.Information("Dispatching reminder id: {Id}", reminder.Id);
+            _logger.Information("Dispatching reminder id: {Id}", reminder.Id);
 
             await _reminder.DispatchReminder(reminder);
         }

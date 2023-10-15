@@ -21,7 +21,8 @@ using Humanizer;
 using MADS.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using Serilog;
+using ILogger = Serilog.ILogger;
 
 namespace MADS.Services;
 
@@ -32,10 +33,12 @@ public class StarboardService : IHostedService
     private readonly BlockingCollection<DiscordReactionUpdateEvent> _messageQueue;
     private bool _stopped;
 
+    private static ILogger _logger = Log.ForContext<StarboardService>();
+    
     public StarboardService(DiscordClientService client, IDbContextFactory<MadsContext> dbFactory)
     {
         _client = client.DiscordClient;
-        _messageQueue = new();
+        _messageQueue = new BlockingCollection<DiscordReactionUpdateEvent>();
         _dbFactory = dbFactory;
     }
 
@@ -46,7 +49,7 @@ public class StarboardService : IHostedService
         _client.MessageReactionsCleared += HandleReactionsCleared;
         _client.MessageReactionRemovedEmoji += HandleReactionEmojiRemoved;
         StartHandleQueue();
-        _client.Logger.LogInformation("Starboard active");
+        _logger.Information("Starboard active");
         return Task.CompletedTask;
     }
 
@@ -57,7 +60,7 @@ public class StarboardService : IHostedService
         _client.MessageReactionsCleared -= HandleReactionsCleared;
         _client.MessageReactionRemovedEmoji -= HandleReactionEmojiRemoved;
         _stopped = true;
-        _client.Logger.LogInformation("Starboard stopped");
+        _logger.Information("Starboard stopped");
         return Task.CompletedTask;
     }
 
@@ -117,15 +120,14 @@ public class StarboardService : IHostedService
             {
                 try
                 {
-                    ModularDiscordBot.Logger.LogTrace("StarboardService: waiting for message");
+                    _logger.Verbose("StarboardService: waiting for message");
                     var msg = _messageQueue.Take();
-                    ModularDiscordBot.Logger.LogTrace("StarboardService: message received");
+                    _logger.Verbose("StarboardService: message received");
                     await HandleEvent(msg);
                 }
                 catch (Exception e)
                 {
-                    ModularDiscordBot.Logger.LogError($"{nameof(StarboardService)}: " + e.Message + "\n" +
-                                                      e.StackTrace);
+                    _logger.Error("Exception in {Source}: {Message}", nameof(StarboardService), e.Message);
                 }
             }
         });
@@ -140,8 +142,7 @@ public class StarboardService : IHostedService
             var eventArgs = (MessageReactionAddEventArgs) e.EventArgs;
             if (eventArgs.User.IsBot) return;
         }
-
-
+        
         using MadsContext db = await _dbFactory.CreateDbContextAsync();
 
         var guildSettings = db.Configs.FirstOrDefault(x => x.DiscordGuildId == e.Message.Channel.GuildId);
@@ -153,7 +154,7 @@ public class StarboardService : IHostedService
             || guildSettings.StarboardThreshold == null
             || guildSettings.StarboardChannelId == null)
         {
-            _client.Logger.LogError("GuildSettings incomplete: StarboardSettings");
+            _logger.Error("GuildSettings incomplete: StarboardSettings");
             return;
         }
 
@@ -195,24 +196,23 @@ public class StarboardService : IHostedService
                 return;
 
             case DiscordReactionUpdateType.ReactionEmojiRemoved:
-                var argss = (MessageReactionRemoveEmojiEventArgs) e.EventArgs;
+                var args = (MessageReactionRemoveEmojiEventArgs) e.EventArgs;
 
                 if (guildSettings.StarboardEmojiId != 0)
                     discordEmoji = DiscordEmoji.FromGuildEmote(_client, guildSettings.StarboardEmojiId.Value);
                 else
                     discordEmoji = DiscordEmoji.FromUnicode(_client, guildSettings.StarboardEmojiName!);
 
-                if (argss.Emoji != discordEmoji) return;
-                var msgss = db.Starboard.Where(x =>
+                if (args.Emoji != discordEmoji) return;
+                var messages = db.Starboard.Where(x =>
                     x.DiscordMessageId == e.Message.Id && x.DiscordChannelId == e.Message.ChannelId);
-                db.Starboard.RemoveRange(msgss);
+                db.Starboard.RemoveRange(messages);
                 return;
 
             default:
                 throw new ArgumentOutOfRangeException();
         }
-
-
+        
         StarboardMessageDbEntity? starData;
         var isNew = false;
         starData = db.Starboard.FirstOrDefault(x =>
@@ -275,7 +275,7 @@ public class StarboardService : IHostedService
         }
         catch (Exception)
         {
-            ModularDiscordBot.Logger.LogError("StarboardMessage not found");
+            _logger.Error("{Source}: Message with id {Id} not found", nameof(StarboardService), starData.DiscordMessageId);
             return;
         }
 
@@ -308,7 +308,7 @@ public class StarboardService : IHostedService
         }
         catch (Exception)
         {
-            ModularDiscordBot.Logger.LogError("StarboardMessage not found");
+            _logger.Error("{Source}: Message with id {Id} not found", nameof(StarboardService), starData.DiscordMessageId);
             return;
         }
 
@@ -318,13 +318,13 @@ public class StarboardService : IHostedService
     private async Task CreateStarboardMessage
     (
         StarboardMessageDbEntity starData,
-        GuildConfigDbEntity congfig,
+        GuildConfigDbEntity config,
         DiscordEmoji emoji
     )
     {
         var starboardMessageBuilder = await BuildStarboardMessage(starData, emoji);
 
-        var starboardChannel = await _client.GetChannelAsync(congfig.StarboardChannelId!.Value);
+        var starboardChannel = await _client.GetChannelAsync(config.StarboardChannelId!.Value);
 
         var starboardMessage = await starboardChannel.SendMessageAsync(starboardMessageBuilder);
 
@@ -359,7 +359,7 @@ public class StarboardService : IHostedService
         }
         catch (Exception)
         {
-            ModularDiscordBot.Logger.LogError("StarboardMessage not found");
+            _logger.Error("{Source}: Message with id {Id} not found", nameof(StarboardService), starData.DiscordMessageId);
             throw;
         }
 

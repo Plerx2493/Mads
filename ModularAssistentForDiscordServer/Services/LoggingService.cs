@@ -23,6 +23,7 @@ using DSharpPlus.SlashCommands;
 using MADS.Extensions;
 using Microsoft.Extensions.Logging;
 using Serilog;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace MADS.Services;
 
@@ -38,6 +39,8 @@ public class LoggingService
     private DiscordWebhookClient _discordWebhookClient = new();
     private bool _isSetup;
     private List<DiscordDmChannel> _ownerChannel = new();
+    
+    private static Serilog.ILogger _logger = Log.ForContext<LoggingService>();
 
     internal LoggingService(DiscordClientService dBot)
     {
@@ -54,8 +57,6 @@ public class LoggingService
         File.AppendAllText(_logPath, $".Net: {RuntimeInformation.FrameworkDescription}\n", Encoding.UTF8);
         File.AppendAllText(_logPath, $"Operating system: {os}\n", Encoding.UTF8);
         File.AppendAllText(_logPath, "========== LOG START ==========\n\n", Encoding.UTF8);
-
-        Console.WriteLine(_logPath);
     }
 
     //Fetching Linux name by Naamloos. Can be found in Naamloos/Modcore
@@ -123,7 +124,7 @@ public class LoggingService
             _ownerChannel.Add(ownerChannel);
         }
 
-        _modularDiscordBot.DiscordClient.Logger.LogInformation(
+        _logger.Information(
             "Found {OwnerChannel} dm Channel for {Owner} application owner",
             _ownerChannel.Count, owners.Length);
     }

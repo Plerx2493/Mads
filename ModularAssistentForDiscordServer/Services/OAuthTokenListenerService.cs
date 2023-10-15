@@ -17,6 +17,8 @@ using System.Text;
 using DSharpPlus;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Serilog;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace MADS.Services;
 
@@ -40,6 +42,8 @@ public class TokenListener : IDisposable, IHostedService
     private readonly DiscordClient _client;
     private Thread _listenTask;
 
+    private static Serilog.ILogger _logger = Log.ForContext<TokenListener>();
+
     public TokenListener(string port, DiscordClient client, string path = "/")
     {
         _url = $"http://localhost:{port}{path}";
@@ -56,7 +60,7 @@ public class TokenListener : IDisposable, IHostedService
     public Task StartAsync(CancellationToken cancellationToken)
     {
         _listener.Start();
-        _client.Logger.LogInformation("Listening for connections on {Url}", _url);
+        _logger.Information("Listening for connections on {Url}", _url);
 
         _listenTask = new Thread(() => _ = HandleIncomingConnections(cancellationToken))
         {
@@ -72,7 +76,7 @@ public class TokenListener : IDisposable, IHostedService
     {
         _listener.Abort();
         _listenTask.Interrupt();
-        _client.Logger.LogInformation("Tokenlistener stopped");
+        _logger.Information("Tokenlistener stopped");
         return Task.CompletedTask;
     }
 

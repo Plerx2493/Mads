@@ -19,8 +19,8 @@ using Humanizer;
 using MADS.Extensions;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Serilog;
+using ILogger = Serilog.ILogger;
 
 namespace MADS.Services;
 
@@ -30,6 +30,8 @@ public class MessageSnipeService : IHostedService
     private readonly MemoryCacheEntryOptions _options;
     private readonly DiscordClientService _discordClientService;
     private DiscordClient Discord  => _discordClientService.DiscordClient;
+
+    private static ILogger _logger = Log.ForContext<MessageSnipeService>();
 
     public MessageSnipeService(IMemoryCache memoryCache, DiscordClientService discordClientService)
     {
@@ -43,7 +45,7 @@ public class MessageSnipeService : IHostedService
     
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        Log.Warning("Sniper active!");
+        _logger.Warning("Sniper active!");
         Discord.MessageDeleted += MessageSniperDeleted;
         Discord.MessageUpdated += MessageSniperEdited;
         
@@ -70,8 +72,8 @@ public class MessageSnipeService : IHostedService
         if ((!string.IsNullOrEmpty(e.Message?.Content) || e.Message?.Attachments.Count > 0) && !e.Message.Author.IsBot)
         {
             AddMessage(e.Message);
-            Log.Warning("Sniped!");
-            sender.Logger.LogTrace("Message added to cache");
+            _logger.Warning("Sniped!");
+            _logger.Verbose("Message added to cache");
         }
 
         return Task.CompletedTask;
@@ -90,15 +92,15 @@ public class MessageSnipeService : IHostedService
             || e.Message.Author.IsBot) return Task.CompletedTask;
 
         AddEditedMessage(e.MessageBefore);
-        Log.Warning("Sniped!");
+        _logger.Warning("Sniped!");
         
-        sender.Logger.LogTrace("Message edit added to cache");
+        _logger.Verbose("Message edit added to cache");
         return Task.CompletedTask;
     }
 
     private static void PostEvictionCallback(object key, object value, EvictionReason reason, object state)
     {
-        Log.ForContext<MessageSnipeService>().Verbose("MessageSniper: Message eviction - {Reason}", reason.Humanize());
+        _logger.Verbose("MessageSniper: Message eviction - {Reason}", reason.Humanize());
     }
 
     public void AddMessage(DiscordMessage message)

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Diagnostics;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
@@ -42,10 +43,9 @@ public class ExitGuild : MadsBaseCommand
     {
         var client = ModularDiscordBot.Services.GetRequiredService<DiscordRestClient>();
         var channel = await client.GetChannelAsync(chnl.Id);
-        var messages = channel.GetMessagesAfterAsync(ctx.Message.Id + 1221);
-
-        messages.ToBlockingEnumerable().Count();
+        var messages = channel.GetMessagesBeforeAsync(ctx.Message.Id + 1221, limit);
         
+        var sw = Stopwatch.StartNew();
         
         int i = 0;
         await foreach (var message in messages)
@@ -53,7 +53,7 @@ public class ExitGuild : MadsBaseCommand
             i++;
         }
         
-        await ctx.RespondAsync($"Found {i} messages");
+        await ctx.RespondAsync($"Found {i} messages in {sw.ElapsedMilliseconds}ms");
         
     }
 }

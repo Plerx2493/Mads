@@ -30,6 +30,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
+using ILogger = Serilog.ILogger;
 
 namespace MADS.Services;
 
@@ -41,6 +42,8 @@ public class DiscordClientService : IHostedService
     public LoggingService Logging;
     public SlashCommandsExtension SlashCommands;
     public DateTime StartTime;
+    
+    private static ILogger _logger = Log.ForContext<DiscordClientService>();
 
     public DiscordClientService
     (
@@ -48,7 +51,7 @@ public class DiscordClientService : IHostedService
         IDbContextFactory<MadsContext> dbDbContextFactory
     )
     {
-        Log.Warning("DiscordClientService");
+        _logger.Warning("DiscordClientService");
 
         StartTime = DateTime.Now;
         var config = pConfig;
@@ -94,7 +97,7 @@ public class DiscordClientService : IHostedService
 #if RELEASE
         SlashCommands.RegisterCommands(asm);
 #else
-        DiscordClient.Logger.LogWarning("DEBUG");
+        _logger.Warning("SlashCommands are registered in debug mode");
         SlashCommands.RegisterCommands(asm, 938120155974750288);
 #endif
         SlashCommands.SlashCommandErrored += EventListener.OnSlashCommandErrored;
@@ -124,15 +127,14 @@ public class DiscordClientService : IHostedService
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        Log.Warning("DiscordClientService started");
-        //Update database to latest version
-        var context = await _dbContextFactory.CreateDbContextAsync();
+        _logger.Warning("DiscordClientService started");
+        //Update database to latest migration
+        using var context = await _dbContextFactory.CreateDbContextAsync();
         if ((await context.Database.GetPendingMigrationsAsync()).Any())
             await context.Database.MigrateAsync();
         
-        DiscordActivity act = new("over some Servers", ActivityType.Watching);
-
-
+        DiscordActivity act = new("Messing with code", ActivityType.Custom);
+        
         //connect client
         await DiscordClient.ConnectAsync(act, UserStatus.Online);
     }
