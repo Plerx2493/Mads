@@ -30,11 +30,9 @@ internal static partial class EventListener
         {
             try
             {
-                if (e is null) return Task.CompletedTask;
-
                 sender.Logger.LogTrace("Button clicked with id: {Id}", e.Id);
 
-                if (!Regex.IsMatch(e.Id, @"^CMD:\d{1,4}(?::\d{1,20}){0,3}$", RegexOptions.Compiled))
+                if (!CommandButtonRegex().IsMatch(e.Id))
                     return Task.CompletedTask;
 
                 var substring = e.Id.Split(':');
@@ -219,4 +217,7 @@ internal static partial class EventListener
 
         await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, response);
     }
+
+    [GeneratedRegex("^CMD:\\d{1,4}(?::\\d{1,20}){0,3}$", RegexOptions.Compiled)]
+    private static partial Regex CommandButtonRegex();
 }

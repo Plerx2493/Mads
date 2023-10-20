@@ -22,7 +22,7 @@ namespace MADS.Commands.AutoCompletion;
 
 public class ReminderAutoCompletion : IAutocompleteProvider
 {
-    private IDbContextFactory<MadsContext> _factory;
+    private readonly IDbContextFactory<MadsContext> _factory;
     
     public ReminderAutoCompletion(IServiceProvider services)
     {

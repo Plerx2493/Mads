@@ -21,17 +21,15 @@ using MADS.Extensions;
 
 namespace MADS.Commands.ContextMenu;
 
-public class StealEmojiMessage : MadsBaseApplicationCommand
+public partial class StealEmojiMessage : MadsBaseApplicationCommand
 {
-    private const string EmojiRegex = @"<a?:(.+?):(\d+)>";
-
     [ContextMenu(ApplicationCommandType.MessageContextMenu, "Steal emoji(s)"),
      SlashRequirePermissions(Permissions.ManageEmojis)]
     public async Task YoinkAsync(ContextMenuContext ctx)
     {
         await ctx.DeferAsync(true);
 
-        var matches = Regex.Matches(ctx.TargetMessage.Content.Replace("><", "> <"), EmojiRegex, RegexOptions.Compiled);
+        var matches = EmojiRegex().Matches(ctx.TargetMessage.Content.Replace("><", "> <"));
 
         if (matches.Count < 1)
         {
@@ -91,4 +89,7 @@ public class StealEmojiMessage : MadsBaseApplicationCommand
 
         return newEmoji;
     }
+
+    [GeneratedRegex("<a?:(.+?):(\\d+)>", RegexOptions.Compiled)]
+    private static partial Regex EmojiRegex();
 }

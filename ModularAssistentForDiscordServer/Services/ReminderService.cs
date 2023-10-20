@@ -19,7 +19,6 @@ using MADS.Entities;
 using MADS.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Quartz;
 using Serilog;
 using ILogger = Serilog.ILogger;

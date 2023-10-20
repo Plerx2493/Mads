@@ -66,15 +66,15 @@ public class MessageSnipeService : IHostedService
         MessageDeleteEventArgs e
     )
     {
-        if (e.Message == null) return Task.CompletedTask;
+        if (e.Message is null) return Task.CompletedTask;
         if (e.Message.WebhookMessage) return Task.CompletedTask;
 
-        if ((!string.IsNullOrEmpty(e.Message?.Content) || e.Message?.Attachments.Count > 0) && !e.Message.Author.IsBot)
-        {
-            AddMessage(e.Message);
-            _logger.Warning("Sniped!");
-            _logger.Verbose("Message added to cache");
-        }
+        if ((string.IsNullOrEmpty(e.Message?.Content) && !(e.Message?.Attachments.Count > 0)) || e.Message.Author.IsBot)
+            return Task.CompletedTask;
+        
+        AddMessage(e.Message);
+        _logger.Warning("Sniped!");
+        _logger.Verbose("Message added to cache");
 
         return Task.CompletedTask;
     }
@@ -85,7 +85,7 @@ public class MessageSnipeService : IHostedService
         MessageUpdateEventArgs e
     )
     {
-        if (e.Message == null) return Task.CompletedTask;
+        if (e.Message is null) return Task.CompletedTask;
         if (e.Message.WebhookMessage) return Task.CompletedTask;
 
         if ((string.IsNullOrEmpty(e.MessageBefore?.Content) && !(e.MessageBefore?.Attachments.Count > 0))
@@ -98,7 +98,7 @@ public class MessageSnipeService : IHostedService
         return Task.CompletedTask;
     }
 
-    private static void PostEvictionCallback(object key, object value, EvictionReason reason, object state)
+    private static void PostEvictionCallback(object key, object? value, EvictionReason reason, object? state)
     {
         _logger.Verbose("MessageSniper: Message eviction - {Reason}", reason.Humanize());
     }
@@ -127,29 +127,23 @@ public class MessageSnipeService : IHostedService
         _memoryCache.Remove(id);
     }
 
-    public bool TryGetMessage(ulong channelId, out DiscordMessage message)
+    public bool TryGetMessage(ulong channelId, out DiscordMessage? message)
     {
         var id = CacheHelper.GetMessageSnipeKey(channelId);
         message = _memoryCache.Get<DiscordMessage?>(id);
-        if (message is not null)
-        {
-            _memoryCache.Remove(id);
-            return true;
-        }
+        if (message is null) return false;
+        _memoryCache.Remove(id);
+        return true;
 
-        return false;
     }
 
-    public bool TryGetEditedMessage(ulong channelId, out DiscordMessage message)
+    public bool TryGetEditedMessage(ulong channelId, out DiscordMessage? message)
     {
         var id = CacheHelper.GetMessageEditSnipeKey(channelId);
         message = _memoryCache.Get<DiscordMessage?>(id);
-        if (message is not null)
-        {
-            _memoryCache.Remove(id);
-            return true;
-        }
+        if (message is null) return false;
+        _memoryCache.Remove(id);
+        return true;
 
-        return false;
     }
 }

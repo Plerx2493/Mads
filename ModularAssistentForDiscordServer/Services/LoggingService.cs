@@ -23,7 +23,6 @@ using DSharpPlus.SlashCommands;
 using MADS.Extensions;
 using Microsoft.Extensions.Logging;
 using Serilog;
-using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace MADS.Services;
 

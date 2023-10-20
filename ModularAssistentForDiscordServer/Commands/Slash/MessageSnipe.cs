@@ -18,13 +18,13 @@ using DSharpPlus.SlashCommands;
 using MADS.CustomComponents;
 using MADS.Extensions;
 using MADS.Services;
-using Microsoft.Extensions.DependencyInjection;
+using System;
 
 namespace MADS.Commands.Slash;
 
 public sealed class MessageSnipe : MadsBaseApplicationCommand
 {
-    private MessageSnipeService _messageSnipeService;
+    private readonly MessageSnipeService _messageSnipeService;
 
     public MessageSnipe(MessageSnipeService messageSnipeService)
     {
@@ -46,17 +46,12 @@ public sealed class MessageSnipe : MadsBaseApplicationCommand
     private async Task DoSnipeAsync(InteractionContext ctx, bool edit)
     {
         await ctx.DeferAsync(true);
-        DiscordMessage message;
+        DiscordMessage? message;
         bool result;
-        
-        if (!edit)
-        {
-            result = _messageSnipeService.TryGetMessage(ctx.Channel.Id, out message);
-        }
-        else
-        {
-            result = _messageSnipeService.TryGetEditedMessage(ctx.Channel.Id, out message);
-        }
+
+        result = !edit
+            ? _messageSnipeService.TryGetMessage(ctx.Channel.Id, out message)
+            : _messageSnipeService.TryGetEditedMessage(ctx.Channel.Id, out message);
 
         if (!result)
         {
@@ -64,8 +59,8 @@ public sealed class MessageSnipe : MadsBaseApplicationCommand
             return;
         }
 
-        var content = message.Content;
-        if (content.Length > 500) content = content.Substring(0, 497) + "...";
+        var content = message?.Content;
+        if (content?.Length > 500) content = string.Concat(content.AsSpan(0, 497), "...");
         var member = await ctx.Guild.GetMemberAsync(message.Author.Id);
 
         var embed = new DiscordEmbedBuilder()
@@ -84,7 +79,7 @@ public sealed class MessageSnipe : MadsBaseApplicationCommand
         var attachments = message.Attachments.Where(x => x.MediaType.StartsWith("image/")).ToList();
 
 
-        for (var i = 0; i < attachments.Count(); i++)
+        for (var i = 0; i < attachments.Count; i++)
         {
             var attachment = attachments.ElementAt(i);
             if (i == 0)

@@ -18,7 +18,6 @@ using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.Attributes;
 using MADS.Extensions;
-using Serilog;
 
 namespace MADS.Commands.Slash;
 

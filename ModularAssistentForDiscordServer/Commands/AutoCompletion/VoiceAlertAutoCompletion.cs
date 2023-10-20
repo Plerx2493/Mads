@@ -14,16 +14,14 @@
 
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
-using MADS.Entities;
 using MADS.Services;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.Commands.AutoCompletion;
 
 public class VoiceAlertAutoCompletion : IAutocompleteProvider
 {
-    private VoiceAlertService _voiceAlertService;
+    private readonly VoiceAlertService _voiceAlertService;
     
     public VoiceAlertAutoCompletion(IServiceProvider services)
     {

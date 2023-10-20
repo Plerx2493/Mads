@@ -2,7 +2,7 @@
   "token": "<Your Token here>",
   "defaultPrefix": "!",
   "minmumloglvl": 1,
-  "databaseConnectionString": "Server=192.168.178.61,Port=3306;Database=MadsDB;User=USR;Password=PWD;",
+  "databaseConnectionString": "Server=192.168.178.61,Port=3306;Database=MadsDB;User=root;Password=owsip#63;",
   "databaseConnectionStringQuartz": "Server=192.168.178.61,Port=3306;Database=MadsDB;User=USR;Password=PWD;",
   "discordWebhook": null,
   "DmProxyChannelId": 0
