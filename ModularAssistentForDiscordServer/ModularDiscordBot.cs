@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using DeepL;
 using DSharpPlus;
 using MADS.Extensions;
 using MADS.JsonModel;
@@ -30,12 +31,7 @@ public class ModularDiscordBot
     public static IServiceProvider Services;
     public static DateTimeOffset StartTime = DateTimeOffset.Now;
     public static ILogger<ModularDiscordBot> Logger;
-    private readonly ConfigJson _config;
-
-    public ModularDiscordBot()
-    {
-        _config = DataProvider.GetConfig();
-    }
+    private readonly ConfigJson _config = DataProvider.GetConfig();
 
     public async Task<bool> RunAsync(CancellationToken token)
     {
@@ -87,7 +83,9 @@ public class ModularDiscordBot
                         .AddSingleton<ReminderService>()
                         .AddHostedService(s => s.GetRequiredService<ReminderService>())
                         .AddSingleton<VoiceAlertService>()
-                        .AddHostedService(s => s.GetRequiredService<VoiceAlertService>());
+                        .AddHostedService(s => s.GetRequiredService<VoiceAlertService>())
+                        .AddSingleton(new Translator(_config.DeeplApiKey ?? ""))
+                        .AddSingleton<TranslateInformationService>();
 
                     Services = services.BuildServiceProvider();
                     Logger = Services.GetRequiredService<ILogger<ModularDiscordBot>>();

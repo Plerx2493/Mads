@@ -61,6 +61,7 @@ internal static partial class EventListener
             await e.Context.Interaction.EditOriginalResponseAsync(
                 new DiscordWebhookBuilder(new DiscordInteractionResponseBuilder().AddEmbed(discordEmbed)
                     .AsEphemeral()));
+            return;
         }
         catch (BadRequestException)
         {
@@ -68,8 +69,7 @@ internal static partial class EventListener
 
         await e.Context.Channel.SendMessageAsync(discordEmbed);
     }
-
-
+    
     internal static async Task OnCNextErrored(CommandsNextExtension sender, CommandErrorEventArgs e)
     {
         var typeOfException = e.Exception.GetType();
@@ -111,5 +111,21 @@ internal static partial class EventListener
             .AddEmbed(exceptionEmbed);
 
         await webhookClient.BroadcastMessageAsync(webhookBuilder);
+    }
+
+    internal static async Task OnAutocompleteError(SlashCommandsExtension sender, AutocompleteErrorEventArgs e)
+    {
+        await e.Context.Channel.SendMessageAsync($"OOPS your command just errored... \n {e.Exception.Message}");
+        await e.Context.Channel.SendMessageAsync(e.Exception.InnerException?.Message ?? "no inner exception");
+        var reallyLongString = e.Exception.StackTrace;
+
+        var interactivity = e.Context.Client.GetInteractivity();
+        if (reallyLongString != null)
+        {
+            var pages = interactivity.GeneratePagesInEmbed(reallyLongString);
+
+            await e.Context.Channel.SendPaginatedMessageAsync(e.Context.Member, pages, PaginationBehaviour.Ignore,
+                ButtonPaginationBehavior.DeleteButtons);
+        }
     }
 }

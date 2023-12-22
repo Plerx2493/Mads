@@ -16,7 +16,6 @@
 using System.Reflection;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Executors;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity;
@@ -69,9 +68,10 @@ public class DiscordClientService : IHostedService
         };
 
         DiscordClient = new DiscordClient(discordConfig);
-
-        EventListener.GuildDownload(DiscordClient, _dbContextFactory);
-        EventListener.AddGuildNotifier(DiscordClient, Logging);
+        EventListener.GuildDownload(DiscordClient);
+        DiscordClient.GuildCreated += EventListener.OnGuildCreated;
+        DiscordClient.GuildDeleted += EventListener.OnGuildDeleted;
+        DiscordClient.GuildAvailable += EventListener.OnGuildAvailable;
 
         var asm = Assembly.GetExecutingAssembly();
 
@@ -81,8 +81,7 @@ public class DiscordClientService : IHostedService
             CaseSensitive = false,
             DmHelp = false,
             EnableDms = true,
-            EnableMentionPrefix = true,
-            CommandExecutor = new ParallelQueuedCommandExecutor()
+            EnableMentionPrefix = true
         };
         CommandsNext = DiscordClient.UseCommandsNext(cnextConfig);
         CommandsNext.RegisterCommands(asm);
@@ -101,6 +100,7 @@ public class DiscordClientService : IHostedService
         SlashCommands.RegisterCommands(asm, 938120155974750288);
 #endif
         SlashCommands.SlashCommandErrored += EventListener.OnSlashCommandErrored;
+        SlashCommands.AutocompleteErrored += EventListener.OnAutocompleteError;
 
         //Custom buttons
         EventListener.EnableButtonListener(DiscordClient);

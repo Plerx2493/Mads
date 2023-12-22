@@ -42,7 +42,7 @@ public class MadsBaseApplicationCommand : ApplicationCommandModule
         var _ = CommandService.Logging.LogCommandExecutionAsync(ctx, _executionTimer.Elapsed);
 
 
-        return Task.FromResult(true);
+        return Task.CompletedTask;
     }
 
     public override Task<bool> BeforeContextMenuExecutionAsync(ContextMenuContext ctx)

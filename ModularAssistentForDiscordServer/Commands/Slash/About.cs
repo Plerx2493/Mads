@@ -27,8 +27,8 @@ public sealed class About : MadsBaseApplicationCommand
     {
         var discordEmbedBuilder = CommandUtility.GetDiscordEmbed();
         var discordMessageBuilder = new DiscordInteractionResponseBuilder();
-        var inviteUri = ctx.Client.CurrentApplication.GenerateOAuthUri(null, Permissions.Administrator, OAuthScope.Bot,
-            OAuthScope.ApplicationsCommands);
+        var inviteUri = ctx.Client.CurrentApplication.GenerateOAuthUri(null, Permissions.Administrator, DiscordOAuthScope.Bot,
+            DiscordOAuthScope.ApplicationsCommands);
         var addMe = $"[Click here!]({inviteUri.Replace(" ", "%20")})";
 
         var diff = DateTime.Now - CommandService.StartTime;

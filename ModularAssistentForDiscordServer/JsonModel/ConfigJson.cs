@@ -39,4 +39,7 @@ public class ConfigJson
 
     [JsonProperty("DmProxyChannelId")]
     public ulong? DmProxyChannelId { get; set; }
+    
+    [JsonProperty("DeeplApiKey")]
+    public string? DeeplApiKey { get; set; }
 }

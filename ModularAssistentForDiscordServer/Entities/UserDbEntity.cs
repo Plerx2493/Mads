@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -27,6 +28,9 @@ public class UserDbEntity
 
     [Column("discriminator")]
     public int Discriminator { get; set; }
+    
+    [Column("prefered_language")]
+    public string PreferedLanguage { get; set; }
 
     public List<IncidentDbEntity> Incidents { get; set; }
 

@@ -13,7 +13,9 @@
 // limitations under the License.
 
 using DSharpPlus;
+using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
+using Serilog;
 
 namespace MADS.EventListeners;
 
@@ -22,5 +24,10 @@ internal static partial class EventListener
     internal static async Task OnZombied(DiscordClient sender, ZombiedEventArgs e)
     {
         await sender.ReconnectAsync(true);
+    }
+    
+    internal static async Task OnGuildAvailable(DiscordClient sender, GuildCreateEventArgs e)
+    {
+       Log.Warning("Guild available: {GuildName}", e.Guild.Name);
     }
 }

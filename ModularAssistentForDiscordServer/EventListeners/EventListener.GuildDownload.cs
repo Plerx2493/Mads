@@ -16,22 +16,21 @@ using DSharpPlus;
 using DSharpPlus.EventArgs;
 using MADS.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.EventListeners;
 
 internal static partial class EventListener
 {
-    public static void GuildDownload(DiscordClient client, IDbContextFactory<MadsContext> contextFactory)
+    public static void GuildDownload(DiscordClient client)
     {
-        client.GuildDownloadCompleted += async (_, args) => { await UpdateDb(args, contextFactory); };
+        client.GuildDownloadCompleted += async (_, args) => { await UpdateDb(args); };
     }
 
-    private static async Task UpdateDb
-    (
-        GuildDownloadCompletedEventArgs args,
-        IDbContextFactory<MadsContext> dbFactory
-    )
+    private static async Task UpdateDb( GuildDownloadCompletedEventArgs args)
     {
+        var dbFactory = ModularDiscordBot.Services.GetRequiredService<IDbContextFactory<MadsContext>>();
         await UpdateGuilds(args, dbFactory);
         await UpdateUsersDb(args, dbFactory);
     }

@@ -38,6 +38,7 @@ public static class ExtensionMethods
             {
                 options.UseMySql(config.ConnectionString, ServerVersion.AutoDetect(config.ConnectionString));
                 options.UseLoggerFactory(logger);
+                options.EnableDetailedErrors();
             }
         );
 
