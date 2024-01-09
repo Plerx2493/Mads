@@ -117,9 +117,6 @@ internal static partial class EventListener
             }
             
             translationService.SetPreferredLanguage(args.User.Id, result.Result.Values["answer-text"]);
-            
-            
-            
             return;
         }
         if(substring.Length != 2)
@@ -210,24 +207,24 @@ internal static partial class EventListener
         IReadOnlyList<string> substring
     )
     {
+        await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+        
         var member = await e.Guild.GetMemberAsync(e.User.Id);
         if (!member.Permissions.HasPermission(Permissions.MoveMembers)) return;
         var originChannel = e.Guild.GetChannel(ulong.Parse(substring[1]));
         var targetChannel = e.Guild.GetChannel(ulong.Parse(substring[2]));
 
         foreach (var voiceMember in originChannel.Users) await targetChannel.PlaceMemberAsync(voiceMember);
-
-        await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
     }
 
     private static async Task BanUser(ComponentInteractionCreateEventArgs e, IReadOnlyList<string> substring)
     {
+        await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
         var member = await e.Guild.GetMemberAsync(e.User.Id);
         if (!member.Permissions.HasPermission(Permissions.BanMembers)) return;
 
         var userId = ulong.Parse(substring[1]);
         await e.Guild.BanMemberAsync(userId);
-        await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
     }
 
     private static async Task KickUser(ComponentInteractionCreateEventArgs e, IReadOnlyList<string> substring)
