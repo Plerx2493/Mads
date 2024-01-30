@@ -179,7 +179,7 @@ public class LoggingService
             {
                 Title = "Feedback",
                 Description = e.Values["feedback-text"],
-                Color = new Optional<DiscordColor>(new DiscordColor(0, 255, 194)),
+                Color = new DiscordColor(0, 255, 194),
                 Timestamp = (DateTimeOffset) DateTime.Now,
                 Footer = new DiscordEmbedBuilder.EmbedFooter
                 {
@@ -236,7 +236,7 @@ public class LoggingService
         {
             Title = logLevel.ToString(),
             Description = message,
-            Color = new Optional<DiscordColor>(new DiscordColor(0, 255, 194)),
+            Color = new DiscordColor(0, 255, 194),
             Timestamp = DateTime.Now,
             Footer = new DiscordEmbedBuilder.EmbedFooter
             {

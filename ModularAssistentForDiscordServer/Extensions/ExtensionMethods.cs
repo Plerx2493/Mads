@@ -26,7 +26,7 @@ namespace MADS.Extensions;
 public static class ExtensionMethods
 {
     public static IServiceCollection AddDbFactoryDebugOrRelease(this IServiceCollection serviceCollection,
-        ConfigJson config)
+        MadsConfig config)
     {
         var logger = new LoggerFactory().AddSerilog(new LoggerConfiguration()
             .WriteTo.Console()
@@ -46,7 +46,7 @@ public static class ExtensionMethods
     }
 
     public static IServiceCollection AddDiscordRestClient(this IServiceCollection serviceCollection,
-        ConfigJson config)
+        MadsConfig config)
     {
         var discordRestConfig = new DiscordConfiguration
         {
@@ -88,7 +88,7 @@ public static class ExtensionMethods
             .WithColor(DiscordColor.Green);
 
         message.WithContent($"<@!{user.Id}>");
-        message.WithEmbed(embed).WithAllowedMention(userMention);
+        message.AddEmbed(embed).WithAllowedMention(userMention);
 
         return message;
     }

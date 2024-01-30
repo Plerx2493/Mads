@@ -31,7 +31,7 @@ public class ModularDiscordBot
     public static IServiceProvider Services;
     public static DateTimeOffset StartTime = DateTimeOffset.Now;
     public static ILogger<ModularDiscordBot> Logger;
-    private readonly ConfigJson _config = DataProvider.GetConfig();
+    private readonly MadsConfig _config = DataProvider.GetConfig();
 
     public async Task<bool> RunAsync(CancellationToken token)
     {

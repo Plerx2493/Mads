@@ -46,7 +46,7 @@ public class DiscordClientService : IHostedService
 
     public DiscordClientService
     (
-        ConfigJson pConfig,
+        MadsConfig pConfig,
         IDbContextFactory<MadsContext> dbDbContextFactory
     )
     {

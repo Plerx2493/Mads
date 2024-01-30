@@ -35,7 +35,7 @@ internal static partial class EventListener
             
         await ModularDiscordBot.Services
             .GetRequiredService<LoggingService>()
-            .LogToWebhook(new DiscordMessageBuilder().WithEmbed(embed));
+            .LogToWebhook(new DiscordMessageBuilder().AddEmbed(embed));
     }
 
     public static async Task OnGuildDeleted(DiscordClient sender, GuildDeleteEventArgs args)
@@ -51,7 +51,7 @@ internal static partial class EventListener
             
         await ModularDiscordBot.Services
             .GetRequiredService<LoggingService>()
-            .LogToWebhook(new DiscordMessageBuilder().WithEmbed(embed));
+            .LogToWebhook(new DiscordMessageBuilder().AddEmbed(embed));
     }
     
 }

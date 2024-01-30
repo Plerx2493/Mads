@@ -29,19 +29,20 @@ namespace MADS;
 
 internal static class MainProgram
 {
-    public async static Task Main()
+    public static async Task Main()
     {
         Log.Logger = new LoggerConfiguration()
             .WriteTo.Console()
+            .MinimumLevel.Verbose()
             .MinimumLevel.Override("Quartz", LogEventLevel.Warning)
             .CreateLogger();
 
         //Create cancellationToken and hook the cancelKey
         var cancellationSource = new CancellationTokenSource();
-        Console.CancelKeyPress += (_, args) =>
+        Console.CancelKeyPress += async (_, args) =>
         {
             args.Cancel = true;
-            cancellationSource.Cancel();
+            await cancellationSource.CancelAsync();
         };
 
         //Validate the config.json and create a new one when its not present/valid
@@ -69,8 +70,9 @@ internal static class MainProgram
         catch (Exception e)
         {
             if (e is TaskCanceledException) return;
-
+            Log.Error(e, "An uncaught exception occurred");
             var _ = LogToWebhookAsync(e);
+            Environment.Exit(69);
         }
         
         cancellationSource.Token.WaitHandle.WaitOne();
@@ -103,7 +105,7 @@ internal static class MainProgram
         var fileStream = File.Create(configPath);
         fileStream.Close();
 
-        ConfigJson newConfig = new()
+        MadsConfig newConfig = new()
         {
             Token = "<Your Token here>",
             Prefix = "!",

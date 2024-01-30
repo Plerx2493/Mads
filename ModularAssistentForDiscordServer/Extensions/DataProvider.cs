@@ -12,15 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Configuration;
 using MADS.JsonModel;
+using Microsoft.Extensions.Logging;
 
 namespace MADS.Extensions;
 
 internal static class DataProvider
 {
-    public static ConfigJson GetConfig()
+    public static MadsConfig GetConfig()
     {
-        return JsonProvider.ReadFile<ConfigJson>(GetPath("config.json"));
+        var config = new MadsConfig();
+        
+        config.Token = Environment.GetEnvironmentVariable("MADS_DISCORD_TOKEN") ?? throw new ArgumentNullException("Missing env var MADS_DISCORD_TOKEN");
+        config.Prefix = Environment.GetEnvironmentVariable("MADS_DEFAULT_PREFIX") ?? throw new ArgumentNullException("Missing env var MADS_DEFAULT_PREFIX");
+        config.LogLevel = Enum.Parse<LogLevel>(Environment.GetEnvironmentVariable("MADS_MINIMUM_LOG_LEVEL") ?? throw new ArgumentNullException("Missing env var MADS_MINIMUM_LOG_LEVEL"));
+        config.ConnectionString = Environment.GetEnvironmentVariable("MADS_DATABASE_CONNECTION_STRING") ?? throw new ArgumentNullException("Missing env var MADS_DATABASE_CONNECTION_STRING");
+        config.ConnectionStringQuartz = Environment.GetEnvironmentVariable("MADS_DATABASE_CONNECTION_STRING_QUARTZ") ?? throw new ArgumentNullException("Missing env var MADS_DATABASE_CONNECTION_STRING_QUARTZ");
+        config.DiscordWebhook = Environment.GetEnvironmentVariable("MADS_DISCORD_WEBHOOK") ?? throw new ArgumentNullException("Missing env var MADS_DISCORD_WEBHOOK");
+        config.DmProxyChannelId = ulong.Parse(Environment.GetEnvironmentVariable("MADS_DM_PROXY_CHANNEL_ID") ?? throw new ArgumentNullException("Missing env var MADS_DM_PROXY_CHANNEL_ID"));
+        config.DeeplApiKey = Environment.GetEnvironmentVariable("MADS_DEEPL_API_KEY") ?? throw new ArgumentNullException("Missing env var MADS_DEEPL_API_KEY");
+        
+        return config;
     }
 
     public static TJsonModel GetJson<TJsonModel>(string path)
@@ -28,7 +41,7 @@ internal static class DataProvider
         return JsonProvider.ReadFile<TJsonModel>(GetPath(path));
     }
 
-    public static void SetConfig(ConfigJson configJson)
+    public static void SetConfig(MadsConfig configJson)
     {
         JsonProvider.ParseJson(GetPath("config.json"), configJson);
     }
