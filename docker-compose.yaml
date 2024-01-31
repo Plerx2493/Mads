@@ -1,7 +1,7 @@
 version: "3.8"
 services:
     mads-bot:
-        image: plerx2493/mads
+        image: plerx2493/mads:latest
         environment:
             - MADS_DISCORD_TOKEN=<Token>
             - MADS_DEFAULT_PREFIX=!
@@ -10,7 +10,7 @@ services:
             - MADS_DATABASE_CONNECTION_STRING_QUARTZ=Server=mads-db-quartz,Port=3306;Database=quartz;User=quartz;Password=quartz;
             - MADS_DISCORD_WEBHOOK=<Webhook>
             - MADS_DM_PROXY_CHANNEL_ID=0
-            - MADS_DEEPL_API_KEY=<API_KEY>
+            - MADS_DEEPL_API_KEY=<API-Key>
         networks:
             - mads_internal
         depends_on:
@@ -33,7 +33,7 @@ services:
         restart: unless-stopped
         
     mads-db-quartz:
-            image: mariadb:latest
+            image: quartz-db-mysql:latest
             environment:
                 MYSQL_ROOT_PASSWORD: quartz
                 MYSQL_DATABASE: quartz

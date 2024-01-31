@@ -33,7 +33,7 @@ public class ModularDiscordBot
     public static ILogger<ModularDiscordBot> Logger;
     private readonly MadsConfig _config = DataProvider.GetConfig();
 
-    public async Task<bool> RunAsync(CancellationToken token)
+    public async Task RunAsync(CancellationToken token)
     {
         await Host.CreateDefaultBuilder()
             .UseSerilog()
@@ -91,7 +91,6 @@ public class ModularDiscordBot
                     Logger = Services.GetRequiredService<ILogger<ModularDiscordBot>>();
                 }
             )
-            .RunConsoleAsync();
-        return true;
+            .RunConsoleAsync(cancellationToken: token);
     }
 }
