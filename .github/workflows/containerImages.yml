@@ -11,6 +11,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           submodules: 'recursive'
+          
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
@@ -27,23 +28,23 @@ jobs:
       - name: Build and Push ModularAssistentForDiscordServer
         uses: docker/build-push-action@v3
         with:
-          context: .
-          file: ./ModularAssistentForDiscordServer/Dockerfile
+          context: ./ModularAssistentForDiscordServer
+          file: ./Dockerfile
           push: true
           tags: |
-            ghcr.io/plerx2493/mads:latest
-            ghcr.io/plerx2493/mads:${{ github.sha }}
+            ghcr.io/${{ github.repository_owner  }}/mads:latest
+            ghcr.io/${{ github.repository_owner  }}/mads:${{ github.sha }}
           build-args: |
             "BUILD_VER=${{ github.sha }}"
             
       - name: Build and Push QuartzDB
         uses: docker/build-push-action@v3
         with:
-          context: .
-          file: ./QuartzNetDocker/Dockerfile
+          context: ./QuartzNetDocker
+          file: ./Dockerfile
           push: true
           tags: |
-            ghcr.io/plerx2493/quartz-db-mysql:latest
-            ghcr.io/plerx2493/quartz-db-mysql:${{ github.sha }}
+            ghcr.io/${{ github.repository_owner  }}/quartz-db-mysql:latest
+            ghcr.io/${{ github.repository_owner  }}/quartz-db-mysql:${{ github.sha }}
           build-args: |
             "BUILD_VER=${{ github.sha }}"
