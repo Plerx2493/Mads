@@ -32,8 +32,8 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner  }}/mads:latest
-            ghcr.io/${{ github.repository_owner  }}/mads:${{ github.sha }}
+            ghcr.io/plerx2493/mads:latest
+            ghcr.io/plerx2493/mads:${{ github.sha }}
           build-args: |
             "BUILD_VER=${{ github.sha }}"
             
@@ -44,7 +44,7 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner  }}/quartz-db-mysql:latest
-            ghcr.io/${{ github.repository_owner  }}/quartz-db-mysql:${{ github.sha }}
+            ghcr.io/plerx2493/quartz-db-mysql:latest
+            ghcr.io/plerx2493/quartz-db-mysql:${{ github.sha }}
           build-args: |
             "BUILD_VER=${{ github.sha }}"
