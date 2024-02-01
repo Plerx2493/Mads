@@ -67,7 +67,7 @@ public class MessageSnipeService : IHostedService
     )
     {
         if (e.Message is null) return Task.CompletedTask;
-        if (e.Message.WebhookMessage ?? false) return Task.CompletedTask;
+        if (e.Message.WebhookMessage) return Task.CompletedTask;
 
         if ((string.IsNullOrEmpty(e.Message?.Content) && !(e.Message?.Attachments.Count > 0)) || e.Message.Author.IsBot)
             return Task.CompletedTask;
@@ -86,7 +86,7 @@ public class MessageSnipeService : IHostedService
     )
     {
         if (e.Message is null) return Task.CompletedTask;
-        if (e.Message.WebhookMessage ?? false) return Task.CompletedTask;
+        if (e.Message.WebhookMessage) return Task.CompletedTask;
 
         if ((string.IsNullOrEmpty(e.MessageBefore?.Content) && !(e.MessageBefore?.Attachments.Count > 0))
             || e.Message.Author.IsBot) return Task.CompletedTask;

@@ -23,18 +23,19 @@
 
     <ItemGroup>
         <PackageReference Include="DeepL.net" Version="1.8.0" />
-        <PackageReference Include="DSharpPlus" Version="5.0.0-nightly-01958" />
-        <PackageReference Include="DSharpPlus.Commands" Version="5.0.0-nightly-01958" />
-        <PackageReference Include="DSharpPlus.CommandsNext" Version="5.0.0-nightly-01958" />
-        <PackageReference Include="DSharpPlus.Interactivity" Version="5.0.0-nightly-01958" />
-        <PackageReference Include="DSharpPlus.Rest" Version="5.0.0-nightly-01958" />
-        <PackageReference Include="DSharpPlus.SlashCommands" Version="5.0.0-nightly-01958" />
-        <PackageReference Include="DSharpPlus.VoiceNext" Version="5.0.0-nightly-01958" />
+        <PackageReference Include="DSharpPlus" Version="5.0.0-pr-1719-00079" />
+        <PackageReference Include="DSharpPlus.Commands" Version="5.0.0-nightly-01982" />
+        <PackageReference Include="DSharpPlus.CommandsNext" Version="5.0.0-pr-1719-00079" />
+        <PackageReference Include="DSharpPlus.Interactivity" Version="5.0.0-pr-1719-00079" />
+        <PackageReference Include="DSharpPlus.Rest" Version="5.0.0-pr-1719-00079" />
+        <PackageReference Include="DSharpPlus.SlashCommands" Version="5.0.0-pr-1719-00079" />
+        <PackageReference Include="DSharpPlus.VoiceNext" Version="5.0.0-pr-1719-00079" />
         <PackageReference Include="EntityFramework" Version="6.4.4" />
         <PackageReference Include="FlexLabs.EntityFrameworkCore.Upsert" Version="8.0.0" />
         <PackageReference Include="Humanizer.Core" Version="2.14.1" />
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.5.0" />
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.5.0" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.9.0-3.final" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.9.0-3.final" />
+        <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.9.0-3.final" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.1">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
