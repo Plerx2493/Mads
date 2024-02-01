@@ -29,7 +29,6 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: ./ModularAssistentForDiscordServer
-          file: ./Dockerfile
           push: true
           tags: |
             ghcr.io/plerx2493/mads:latest
@@ -41,7 +40,6 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: ./QuartzNetDocker
-          file: ./Dockerfile
           push: true
           tags: |
             ghcr.io/plerx2493/quartz-db-mysql:latest
