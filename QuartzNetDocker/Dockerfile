@@ -1,3 +1,3 @@
 FROM mysql:latest
 
-ADD tables_mysql_innodb.sql /docker-entrypoint-initdb.d/
+ADD tables_mysql_innodb.sql /QuartzNetDocker/docker-entrypoint-initdb.d/

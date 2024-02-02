@@ -26,7 +26,7 @@ jobs:
       - name: Build and Push ModularAssistentForDiscordServer
         uses: docker/build-push-action@v3
         with:
-          context: ./ModularAssistentForDiscordServer/
+          context: .
           file: ./ModularAssistentForDiscordServer/Dockerfile
           push: true
           tags: |
@@ -38,7 +38,7 @@ jobs:
       - name: Build and Push QuartzDB
         uses: docker/build-push-action@v3
         with:
-          context: ./QuartzNetDocker/
+          context: .
           file: ./ModularAssistentForDiscordServer/Dockerfile
           push: true
           tags: |
