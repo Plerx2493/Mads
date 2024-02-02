@@ -33,7 +33,7 @@ services:
         restart: unless-stopped
         
     mads-db-quartz:
-            image: quartz-db-mysql:latest
+            image: plerx2493/quartz-db-mysql:latest
             environment:
                 MYSQL_ROOT_PASSWORD: quartz
                 MYSQL_DATABASE: quartz
