@@ -129,9 +129,9 @@ public class DiscordClientService : IHostedService
     {
         _logger.Warning("DiscordClientService started");
         //Update database to latest migration
-        using var context = await _dbContextFactory.CreateDbContextAsync();
-        if ((await context.Database.GetPendingMigrationsAsync()).Any())
-            await context.Database.MigrateAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        if ((await context.Database.GetPendingMigrationsAsync(cancellationToken)).Any())
+            await context.Database.MigrateAsync(cancellationToken);
         
         DiscordActivity act = new("Messing with code", ActivityType.Custom);
         
