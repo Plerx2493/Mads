@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using DSharpPlus;
+using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using MADS.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -31,8 +32,10 @@ internal static partial class EventListener
     private static async Task UpdateDb( GuildDownloadCompletedEventArgs args)
     {
         var dbFactory = ModularDiscordBot.Services.GetRequiredService<IDbContextFactory<MadsContext>>();
-        await UpdateGuilds(args, dbFactory);
-        await UpdateUsersDb(args, dbFactory);
+        var updateGuilds = UpdateGuilds(args, dbFactory);
+        var updateUsers = UpdateUsersDb(args, dbFactory);
+        
+        await Task.WhenAll(updateGuilds, updateUsers);
     }
 
     private static async Task UpdateUsersDb
@@ -42,28 +45,39 @@ internal static partial class EventListener
     )
     {
         await using var db = await dbFactory.CreateDbContextAsync();
+        var oldDbUsers = db.Users.Select(x => x.Id).ToList();
+        
         var newUserIds = args.Guilds.Values
             .SelectMany(x => x.Members.Values)
             .Select(x => x.Id)
             .Distinct()
-            .Except(db.Users.Select(y => y.Id));
+            .Except(oldDbUsers)
+            .ToArray();
 
-        var newUserDbEntities = newUserIds.Select(userId =>
+        DiscordMember[] users = args.Guilds.Values
+            .SelectMany(x => x.Members.Values)
+            .ToArray();
+
+        List<UserDbEntity> userDbEntities = new(newUserIds.Length);
+
+        foreach (ulong userId in newUserIds)
         {
-            var user = args.Guilds.Values
-                .SelectMany(x => x.Members.Values)
-                .First(x => x.Id == userId);
+            var user = users.FirstOrDefault(x => x.Id == userId);
+                
+            if (user is null) continue;
 
-            return new UserDbEntity
+            var dbEntity = new UserDbEntity
             {
                 Id = user.Id,
                 Username = user.Username,
                 Discriminator = Convert.ToInt32(user.Discriminator),
                 PreferedLanguage = "en-US"
             };
-        });
-
-        await db.Users.AddRangeAsync(newUserDbEntities);
+            
+            userDbEntities.Add(dbEntity);
+        }
+        
+        await db.Users.AddRangeAsync(userDbEntities);
         await db.SaveChangesAsync();
     }
 
@@ -89,7 +103,8 @@ internal static partial class EventListener
                     Prefix = "",
                     StarboardActive = false
                 }
-            });
+            })
+            .ToArray();
 
         await db.Guilds.AddRangeAsync(newGuildEntities);
         await db.SaveChangesAsync();
