@@ -13,33 +13,26 @@
 // limitations under the License.
 
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 
-namespace MADS.JsonModel;
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+
+namespace MADS.Entities;
 
 public class MadsConfig
 {
-    [JsonProperty("token")]
     public string Token { get; set; }
-
-    [JsonProperty("defaultPrefix")]
+    
     public string Prefix { get; set; }
-
-    [JsonProperty("minmumloglvl")]
+    
     public LogLevel LogLevel { get; set; }
-
-    [JsonProperty("databaseConnectionString")]
+    
     public string ConnectionString { get; set; }
 
-    [JsonProperty("databaseConnectionStringQuartz")]
     public string ConnectionStringQuartz { get; set; }
 
-    [JsonProperty("discordWebhook")]
     public string DiscordWebhook { get; set; }
 
-    [JsonProperty("DmProxyChannelId")]
     public ulong? DmProxyChannelId { get; set; }
-    
-    [JsonProperty("DeeplApiKey")]
+
     public string? DeeplApiKey { get; set; }
 }

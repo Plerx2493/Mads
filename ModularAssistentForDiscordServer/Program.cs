@@ -17,11 +17,9 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using MADS.Entities;
 using MADS.Extensions;
-using MADS.JsonModel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Events;
 

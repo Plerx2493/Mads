@@ -14,8 +14,8 @@
 
 using DeepL;
 using DSharpPlus;
+using MADS.Entities;
 using MADS.Extensions;
-using MADS.JsonModel;
 using MADS.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -78,14 +78,15 @@ public class ModularDiscordBot
                         .AddSingleton<StarboardService>()
                         .AddHostedService(s => s.GetRequiredService<StarboardService>())
                         .AddSingleton(s =>
-                            new TokenListener("51151", s.GetRequiredService<DiscordClient>(), "/api/v1/mads/token/"))
+                            new TokenListener("51151", "/api/v1/mads/token/"))
                         .AddHostedService(s => s.GetRequiredService<TokenListener>())
                         .AddSingleton<ReminderService>()
                         .AddHostedService(s => s.GetRequiredService<ReminderService>())
                         .AddSingleton<VoiceAlertService>()
                         .AddHostedService(s => s.GetRequiredService<VoiceAlertService>())
                         .AddSingleton(new Translator(_config.DeeplApiKey ?? ""))
-                        .AddSingleton<TranslateInformationService>();
+                        .AddSingleton<TranslateInformationService>()
+                        .AddHttpClient();
 
                     Services = services.BuildServiceProvider();
                     Logger = Services.GetRequiredService<ILogger<ModularDiscordBot>>();

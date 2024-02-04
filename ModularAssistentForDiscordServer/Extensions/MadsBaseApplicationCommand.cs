@@ -23,7 +23,7 @@ namespace MADS.Extensions;
 [SlashModuleLifespan(SlashModuleLifespan.Transient)]
 public class MadsBaseApplicationCommand : ApplicationCommandModule
 {
-    private InteractionContext _ctx;
+    private InteractionContext? _ctx;
     private readonly Stopwatch _executionTimer = new();
     public DiscordClientService CommandService => ModularDiscordBot.Services.GetRequiredService<DiscordClientService>();
 
@@ -81,7 +81,7 @@ public class MadsBaseApplicationCommand : ApplicationCommandModule
             .AddEmbed(embed)
             .AsEphemeral(isEphemeral);
 
-        await _ctx.CreateResponseAsync(response);
+        await _ctx!.CreateResponseAsync(response);
     }
     
     protected async Task CreateResponse_Success(string message, bool isEphemeral = false)
@@ -95,7 +95,7 @@ public class MadsBaseApplicationCommand : ApplicationCommandModule
             .AddEmbed(embed)
             .AsEphemeral(isEphemeral);
 
-        await _ctx.CreateResponseAsync(response);
+        await _ctx!.CreateResponseAsync(response);
     }
 
     protected async Task EditResponse_Error(string message)
@@ -108,7 +108,7 @@ public class MadsBaseApplicationCommand : ApplicationCommandModule
         var response = new DiscordWebhookBuilder()
             .AddEmbed(embed);
 
-        await _ctx.EditResponseAsync(response);
+        await _ctx!.EditResponseAsync(response);
     }
 
     protected async Task EditResponse_Success(string message)
@@ -121,6 +121,6 @@ public class MadsBaseApplicationCommand : ApplicationCommandModule
         var response = new DiscordWebhookBuilder()
             .AddEmbed(embed);
 
-        await _ctx.EditResponseAsync(response);
+        await _ctx!.EditResponseAsync(response);
     }
 }

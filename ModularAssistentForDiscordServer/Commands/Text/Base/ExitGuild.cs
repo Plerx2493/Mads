@@ -12,13 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Diagnostics;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
-using DSharpPlus.Entities;
 using MADS.Extensions;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.Commands.Text.Base;
 

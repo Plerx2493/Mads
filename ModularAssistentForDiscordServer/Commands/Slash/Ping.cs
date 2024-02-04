@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Diagnostics;
 using DSharpPlus.SlashCommands;
 using Humanizer;
+using Humanizer.Localisation;
 using MADS.Extensions;
 
 namespace MADS.Commands.Slash;
@@ -23,14 +25,13 @@ public sealed class Ping : MadsBaseApplicationCommand
     [SlashCommand("ping", "Get the bot's ping")]
     public async Task PingCommand(InteractionContext ctx)
     {
-        var diff = DateTime.Now - CommandService.StartTime;
-        var date = diff.Humanize();
-
+        using var process = Process.GetCurrentProcess();
+        
         var discordEmbedBuilder = CommandUtility.GetDiscordEmbed();
         discordEmbedBuilder
             .WithTitle("Status")
             .WithTimestamp(DateTime.Now)
-            .AddField("Uptime", date)
+            .AddField("Uptime", $"{DateTimeOffset.UtcNow.Subtract(process.StartTime).Humanize(3, minUnit: TimeUnit.Millisecond, maxUnit: TimeUnit.Day)}")
             .AddField("Websocket ping", $"{ctx.Client.Ping} ms");
 
         await ctx.CreateResponseAsync(discordEmbedBuilder, true);

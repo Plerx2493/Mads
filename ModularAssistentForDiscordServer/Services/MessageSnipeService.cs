@@ -66,10 +66,9 @@ public class MessageSnipeService : IHostedService
         MessageDeleteEventArgs e
     )
     {
-        if (e.Message is null) return Task.CompletedTask;
         if (e.Message.WebhookMessage ?? false) return Task.CompletedTask;
 
-        if ((string.IsNullOrEmpty(e.Message?.Content) && !(e.Message?.Attachments.Count > 0)) || e.Message.Author.IsBot)
+        if ((string.IsNullOrEmpty(e.Message.Content) && !(e.Message.Attachments.Count > 0)) || (e.Message.Author?.IsBot ?? false))
             return Task.CompletedTask;
         
         AddMessage(e.Message);
@@ -85,11 +84,10 @@ public class MessageSnipeService : IHostedService
         MessageUpdateEventArgs e
     )
     {
-        if (e.Message is null) return Task.CompletedTask;
         if (e.Message.WebhookMessage ?? false) return Task.CompletedTask;
 
-        if ((string.IsNullOrEmpty(e.MessageBefore?.Content) && !(e.MessageBefore?.Attachments.Count > 0))
-            || e.Message.Author.IsBot) return Task.CompletedTask;
+        if ((string.IsNullOrEmpty(e.MessageBefore.Content) && !(e.MessageBefore.Attachments.Count > 0))
+            || (e.Message.Author?.IsBot ?? false)) return Task.CompletedTask;
 
         AddEditedMessage(e.MessageBefore);
         _logger.Warning("Sniped!");

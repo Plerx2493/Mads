@@ -28,9 +28,8 @@ public class UserInfoUser : MadsBaseApplicationCommand
     {
         var user = ctx.TargetUser;
 
-        DiscordMember member = null;
-
-        user ??= ctx.User;
+        DiscordMember? member = null;
+        
         try
         {
             if (!ctx.Channel.IsPrivate) member = await ctx.Guild.GetMemberAsync(user.Id);
@@ -57,7 +56,7 @@ public class UserInfoUser : MadsBaseApplicationCommand
             embed.AddField("Joined at:",
                 $"{member.JoinedAt.Humanize()} {Formatter.Timestamp(member.JoinedAt, TimestampFormat.ShortDate)}",
                 true);
-            if (member.MfaEnabled.HasValue) embed.AddField("2FA:", member.MfaEnabled.ToString());
+            if (member.MfaEnabled.HasValue) embed.AddField("2FA:", member.MfaEnabled.ToString()!);
 
             embed.AddField("Permissions:", member.Permissions.Humanize());
 

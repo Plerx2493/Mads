@@ -17,7 +17,6 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using MADS.Extensions;
-using MADS.Migrations;
 using MADS.Services;
 
 namespace MADS.Commands.Slash;

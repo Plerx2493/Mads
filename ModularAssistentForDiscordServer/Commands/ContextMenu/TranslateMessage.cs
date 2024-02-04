@@ -48,9 +48,15 @@ public class TranslateMessage : MadsBaseApplicationCommand
         var message = await ctx.Channel.GetMessageAsync(messageId);
         var messageContent = message.Content;
 
-        if (messageContent.IsNullOrWhiteSpace())
+        if (messageContent.IsNullOrWhiteSpace() || messageContent is null)
         {
             await ctx.CreateResponseAsync("⚠️ Message is empty!");
+            return;
+        }
+        
+        if (preferredLanguage is null)
+        {
+            await ctx.CreateResponseAsync("⚠️ No language set!");
             return;
         }
         
@@ -58,8 +64,8 @@ public class TranslateMessage : MadsBaseApplicationCommand
             await _translator.TranslateTextAsync(messageContent, null, preferredLanguage);
         
         var embed = new DiscordEmbedBuilder()
-            .WithAuthor($"Translated message from {message.Author.Username}", 
-                message.Author.AvatarUrl)
+            .WithAuthor(message.Author?.Username, 
+                message.Author?.AvatarUrl)
             .WithDescription(transaltedMessage.Text)
             .WithColor(new DiscordColor(0, 255, 194))
             .WithFooter($"Translated from {transaltedMessage.DetectedSourceLanguageCode} to {preferredLanguage}")
@@ -73,7 +79,7 @@ public class TranslateMessage : MadsBaseApplicationCommand
             .WithContent("⚠️ You haven't set a preferred language yet. Default is english.")
             .AddComponents(new DiscordButtonComponent(ButtonStyle.Primary, "setLanguage", "Set language").AsActionButton(ActionDiscordButtonEnum.SetTranslationLanguage))
             .AddComponents(new DiscordButtonComponent(ButtonStyle.Primary, "setLanguage", "Set your language to en-US").AsActionButton(ActionDiscordButtonEnum.SetTranslationLanguage, "en-US"))
-            .AsEphemeral(true);
+            .AsEphemeral();
         
         
         await ctx.FollowUpAsync(followUpMessage);

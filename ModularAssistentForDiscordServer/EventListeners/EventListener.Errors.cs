@@ -79,13 +79,6 @@ internal static partial class EventListener
 
         await e.Context.Message.RespondAsync($"OOPS your command just errored... \n {e.Exception.Message}");
         await e.Context.Message.RespondAsync(e.Exception.InnerException?.Message ?? "no inner exception");
-        var reallyLongString = e.Exception.StackTrace;
-
-        var interactivity = e.Context.Client.GetInteractivity();
-        var pages = interactivity.GeneratePagesInEmbed(reallyLongString);
-
-        await e.Context.Channel.SendPaginatedMessageAsync(e.Context.Member, pages, PaginationBehaviour.Ignore,
-            ButtonPaginationBehavior.DeleteButtons);
     }
 
     internal static async Task OnClientErrored(DiscordClient sender, ClientErrorEventArgs e)
@@ -96,7 +89,7 @@ internal static partial class EventListener
         //Create a discordWebhookClient and add the debug webhook from the config.json
         var webhookClient = new DiscordWebhookClient();
         var webhookUrl = new Uri(config.DiscordWebhook);
-        webhookClient.AddWebhookAsync(webhookUrl).GetAwaiter().GetResult();
+        await webhookClient.AddWebhookAsync(webhookUrl);
 
 
         var exceptionEmbed = new DiscordEmbedBuilder()

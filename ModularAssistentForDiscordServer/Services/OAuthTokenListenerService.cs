@@ -14,7 +14,6 @@
 
 using System.Net;
 using System.Text;
-using DSharpPlus;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 
@@ -35,19 +34,17 @@ public class TokenListener : IDisposable, IHostedService
             </html >
             """;
 
-    private static HttpListener _listener;
-    private static string _url;
-    private readonly DiscordClient _client;
-    private Thread _listenTask;
+    private HttpListener _listener;
+    private string _url;
+    private Thread? _listenTask;
 
     private static readonly ILogger Logger = Log.ForContext<TokenListener>();
 
-    public TokenListener(string port, DiscordClient client, string path = "/")
+    public TokenListener(string port, string path = "/")
     {
         _url = $"http://localhost:{port}{path}";
         _listener = new HttpListener();
         _listener.Prefixes.Add(_url);
-        _client = client;
     }
 
     public void Dispose()
@@ -78,7 +75,7 @@ public class TokenListener : IDisposable, IHostedService
         return Task.CompletedTask;
     }
 
-    private static async Task HandleIncomingConnections(CancellationToken token)
+    private async Task HandleIncomingConnections(CancellationToken token)
     {
         while (!token.IsCancellationRequested)
         {

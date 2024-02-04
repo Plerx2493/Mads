@@ -15,7 +15,6 @@
 using DSharpPlus;
 using DSharpPlus.Entities;
 using MADS.Entities;
-using MADS.JsonModel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

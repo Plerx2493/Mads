@@ -23,12 +23,12 @@
 
     <ItemGroup>
         <PackageReference Include="DeepL.net" Version="1.8.0" />
-        <PackageReference Include="DSharpPlus" Version="5.0.0-nightly-01982" />
-        <PackageReference Include="DSharpPlus.CommandsNext" Version="5.0.0-nightly-01982" />
-        <PackageReference Include="DSharpPlus.Interactivity" Version="5.0.0-nightly-01982" />
-        <PackageReference Include="DSharpPlus.Rest" Version="5.0.0-nightly-01982" />
-        <PackageReference Include="DSharpPlus.SlashCommands" Version="5.0.0-nightly-01982" />
-        <PackageReference Include="DSharpPlus.VoiceNext" Version="5.0.0-nightly-01982" />
+        <PackageReference Include="DSharpPlus" Version="5.0.0-nightly-01989" />
+        <PackageReference Include="DSharpPlus.CommandsNext" Version="5.0.0-nightly-01989" />
+        <PackageReference Include="DSharpPlus.Interactivity" Version="5.0.0-nightly-01989" />
+        <PackageReference Include="DSharpPlus.Rest" Version="5.0.0-nightly-01989" />
+        <PackageReference Include="DSharpPlus.SlashCommands" Version="5.0.0-nightly-01989" />
+        <PackageReference Include="DSharpPlus.VoiceNext" Version="5.0.0-nightly-01989" />
         <PackageReference Include="EntityFramework" Version="6.4.4" />
         <PackageReference Include="FlexLabs.EntityFrameworkCore.Upsert" Version="8.0.0" />
         <PackageReference Include="Humanizer.Core" Version="2.14.1" />

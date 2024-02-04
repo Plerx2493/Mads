@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Configuration;
-using MADS.JsonModel;
+using MADS.Entities;
 using Microsoft.Extensions.Logging;
+// ReSharper disable NotResolvedInText
 
 namespace MADS.Extensions;
 

@@ -17,7 +17,6 @@ using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using MADS.Entities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.EventListeners;

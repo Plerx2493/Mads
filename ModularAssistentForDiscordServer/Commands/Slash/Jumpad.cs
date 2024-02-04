@@ -17,6 +17,7 @@ using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using MADS.CustomComponents;
 using MADS.Extensions;
+using Quartz.Util;
 
 namespace MADS.Commands.Slash;
 
@@ -30,7 +31,9 @@ public sealed class Jumppad : MadsBaseApplicationCommand
         [Option("originChannel", "Channel where the users will be moved out"), ChannelTypes(ChannelType.Voice)]
         DiscordChannel originChannel,
         [Option("targetChannel", "Channel where the users will be put in"), ChannelTypes(ChannelType.Voice)]
-        DiscordChannel targetChannel
+        DiscordChannel targetChannel,
+        [Option("message", "Message to be sent")]
+        string? content = null
     )
     {
         DiscordInteractionResponseBuilder message = new();
@@ -40,7 +43,7 @@ public sealed class Jumppad : MadsBaseApplicationCommand
             originChannel.Id, targetChannel.Id);
 
         message.AddComponents(newButton);
-        message.Content = "Jumppad";
+        message.WithContent(!content.IsNullOrWhiteSpace() ? content! : "Jumppad");
         await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, message);
     }
 }

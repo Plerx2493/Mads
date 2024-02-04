@@ -42,12 +42,13 @@ internal static partial class EventListener
 
         if (client.CurrentApplication.Owners?.Contains(e.Author) ?? false) return;
         if (client.CurrentApplication.Team?.Members.Any(x => x.User.Id == e.Author.Id) ?? false) return;
-        
+        if (e.Message.Content is null) return;
+
         var embed = new DiscordEmbedBuilder()
             .WithAuthor("Mads-DMs")
             .WithColor(new DiscordColor(0, 255, 194))
             .WithTimestamp(DateTime.UtcNow)
-            .WithTitle($"Dm from {e.Author.Username}#{e.Author.Discriminator}")
+            .WithTitle($"Dm from {e.Author.Username}")
             .WithDescription(e.Message.Content);
 
         var button =

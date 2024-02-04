@@ -23,11 +23,24 @@ namespace MADS.Commands.ContextMenu;
 
 public partial class StealEmojiMessage : MadsBaseApplicationCommand
 {
+    private HttpClient _httpClient;
+    
+    public StealEmojiMessage(HttpClient httpClient)
+    {
+        _httpClient = httpClient;
+    }
+    
     [ContextMenu(ApplicationCommandType.MessageContextMenu, "Steal emoji(s)"),
      SlashRequirePermissions(Permissions.ManageEmojis)]
     public async Task YoinkAsync(ContextMenuContext ctx)
     {
         await ctx.DeferAsync(true);
+        
+        if (ctx.TargetMessage.Content is null)
+        {
+            await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("⚠️ Message has not content!"));
+            return;
+        }
 
         var matches = EmojiRegex().Matches(ctx.TargetMessage.Content.Replace("><", "> <"));
 
@@ -61,7 +74,7 @@ public partial class StealEmojiMessage : MadsBaseApplicationCommand
                 // ignored
             }
 
-            await IntendedWait(1000);
+            await IntendedWait(500);
         }
 
         var message = newEmojis.Aggregate("✅ Yoink! These emoji(s) have been added to your server: ",
@@ -74,11 +87,10 @@ public partial class StealEmojiMessage : MadsBaseApplicationCommand
         await ctx.EditResponseAsync(discordWebhook);
     }
 
-    private static async Task<DiscordEmoji> CopyEmoji(ContextMenuContext ctx, string name, ulong id, bool animated)
+    private async Task<DiscordEmoji> CopyEmoji(ContextMenuContext ctx, string name, ulong id, bool animated)
     {
-        using HttpClient httpClient = new();
         var downloadedEmoji =
-            await httpClient.GetStreamAsync($"https://cdn.discordapp.com/emojis/{id}.{(animated ? "gif" : "png")}");
+            await _httpClient.GetStreamAsync($"https://cdn.discordapp.com/emojis/{id}.{(animated ? "gif" : "png")}");
 
         MemoryStream memory = new();
 

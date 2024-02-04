@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using DSharpPlus;
-using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using Serilog;
 
@@ -26,8 +25,9 @@ internal static partial class EventListener
         await sender.ReconnectAsync(true);
     }
     
-    internal static async Task OnGuildAvailable(DiscordClient sender, GuildCreateEventArgs e)
+    internal static Task OnGuildAvailable(DiscordClient sender, GuildCreateEventArgs e)
     {
        Log.Warning("Guild available: {GuildName}", e.Guild.Name);
+       return Task.CompletedTask;
     }
 }

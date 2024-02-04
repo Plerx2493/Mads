@@ -34,7 +34,7 @@ public class LoggingService
     private readonly string _dirPath = DataProvider.GetPath("Logs");
     private readonly string _logPath;
     private readonly DiscordClientService _modularDiscordBot;
-    private DiscordRestClient _discordRestClient;
+    private DiscordRestClient? _discordRestClient;
     private DiscordWebhookClient _discordWebhookClient = new();
     private bool _isSetup;
     private List<DiscordDmChannel> _ownerChannel = new();
@@ -102,8 +102,8 @@ public class LoggingService
     private async void AddOwnerChannels()
     {
         var application = _modularDiscordBot.DiscordClient.CurrentApplication;
-        var owners = application.Owners.ToArray();
-        if (_ownerChannel.Count == owners.Length) return;
+        var owners = application.Owners?.ToArray();
+        if (owners is null || _ownerChannel.Count == owners.Length) return;
 
         _ownerChannel = new List<DiscordDmChannel>();
 
@@ -113,7 +113,7 @@ public class LoggingService
 
             try
             {
-                ownerChannel = await _discordRestClient.CreateDmAsync(owner.Id);
+                ownerChannel = await _discordRestClient!.CreateDmAsync(owner.Id);
             }
             catch (DiscordException)
             {
@@ -166,6 +166,7 @@ public class LoggingService
 
             string guildName;
             
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
             if (e.Interaction.Guild is null)
             {
                 guildName = "Dms";
@@ -208,7 +209,7 @@ public class LoggingService
     public async Task LogCommandExecutionAsync(CommandContext ctx, TimeSpan timespan)
     {
         await LogInfo(
-            $"[{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [{ctx.Command.Name}] {timespan.TotalMilliseconds} milliseconds to execute");
+            $"[{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [{ctx.Command?.Name}] {timespan.TotalMilliseconds} milliseconds to execute");
     }
 
     public async Task LogCommandExecutionAsync(InteractionContext ctx, TimeSpan timespan)

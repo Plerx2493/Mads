@@ -14,9 +14,6 @@
 
 using DSharpPlus;
 using DSharpPlus.Entities;
-using MADS.Services;
-using Microsoft.Extensions.Logging;
-using Serilog;
 
 namespace MADS.EventListeners;
 

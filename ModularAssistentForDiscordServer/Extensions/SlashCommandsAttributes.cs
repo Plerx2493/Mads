@@ -24,8 +24,8 @@ public sealed class SlashRequireOwnerAttribute : SlashCheckBaseAttribute
         var me = ctx.Client.CurrentUser;
 
         // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-        return app != null
-            ? Task.FromResult(app.Owners.Any(x => x.Id == ctx.User.Id))
+        return app is not null
+            ? Task.FromResult(app.Owners?.Any(x => x.Id == ctx.User.Id) ?? false)
             : Task.FromResult(ctx.User.Id == me.Id);
     }
 }
