@@ -18,13 +18,12 @@ using DSharpPlus.SlashCommands;
 using MADS.CustomComponents;
 using MADS.Extensions;
 using MADS.Services;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.Commands.Slash;
 
 public sealed class MessageSnipe : MadsBaseApplicationCommand
 {
-    private MessageSnipeService _messageSnipeService;
+    private readonly MessageSnipeService _messageSnipeService;
 
     public MessageSnipe(MessageSnipeService messageSnipeService)
     {
@@ -46,32 +45,27 @@ public sealed class MessageSnipe : MadsBaseApplicationCommand
     private async Task DoSnipeAsync(InteractionContext ctx, bool edit)
     {
         await ctx.DeferAsync(true);
-        DiscordMessage message;
+        DiscordMessage? message;
         bool result;
-        
-        if (!edit)
-        {
-            result = _messageSnipeService.TryGetMessage(ctx.Channel.Id, out message);
-        }
-        else
-        {
-            result = _messageSnipeService.TryGetEditedMessage(ctx.Channel.Id, out message);
-        }
 
-        if (!result)
+        result = !edit
+            ? _messageSnipeService.TryGetMessage(ctx.Channel.Id, out message)
+            : _messageSnipeService.TryGetEditedMessage(ctx.Channel.Id, out message);
+
+        if (!result || message is null)
         {
             await EditResponse_Error("⚠️ No message to snipe! Either nothing was deleted, or the message has expired (12 hours)!");
             return;
         }
 
         var content = message.Content;
-        if (content.Length > 500) content = content.Substring(0, 497) + "...";
-        var member = await ctx.Guild.GetMemberAsync(message.Author.Id);
+        if (content is not null && content.Length > 500) content = string.Concat(content.AsSpan(0, 497), "...");
+        DiscordMember? member = message.Author is not null ? await ctx.Guild.GetMemberAsync(message.Author.Id) : null;
 
         var embed = new DiscordEmbedBuilder()
             .WithAuthor(
-                $"{member.DisplayName}" + (edit ? " (Edited)" : ""),
-                iconUrl: message.Author.GetAvatarUrl(ImageFormat.Png))
+                $"{member?.DisplayName ?? message.Author?.GlobalName}" + (edit ? " (Edited)" : ""),
+                iconUrl: message.Author?.GetAvatarUrl(ImageFormat.Png))
             .WithFooter(
                 $"{(edit ? "Edit" : "Deletion")} sniped by {ctx.Member.DisplayName}",
                 ctx.User.AvatarUrl);
@@ -81,15 +75,15 @@ public sealed class MessageSnipe : MadsBaseApplicationCommand
         embed.WithTimestamp(message.Id);
 
         var embeds = new List<DiscordEmbedBuilder>();
-        var attachments = message.Attachments.Where(x => x.MediaType.StartsWith("image/")).ToList();
+        var attachments = message.Attachments.Where(x => x.MediaType?.StartsWith("image/") ?? false).ToList();
 
 
-        for (var i = 0; i < attachments.Count(); i++)
+        for (var i = 0; i < attachments.Count; i++)
         {
             var attachment = attachments.ElementAt(i);
-            if (i == 0)
+            if (i == 0 && attachment.Url is not null)
                 embed.WithThumbnail(attachment.Url);
-            else
+            else if (attachment.Url is not null)
                 embeds.Add(new DiscordEmbedBuilder()
                     .WithTitle("Additional Image").WithThumbnail(attachment.Url));
         }
@@ -99,7 +93,7 @@ public sealed class MessageSnipe : MadsBaseApplicationCommand
 
         var btn = new DiscordButtonComponent(ButtonStyle.Danger, "placeholder", "Delete (Author only)",
             emoji: new DiscordComponentEmoji("🗑"));
-        btn = btn.AsActionButton(ActionDiscordButtonEnum.DeleteOneUserOnly, message.Author.Id);
+        btn = btn.AsActionButton(ActionDiscordButtonEnum.DeleteOneUserOnly, message.Author!.Id);
 
         response.AddComponents(btn);
 

@@ -12,21 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using DeepL;
+using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
-using MADS.Extensions;
 
-namespace MADS.Commands.Slash;
+namespace MADS.Commands.AutoCompletion;
 
-public sealed class NoBtches : MadsBaseApplicationCommand
+public class TargetLanguageAutoCompletion : IAutocompleteProvider
 {
-    [SlashCommand("nobtches", "nobtches api")]
-    public async Task PingCommand
-    (
-        InteractionContext ctx,
-        [Option("imageText", "Text on image")] string imageText
-    )
+    private readonly Translator _translator;
+    
+    public TargetLanguageAutoCompletion(Translator translator)
     {
-        imageText = imageText.Replace(" ", "%20").Replace("?", "%3F");
-        await ctx.CreateResponseAsync("https://api.no-bitch.es/" + imageText);
+        _translator = translator;
+    }
+    
+    public async Task<IEnumerable<DiscordAutoCompleteChoice>> Provider(AutocompleteContext ctx)
+    {
+        var sourceLangs = await _translator.GetTargetLanguagesAsync();
+        var choices = sourceLangs
+            .Select(x => new DiscordAutoCompleteChoice(x.Name, x.Code))
+            .Take(25);
+        return choices;
     }
 }

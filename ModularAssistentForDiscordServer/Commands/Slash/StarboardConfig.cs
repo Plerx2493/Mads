@@ -20,7 +20,6 @@ using DSharpPlus.SlashCommands.Attributes;
 using MADS.Entities;
 using MADS.Extensions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.Commands.Slash;
 
@@ -65,7 +64,7 @@ public sealed class StarboardConfig : MadsBaseApplicationCommand
 
         guildConfig.StarboardChannelId = channel.Id;
         guildConfig.StarboardThreshold = (int) threshhold;
-        guildConfig.StarboardEmojiId = (ulong?) emoji.Id ?? 0;
+        guildConfig.StarboardEmojiId = emoji.Id;
         guildConfig.StarboardEmojiName = emoji.Name;
         guildConfig.StarboardActive = true;
 

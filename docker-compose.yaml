@@ -1,0 +1,57 @@
+version: "3.8"
+services:
+    mads-bot:
+        image: plerx2493/mads:latest
+        environment:
+            - MADS_DISCORD_TOKEN=<Token>
+            - MADS_DEFAULT_PREFIX=!
+            - MADS_MINIMUM_LOG_LEVEL=0
+            - MADS_DATABASE_CONNECTION_STRING=Server=mads-db-core,Port=3306;Database=mads;User=mads;Password=mads;
+            - MADS_DATABASE_CONNECTION_STRING_QUARTZ=Server=mads-db-quartz,Port=3306;Database=quartz;User=quartz;Password=quartz;
+            - MADS_DISCORD_WEBHOOK=<Webhook>
+            - MADS_DM_PROXY_CHANNEL_ID=0
+            - MADS_DEEPL_API_KEY=<API-Key>
+        networks:
+            - mads_internal
+        depends_on:
+            - mads-db-core
+            - mads-db-quartz
+        restart: unless-stopped
+                        
+    mads-db-core:
+        image: mariadb:latest
+        environment:
+            MYSQL_ROOT_PASSWORD: mads
+            MYSQL_DATABASE: mads
+            MYSQL_USER: mads
+            MYSQL_PASSWORD: mads
+        volumes:
+            - data_mads_core:/var/lib/mysql
+        networks:
+            - mads_internal
+        hostname: mads-db-core
+        restart: unless-stopped
+        
+    mads-db-quartz:
+            image: plerx2493/quartz-db-mysql:latest
+            environment:
+                MYSQL_ROOT_PASSWORD: quartz
+                MYSQL_DATABASE: quartz
+                MYSQL_USER: quartz
+                MYSQL_PASSWORD: quartz
+            volumes:
+                - data_mads_quartz:/var/lib/mysql
+            networks:
+                - mads_internal
+            hostname: mads-db-quartz
+            restart: unless-stopped
+              
+networks:
+    mads_internal:
+        driver: bridge
+        
+volumes:
+  data_mads_quartz:
+    driver: local
+  data_mads_core:
+    driver: local

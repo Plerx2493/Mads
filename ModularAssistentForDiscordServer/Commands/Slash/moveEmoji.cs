@@ -23,10 +23,8 @@ using MADS.Extensions;
 
 namespace MADS.Commands.Slash;
 
-public sealed class MoveEmoji : MadsBaseApplicationCommand
+public sealed partial class MoveEmoji : MadsBaseApplicationCommand
 {
-    private const string EmojiRegex = @"<a?:(.+?):(\d+)>";
-
     [SlashCommand("MoveEmoji", "Move emoji to your guild"), SlashRequirePermissions(Permissions.ManageEmojis)]
     public async Task MoveEmojiAsync
         (InteractionContext ctx, [Option("Emoji", "Emoji which should be moved")] string pEmoji)
@@ -34,7 +32,7 @@ public sealed class MoveEmoji : MadsBaseApplicationCommand
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource,
             new DiscordInteractionResponseBuilder().AsEphemeral());
 
-        var matches = Regex.Matches(pEmoji, EmojiRegex, RegexOptions.Compiled);
+        var matches = EmojiRegex().Matches(pEmoji);
 
         if (!matches.Any())
         {
@@ -120,4 +118,7 @@ public sealed class MoveEmoji : MadsBaseApplicationCommand
         var targetGuildEntity = await client.GetGuildAsync(targetGuild);
         var _ = await targetGuildEntity.CreateEmojiAsync(name, memory);
     }
+
+    [GeneratedRegex("<a?:(.+?):(\\d+)>", RegexOptions.Compiled)]
+    private static partial Regex EmojiRegex();
 }

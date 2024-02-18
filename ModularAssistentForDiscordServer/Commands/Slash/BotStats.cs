@@ -21,14 +21,13 @@ using Humanizer.Localisation;
 using MADS.Entities;
 using MADS.Extensions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.Commands.Slash;
 
 public sealed class BotStats : MadsBaseApplicationCommand
 {
-    private IDbContextFactory<MadsContext> _contextFactory;
-    private DiscordRestClient _discordRestClient;
+    private readonly IDbContextFactory<MadsContext> _contextFactory;
+    private readonly DiscordRestClient _discordRestClient;
 
     public BotStats(IDbContextFactory<MadsContext> contextFactory, DiscordRestClient discordRestClient)
     {
@@ -43,18 +42,20 @@ public sealed class BotStats : MadsBaseApplicationCommand
         var swDb = new Stopwatch();
         var swRest = new Stopwatch();
 
+        var _ = await db.Users.FirstOrDefaultAsync();
         swDb.Start();
-        var _ = await db.Guilds.FirstAsync();
+        var __ = await db.Guilds.FirstOrDefaultAsync();
         swDb.Stop();
 
+        var ___ = await _discordRestClient.GetChannelAsync(ctx.Guild.Channels.Values.First().Id);
         swRest.Start();
-        var __ = await _discordRestClient.GetChannelAsync(ctx.Channel.Id);
+        var ____ = await _discordRestClient.GetChannelAsync(ctx.Channel.Id);
         swRest.Stop();
 
         using var process = Process.GetCurrentProcess();
 
-        var members = ctx.Client.Guilds.Values.Select(x => x.MemberCount).Sum();
-        var guilds = ctx.Client.Guilds.Count;
+        var members = db.Users.Count();
+        var guilds = db.Guilds.Count();
         var ping = ctx.Client.Ping;
         GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
         var heapMemory = $"{process.PrivateMemorySize64 / 1024 / 1024} MB";
@@ -71,7 +72,7 @@ public sealed class BotStats : MadsBaseApplicationCommand
             .AddField("Rest Latency:", swRest.ElapsedMilliseconds.ToString("N0") + " ms", true)
             .AddField("Memory:", heapMemory, true)
             .AddField("Uptime:",
-                $"{DateTimeOffset.UtcNow.Subtract(process.StartTime).Humanize(2, minUnit: TimeUnit.Millisecond, maxUnit: TimeUnit.Day)}",
+                $"{DateTimeOffset.UtcNow.Subtract(process.StartTime).Humanize(3, minUnit: TimeUnit.Millisecond, maxUnit: TimeUnit.Day)}",
                 true);
 
         await ctx.CreateResponseAsync(embed, true);

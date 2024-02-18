@@ -22,7 +22,7 @@ namespace MADS.Commands.AutoCompletion;
 
 public class ReminderAutoCompletion : IAutocompleteProvider
 {
-    private IDbContextFactory<MadsContext> _factory;
+    private readonly IDbContextFactory<MadsContext> _factory;
     
     public ReminderAutoCompletion(IServiceProvider services)
     {
@@ -31,11 +31,22 @@ public class ReminderAutoCompletion : IAutocompleteProvider
     
     public async Task<IEnumerable<DiscordAutoCompleteChoice>> Provider(AutocompleteContext ctx)
     {
+        //TODO Userinput is not working (The input string '' was not in a correct format.)
+        /*long currentInput = (long?) ctx.OptionValue ?? 0;
+        string currentInputString = currentInput.ToString();
+        if (currentInputString == "0")
+        {
+            currentInputString = "";
+        }
+        */
+        
         await using var db = await _factory.CreateDbContextAsync();
         var choices = db.Reminders
             .Where(x => x.UserId == ctx.User.Id)
-            .Select(x => new DiscordAutoCompleteChoice(x.Id.ToString(), x.Id.ToString()))
-            .ToList();
+            .Select(x => x.Id.ToString())
+            .ToList()
+            //.Where(x => x.StartsWith(currentInputString))
+            .Select(x => new DiscordAutoCompleteChoice(x, x));
         return choices;
     }
 }

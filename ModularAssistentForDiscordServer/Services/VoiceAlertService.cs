@@ -106,7 +106,8 @@ public class VoiceAlertService : IHostedService
             user = new UserDbEntity
             {
                 Id = userId,
-                VoiceAlerts = new List<VoiceAlert>()
+                VoiceAlerts = new List<VoiceAlert>(),
+                PreferedLanguage = "en-US"
             };
             await context.Users.AddAsync(user);
         }

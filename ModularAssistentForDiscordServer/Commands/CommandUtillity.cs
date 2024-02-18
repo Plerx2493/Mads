@@ -22,7 +22,7 @@ public class CommandUtility
     {
         var standardEmbed = new DiscordEmbedBuilder
         {
-            Color = new Optional<DiscordColor>(new DiscordColor(0, 255, 194))
+            Color = new DiscordColor(0, 255, 194)
         };
         return standardEmbed;
     }

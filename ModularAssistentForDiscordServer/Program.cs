@@ -17,11 +17,9 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using MADS.Entities;
 using MADS.Extensions;
-using MADS.JsonModel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Events;
 
@@ -29,27 +27,21 @@ namespace MADS;
 
 internal static class MainProgram
 {
-    public async static Task Main()
+    public static async Task Main()
     {
         Log.Logger = new LoggerConfiguration()
             .WriteTo.Console()
+            .MinimumLevel.Verbose()
             .MinimumLevel.Override("Quartz", LogEventLevel.Warning)
             .CreateLogger();
 
         //Create cancellationToken and hook the cancelKey
         var cancellationSource = new CancellationTokenSource();
-        Console.CancelKeyPress += (_, args) =>
+        Console.CancelKeyPress += async (_, args) =>
         {
             args.Cancel = true;
-            cancellationSource.Cancel();
+            await cancellationSource.CancelAsync();
         };
-
-        //Validate the config.json and create a new one when its not present/valid
-        if (!ValidateConfig())
-        {
-            CreateConfig();
-            return;
-        }
 
         //retrieves the config.json
         var config = DataProvider.GetConfig();
@@ -69,53 +61,12 @@ internal static class MainProgram
         catch (Exception e)
         {
             if (e is TaskCanceledException) return;
-
+            Log.Error(e, "An uncaught exception occurred");
             var _ = LogToWebhookAsync(e);
+            Environment.Exit(69);
         }
         
         cancellationSource.Token.WaitHandle.WaitOne();
-    }
-
-    private static bool ValidateConfig()
-    {
-        var configPath = DataProvider.GetPath("config.json");
-
-        if (!File.Exists(configPath)) return false;
-
-        var lConfig = DataProvider.GetConfig();
-
-        if (lConfig.Token is null or "" or "<Your Token here>") return false;
-
-        if (lConfig.Prefix is null or "") lConfig.Prefix = "!";
-
-        if (lConfig.DiscordWebhook is null or "") return false;
-        lConfig.DmProxyChannelId ??= 0;
-
-        DataProvider.SetConfig(lConfig);
-
-        return true;
-    }
-
-    private static void CreateConfig()
-    {
-        var configPath = DataProvider.GetPath("config.json");
-
-        var fileStream = File.Create(configPath);
-        fileStream.Close();
-
-        ConfigJson newConfig = new()
-        {
-            Token = "<Your Token here>",
-            Prefix = "!",
-            LogLevel = LogLevel.Debug,
-            DmProxyChannelId = 0
-        };
-        JsonProvider.ParseJson(configPath, newConfig);
-
-        Console.WriteLine("Please insert your token in the config file and restart");
-        Console.WriteLine("Filepath: " + configPath);
-        Console.WriteLine("Press key to continue");
-        Console.Read();
     }
 
     public static async Task LogToWebhookAsync(Exception e)

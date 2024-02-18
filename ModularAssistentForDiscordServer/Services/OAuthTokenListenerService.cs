@@ -14,11 +14,8 @@
 
 using System.Net;
 using System.Text;
-using DSharpPlus;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Serilog;
-using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace MADS.Services;
 
@@ -37,19 +34,17 @@ public class TokenListener : IDisposable, IHostedService
             </html >
             """;
 
-    private static HttpListener _listener;
-    private static string _url;
-    private readonly DiscordClient _client;
-    private Thread _listenTask;
+    private HttpListener _listener;
+    private string _url;
+    private Thread? _listenTask;
 
-    private static Serilog.ILogger _logger = Log.ForContext<TokenListener>();
+    private static readonly ILogger Logger = Log.ForContext<TokenListener>();
 
-    public TokenListener(string port, DiscordClient client, string path = "/")
+    public TokenListener(string port, string path = "/")
     {
         _url = $"http://localhost:{port}{path}";
         _listener = new HttpListener();
         _listener.Prefixes.Add(_url);
-        _client = client;
     }
 
     public void Dispose()
@@ -60,7 +55,7 @@ public class TokenListener : IDisposable, IHostedService
     public Task StartAsync(CancellationToken cancellationToken)
     {
         _listener.Start();
-        _logger.Information("Listening for connections on {Url}", _url);
+        Logger.Information("Listening for connections on {Url}", _url);
 
         _listenTask = new Thread(() => _ = HandleIncomingConnections(cancellationToken))
         {
@@ -76,11 +71,11 @@ public class TokenListener : IDisposable, IHostedService
     {
         _listener.Abort();
         _listenTask.Interrupt();
-        _logger.Information("Tokenlistener stopped");
+        Logger.Information("Tokenlistener stopped");
         return Task.CompletedTask;
     }
 
-    private static async Task HandleIncomingConnections(CancellationToken token)
+    private async Task HandleIncomingConnections(CancellationToken token)
     {
         while (!token.IsCancellationRequested)
         {

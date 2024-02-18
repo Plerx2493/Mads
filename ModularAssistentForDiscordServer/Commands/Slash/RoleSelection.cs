@@ -18,7 +18,6 @@ using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.Attributes;
 using MADS.Extensions;
-using Serilog;
 
 namespace MADS.Commands.Slash;
 
@@ -56,7 +55,7 @@ public sealed class RoleSelection : MadsBaseApplicationCommand
 
         //get all roles and Create a list of select menu options
         var options = Enumerable.Empty<DiscordSelectComponentOption>();
-        var roles = ctx.Guild!.Roles.Values.ToList();
+        var roles = ctx.Guild.Roles.Values.ToList();
 
         //remove all roles from bots etc
         roles.RemoveAll(x => x.IsManaged);

@@ -22,34 +22,40 @@ namespace MADS.EventListeners;
 
 internal static partial class EventListener
 {
+    static EventListener()
+    {
+        //retrieves the config.json
+        var config = DataProvider.GetConfig();
+        
+        //Create a discordWebhookClient and add the debug webhook from the config.json
+        WebhookClient = new DiscordWebhookClient();
+        var webhookUrl = new Uri(config.DiscordWebhook);
+        WebhookClient.AddWebhookAsync(webhookUrl).GetAwaiter().GetResult();
+    }
+    
+    internal static DiscordWebhookClient WebhookClient;
+    
     internal static async Task DmHandler(DiscordClient client, MessageCreateEventArgs e)
     {
         if (!e.Channel.IsPrivate) return;
         if (e.Author.IsBot) return;
 
-        //if (client.CurrentApplication.Owners.Contains(e.Author)) return Task.CompletedTask;
-
-        //retrieves the config.json
-        var config = DataProvider.GetConfig();
-
-        //Create a discordWebhookClient and add the debug webhook from the config.json
-        var webhookClient = new DiscordWebhookClient();
-        var webhookUrl = new Uri(config.DiscordWebhook);
-        webhookClient.AddWebhookAsync(webhookUrl).GetAwaiter().GetResult();
-
+        if (client.CurrentApplication.Owners?.Contains(e.Author) ?? false) return;
+        if (client.CurrentApplication.Team?.Members.Any(x => x.User.Id == e.Author.Id) ?? false) return;
+        if (e.Message.Content is null) return;
 
         var embed = new DiscordEmbedBuilder()
             .WithAuthor("Mads-DMs")
             .WithColor(new DiscordColor(0, 255, 194))
             .WithTimestamp(DateTime.UtcNow)
-            .WithTitle($"Dm from {e.Author.Username}#{e.Author.Discriminator}")
+            .WithTitle($"Dm from {e.Author.Username}")
             .WithDescription(e.Message.Content);
 
         var button =
             new DiscordButtonComponent(ButtonStyle.Success, "Placeholder", "Respond to User").AsActionButton(
                 ActionDiscordButtonEnum.AnswerDmChannel, e.Channel.Id);
 
-        var channel = await client.GetChannelAsync(webhookClient.Webhooks[0].ChannelId);
+        var channel = await client.GetChannelAsync(WebhookClient.Webhooks[0].ChannelId);
         await channel.SendMessageAsync(new DiscordMessageBuilder().AddEmbed(embed).AddComponents(button));
     }
 }

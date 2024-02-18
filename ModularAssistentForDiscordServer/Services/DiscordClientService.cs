@@ -16,7 +16,6 @@
 using System.Reflection;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Executors;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity;
@@ -25,7 +24,6 @@ using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
 using MADS.Entities;
 using MADS.EventListeners;
-using MADS.JsonModel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -47,7 +45,7 @@ public class DiscordClientService : IHostedService
 
     public DiscordClientService
     (
-        ConfigJson pConfig,
+        MadsConfig pConfig,
         IDbContextFactory<MadsContext> dbDbContextFactory
     )
     {
@@ -65,13 +63,14 @@ public class DiscordClientService : IHostedService
             AutoReconnect = true,
             MinimumLogLevel = config.LogLevel,
             LoggerFactory = new LoggerFactory().AddSerilog(),
-            Intents = DiscordIntents.All
+            Intents = DiscordIntents.All ^ DiscordIntents.GuildPresences
         };
 
         DiscordClient = new DiscordClient(discordConfig);
-
-        EventListener.GuildDownload(DiscordClient, _dbContextFactory);
-        EventListener.AddGuildNotifier(DiscordClient, Logging);
+        EventListener.GuildDownload(DiscordClient);
+        DiscordClient.GuildCreated += EventListener.OnGuildCreated;
+        DiscordClient.GuildDeleted += EventListener.OnGuildDeleted;
+        DiscordClient.GuildAvailable += EventListener.OnGuildAvailable;
 
         var asm = Assembly.GetExecutingAssembly();
 
@@ -81,8 +80,7 @@ public class DiscordClientService : IHostedService
             CaseSensitive = false,
             DmHelp = false,
             EnableDms = true,
-            EnableMentionPrefix = true,
-            CommandExecutor = new ParallelQueuedCommandExecutor()
+            EnableMentionPrefix = true
         };
         CommandsNext = DiscordClient.UseCommandsNext(cnextConfig);
         CommandsNext.RegisterCommands(asm);
@@ -101,6 +99,7 @@ public class DiscordClientService : IHostedService
         SlashCommands.RegisterCommands(asm, 938120155974750288);
 #endif
         SlashCommands.SlashCommandErrored += EventListener.OnSlashCommandErrored;
+        SlashCommands.AutocompleteErrored += EventListener.OnAutocompleteError;
 
         //Custom buttons
         EventListener.EnableButtonListener(DiscordClient);
@@ -129,9 +128,9 @@ public class DiscordClientService : IHostedService
     {
         _logger.Warning("DiscordClientService started");
         //Update database to latest migration
-        using var context = await _dbContextFactory.CreateDbContextAsync();
-        if ((await context.Database.GetPendingMigrationsAsync()).Any())
-            await context.Database.MigrateAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        if ((await context.Database.GetPendingMigrationsAsync(cancellationToken)).Any())
+            await context.Database.MigrateAsync(cancellationToken);
         
         DiscordActivity act = new("Messing with code", ActivityType.Custom);
         

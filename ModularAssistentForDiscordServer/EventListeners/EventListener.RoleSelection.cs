@@ -14,7 +14,6 @@
 
 using DSharpPlus;
 using DSharpPlus.Entities;
-using Microsoft.Extensions.Logging;
 
 namespace MADS.EventListeners;
 
@@ -27,10 +26,7 @@ internal static partial class EventListener
             if (e.Guild is null) return;
 
             if (e.Id != "RoleSelection:" + e.Guild.Id) return;
-
-            client.Logger.LogDebug(new EventId(420, "MADS"), $"Roleselection triggered: [{e.Id}]");
-
-
+            
             //TODO Test if "await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);" is possible
             await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
                 new DiscordInteractionResponseBuilder().WithContent("Roles granted/revoked").AsEphemeral());

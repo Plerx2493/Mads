@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#nullable enable
 using System.Collections.Concurrent;
 using DSharpPlus;
 using DSharpPlus.Entities;
@@ -33,7 +32,7 @@ public class StarboardService : IHostedService
     private readonly BlockingCollection<DiscordReactionUpdateEvent> _messageQueue;
     private bool _stopped;
 
-    private static ILogger _logger = Log.ForContext<StarboardService>();
+    private static readonly ILogger _logger = Log.ForContext<StarboardService>();
     
     public StarboardService(DiscordClientService client, IDbContextFactory<MadsContext> dbFactory)
     {
@@ -135,7 +134,8 @@ public class StarboardService : IHostedService
 
     private async Task HandleEvent(DiscordReactionUpdateEvent e)
     {
-        if (!e.Message.Channel.GuildId.HasValue) return;
+        if (e.Message.Channel is null) return;
+        if (!e.Message.Channel?.GuildId.HasValue ?? false) return;
 
         if (e.Type == DiscordReactionUpdateType.ReactionAdded)
         {
@@ -145,7 +145,7 @@ public class StarboardService : IHostedService
         
         using MadsContext db = await _dbFactory.CreateDbContextAsync();
 
-        var guildSettings = db.Configs.FirstOrDefault(x => x.DiscordGuildId == e.Message.Channel.GuildId);
+        var guildSettings = db.Configs.FirstOrDefault(x => x.DiscordGuildId == e.Message.Channel!.GuildId );
 
         if (guildSettings is null) return;
         if (!guildSettings.StarboardActive) return;
@@ -224,7 +224,7 @@ public class StarboardService : IHostedService
             {
                 DiscordChannelId = e.Message.ChannelId,
                 DiscordMessageId = e.Message.Id,
-                DiscordGuildId = e.Message.Channel.Guild.Id,
+                DiscordGuildId = e.Message.Channel!.Guild.Id,
                 Stars = 1
             };
             isNew = true;
@@ -338,7 +338,7 @@ public class StarboardService : IHostedService
 
         starDataOld.StarboardMessageId = starboardMessage.Id;
         starDataOld.StarboardChannelId = starboardMessage.ChannelId;
-        starDataOld.StarboardGuildId = starboardMessage.Channel.GuildId!.Value;
+        starDataOld.StarboardGuildId = starboardMessage.Channel!.GuildId!.Value;
 
         db.Update(starDataOld);
         await db.SaveChangesAsync();
@@ -365,7 +365,7 @@ public class StarboardService : IHostedService
 
 
         var embed = new DiscordEmbedBuilder()
-            .WithAuthor($"{message.Author.Username}#{message.Author.Discriminator}",
+            .WithAuthor($"{message.Author!.Username}#{message.Author.Discriminator}",
                 iconUrl: string.IsNullOrEmpty(message.Author.AvatarHash)
                     ? message.Author.DefaultAvatarUrl
                     : message.Author.AvatarUrl)
@@ -374,13 +374,13 @@ public class StarboardService : IHostedService
             .WithTimestamp(message.Id);
 
         var imageAttachments = message.Attachments.Where(
-                x => x.Url.ToLower().EndsWith(".jpg") ||
+                x => x.Url!.ToLower().EndsWith(".jpg") ||
                      x.Url.ToLower().EndsWith(".png") ||
                      x.Url.ToLower().EndsWith(".jpeg") ||
                      x.Url.ToLower().EndsWith(".gif"))
             .ToList();
 
-        if (imageAttachments.Any()) embed.WithImageUrl(imageAttachments.First().Url);
+        if (imageAttachments.Any()) embed.WithImageUrl(imageAttachments.First().Url!);
 
 
         var emotename = emoji.GetDiscordName().Replace(":", "");
@@ -391,12 +391,12 @@ public class StarboardService : IHostedService
             var refContent = message.ReferencedMessage.Content.Truncate(200, "...").Replace(")[", "​)[") + " ";
 
             embed.Description +=
-                $"\n\n**➥** {message.ReferencedMessage.Author.Mention}: {refContent} {(message.ReferencedMessage.Attachments.Any() ? $"_<{message.ReferencedMessage.Attachments.Count} file(s)>_" : "")}";
+                $"\n\n**➥** {message.ReferencedMessage.Author!.Mention}: {refContent} {(message.ReferencedMessage.Attachments.Any() ? $"_<{message.ReferencedMessage.Attachments.Count} file(s)>_" : "")}";
         }
 
         var messageBuilder = new DiscordMessageBuilder()
             .AddEmbed(embed)
-            .WithContent($"{emoji} {starData.Stars} {emotename} in {message.Channel.Mention}");
+            .WithContent($"{emoji} {starData.Stars} {emotename} in {message.Channel!.Mention}");
 
         messageBuilder.AddComponents(new DiscordLinkButtonComponent(message.JumpLink.ToString(), "Go to message"));
 

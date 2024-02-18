@@ -19,9 +19,9 @@ namespace MADS.Entities;
 
 public class DiscordReactionUpdateEvent
 {
-    public AsyncEventArgs EventArgs;
-    public DiscordMessage Message;
-    public DiscordReactionUpdateType Type;
+    public AsyncEventArgs EventArgs { get; set; }
+    public DiscordMessage Message { get; set; }
+    public DiscordReactionUpdateType Type { get; set; }
 }
 
 public enum DiscordReactionUpdateType

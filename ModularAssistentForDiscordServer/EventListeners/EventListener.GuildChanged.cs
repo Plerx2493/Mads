@@ -14,38 +14,44 @@
 
 using DSharpPlus;
 using DSharpPlus.Entities;
+using DSharpPlus.EventArgs;
 using MADS.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.EventListeners;
 
 internal static partial class EventListener
 {
-    public static void AddGuildNotifier(DiscordClient client, LoggingService loggingService)
+    public static async Task OnGuildCreated(DiscordClient sender, GuildCreateEventArgs args)
     {
-        client.GuildCreated += async (_, args) =>
-        {
-            var embed = new DiscordEmbedBuilder()
-                .WithTitle($"New guild added: {args.Guild.Name}")
-                .AddField("Id:", args.Guild.Id.ToString())
-                .AddField("Owner:", args.Guild.Owner.Username + "#" + args.Guild.Owner.Discriminator)
-                .AddField("Membercount:", args.Guild.MemberCount.ToString())
-                .AddField("Added:", Formatter.Timestamp(DateTimeOffset.Now))
-                .AddField("Created:", Formatter.Timestamp(args.Guild.CreationTimestamp))
-                .WithColor(DiscordColor.Green);
-            await loggingService.LogToWebhook(new DiscordMessageBuilder().WithEmbed(embed));
-        };
-
-        client.GuildDeleted += async (_, args) =>
-        {
-            var embed = new DiscordEmbedBuilder()
-                .WithTitle($"Guild removed: {args.Guild.Name}")
-                .AddField("Id:", args.Guild.Id.ToString())
-                .AddField("Owner:", args.Guild.Owner.Username + "#" + args.Guild.Owner.Discriminator)
-                .AddField("Membercount:", args.Guild.MemberCount.ToString())
-                .AddField("Removed:", Formatter.Timestamp(DateTimeOffset.Now))
-                .AddField("Created:", Formatter.Timestamp(args.Guild.CreationTimestamp))
-                .WithColor(DiscordColor.Red);
-            await loggingService.LogToWebhook(new DiscordMessageBuilder().WithEmbed(embed));
-        };
+        var embed = new DiscordEmbedBuilder()
+            .WithTitle($"New guild added: {args.Guild.Name}")
+            .AddField("Id:", args.Guild.Id.ToString())
+            .AddField("Owner:", args.Guild.Owner.Username + "#" + args.Guild.Owner.Discriminator)
+            .AddField("Membercount:", args.Guild.MemberCount.ToString())
+            .AddField("Added:", Formatter.Timestamp(DateTimeOffset.Now))
+            .AddField("Created:", Formatter.Timestamp(args.Guild.CreationTimestamp))
+            .WithColor(DiscordColor.Green);
+            
+        await ModularDiscordBot.Services
+            .GetRequiredService<LoggingService>()
+            .LogToWebhook(new DiscordMessageBuilder().AddEmbed(embed));
     }
+
+    public static async Task OnGuildDeleted(DiscordClient sender, GuildDeleteEventArgs args)
+    {
+        var embed = new DiscordEmbedBuilder()
+            .WithTitle($"Guild removed: {args.Guild.Name}")
+            .AddField("Id:", args.Guild.Id.ToString())
+            .AddField("Owner:", args.Guild.Owner.Username + "#" + args.Guild.Owner.Discriminator)
+            .AddField("Membercount:", args.Guild.MemberCount.ToString())
+            .AddField("Removed:", Formatter.Timestamp(DateTimeOffset.Now))
+            .AddField("Created:", Formatter.Timestamp(args.Guild.CreationTimestamp))
+            .WithColor(DiscordColor.Red);
+            
+        await ModularDiscordBot.Services
+            .GetRequiredService<LoggingService>()
+            .LogToWebhook(new DiscordMessageBuilder().AddEmbed(embed));
+    }
+    
 }

@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using DeepL;
 using DSharpPlus;
+using MADS.Entities;
 using MADS.Extensions;
-using MADS.JsonModel;
 using MADS.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -30,14 +31,9 @@ public class ModularDiscordBot
     public static IServiceProvider Services;
     public static DateTimeOffset StartTime = DateTimeOffset.Now;
     public static ILogger<ModularDiscordBot> Logger;
-    private readonly ConfigJson _config;
+    private readonly MadsConfig _config = DataProvider.GetConfig();
 
-    public ModularDiscordBot()
-    {
-        _config = DataProvider.GetConfig();
-    }
-
-    public async Task<bool> RunAsync(CancellationToken token)
+    public async Task RunAsync(CancellationToken token)
     {
         await Host.CreateDefaultBuilder()
             .UseSerilog()
@@ -82,18 +78,21 @@ public class ModularDiscordBot
                         .AddSingleton<StarboardService>()
                         .AddHostedService(s => s.GetRequiredService<StarboardService>())
                         .AddSingleton(s =>
-                            new TokenListener("51151", s.GetRequiredService<DiscordClient>(), "/api/v1/mads/token/"))
+                            new TokenListener("51151", "/api/v1/mads/token/"))
                         .AddHostedService(s => s.GetRequiredService<TokenListener>())
                         .AddSingleton<ReminderService>()
                         .AddHostedService(s => s.GetRequiredService<ReminderService>())
                         .AddSingleton<VoiceAlertService>()
-                        .AddHostedService(s => s.GetRequiredService<VoiceAlertService>());
+                        .AddHostedService(s => s.GetRequiredService<VoiceAlertService>())
+                        .AddSingleton(new Translator(_config.DeeplApiKey ?? ""))
+                        .AddSingleton<TranslateInformationService>()
+                        .AddSingleton<LoggingService>()
+                        .AddHttpClient();
 
                     Services = services.BuildServiceProvider();
                     Logger = Services.GetRequiredService<ILogger<ModularDiscordBot>>();
                 }
             )
-            .RunConsoleAsync();
-        return true;
+            .RunConsoleAsync(cancellationToken: token);
     }
 }

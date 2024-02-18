@@ -12,13 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Diagnostics;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
-using DSharpPlus.Entities;
 using MADS.Extensions;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.Commands.Text.Base;
 
@@ -36,24 +33,5 @@ public class ExitGuild : MadsBaseCommand
     {
         await ctx.Message.DeleteAsync();
         await ctx.Guild.LeaveAsync();
-    }
-    
-    [Command("test"), Description("Leave given server"), RequireGuild, Hidden, RequireOwner]
-    public async Task Test(CommandContext ctx, DiscordChannel chnl, int limit)
-    {
-        var client = ModularDiscordBot.Services.GetRequiredService<DiscordRestClient>();
-        var channel = await client.GetChannelAsync(chnl.Id);
-        var messages = channel.GetMessagesBeforeAsync(ctx.Message.Id + 1221, limit);
-        
-        var sw = Stopwatch.StartNew();
-        
-        int i = 0;
-        await foreach (var message in messages)
-        {
-            i++;
-        }
-        
-        await ctx.RespondAsync($"Found {i} messages in {sw.ElapsedMilliseconds}ms");
-        
     }
 }

@@ -96,17 +96,17 @@ public class TestVariables
         ClientService = mdb;
         Message = msg;
         Channel = msg.Channel;
-        Guild = Channel.Guild;
+        Guild = Channel?.Guild;
         User = Message.Author;
-        if (Guild != null)
+        if (Guild is not null && User is not null) 
             Member = Guild.GetMemberAsync(User.Id).GetAwaiter().GetResult();
         Context = ctx;
     }
 
     public DiscordMessage Message { get; private set; }
-    public DiscordChannel Channel { get; private set; }
-    public DiscordGuild Guild { get; private set; }
-    public DiscordUser User { get; private set; }
+    public DiscordChannel? Channel { get; private set; }
+    public DiscordGuild? Guild { get; private set; }
+    public DiscordUser? User { get; private set; }
     public DiscordMember Member { get; private set; }
     public CommandContext Context { get; private set; }
     public DiscordClient Client { get; private set; }

@@ -19,7 +19,6 @@ using DSharpPlus.SlashCommands;
 using MADS.Commands.AutoCompletion;
 using MADS.Extensions;
 using MADS.Services;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.Commands.Slash;
 

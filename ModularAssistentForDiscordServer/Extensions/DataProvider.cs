@@ -12,49 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using MADS.JsonModel;
+using MADS.Entities;
+using Microsoft.Extensions.Logging;
+// ReSharper disable NotResolvedInText
 
 namespace MADS.Extensions;
 
 internal static class DataProvider
 {
-    public static ConfigJson GetConfig()
+    public static MadsConfig GetConfig()
     {
-        return JsonProvider.ReadFile<ConfigJson>(GetPath("config.json"));
-    }
+        var config = new MadsConfig
+        {
+            Token = Environment.GetEnvironmentVariable("MADS_DISCORD_TOKEN") ?? throw new ArgumentNullException("Missing env var MADS_DISCORD_TOKEN"),
+            Prefix = Environment.GetEnvironmentVariable("MADS_DEFAULT_PREFIX") ?? throw new ArgumentNullException("Missing env var MADS_DEFAULT_PREFIX"),
+            LogLevel = Enum.Parse<LogLevel>(Environment.GetEnvironmentVariable("MADS_MINIMUM_LOG_LEVEL") ?? throw new ArgumentNullException("Missing env var MADS_MINIMUM_LOG_LEVEL")),
+            ConnectionString = Environment.GetEnvironmentVariable("MADS_DATABASE_CONNECTION_STRING") ?? throw new ArgumentNullException("Missing env var MADS_DATABASE_CONNECTION_STRING"),
+            ConnectionStringQuartz = Environment.GetEnvironmentVariable("MADS_DATABASE_CONNECTION_STRING_QUARTZ") ?? throw new ArgumentNullException("Missing env var MADS_DATABASE_CONNECTION_STRING_QUARTZ"),
+            DiscordWebhook = Environment.GetEnvironmentVariable("MADS_DISCORD_WEBHOOK") ?? throw new ArgumentNullException("Missing env var MADS_DISCORD_WEBHOOK"),
+            DmProxyChannelId = ulong.Parse(Environment.GetEnvironmentVariable("MADS_DM_PROXY_CHANNEL_ID") ?? throw new ArgumentNullException("Missing env var MADS_DM_PROXY_CHANNEL_ID")),
+            DeeplApiKey = Environment.GetEnvironmentVariable("MADS_DEEPL_API_KEY") ?? throw new ArgumentNullException("Missing env var MADS_DEEPL_API_KEY")
+        };
 
-    public static TJsonModel GetJson<TJsonModel>(string path)
-    {
-        return JsonProvider.ReadFile<TJsonModel>(GetPath(path));
+        return config;
     }
-
-    public static void SetConfig(ConfigJson configJson)
-    {
-        JsonProvider.ParseJson(GetPath("config.json"), configJson);
-    }
-
     public static string GetPath(params string[] path)
     {
         return Path.GetFullPath(Path.Combine(path));
-    }
-
-    public static bool TryGetOAuthTokenByUser(ulong userId, out string token)
-    {
-        var file = JsonProvider.ReadFile<OAuthTokenJson>(GetPath("oauthtoken.json"));
-
-        return file.Token.TryGetValue(userId, out token);
-    }
-
-    public static bool TryInsertUserToken(ulong userId, string token)
-    {
-        var file = JsonProvider.ReadFile<OAuthTokenJson>(GetPath("oauthtoken.json"));
-
-        var success = file.Token.TryAdd(userId, token);
-
-        file.TokenCount++;
-
-        JsonProvider.ParseJson(GetPath("config.json"), file);
-
-        return success;
     }
 }
