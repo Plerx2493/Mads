@@ -63,7 +63,7 @@ public class DiscordClientService : IHostedService
             AutoReconnect = true,
             MinimumLogLevel = config.LogLevel,
             LoggerFactory = new LoggerFactory().AddSerilog(),
-            Intents = DiscordIntents.All
+            Intents = DiscordIntents.All ^ DiscordIntents.GuildPresences
         };
 
         DiscordClient = new DiscordClient(discordConfig);

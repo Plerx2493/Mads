@@ -22,17 +22,18 @@ internal static class DataProvider
 {
     public static MadsConfig GetConfig()
     {
-        var config = new MadsConfig();
-        
-        config.Token = Environment.GetEnvironmentVariable("MADS_DISCORD_TOKEN") ?? throw new ArgumentNullException("Missing env var MADS_DISCORD_TOKEN");
-        config.Prefix = Environment.GetEnvironmentVariable("MADS_DEFAULT_PREFIX") ?? throw new ArgumentNullException("Missing env var MADS_DEFAULT_PREFIX");
-        config.LogLevel = Enum.Parse<LogLevel>(Environment.GetEnvironmentVariable("MADS_MINIMUM_LOG_LEVEL") ?? throw new ArgumentNullException("Missing env var MADS_MINIMUM_LOG_LEVEL"));
-        config.ConnectionString = Environment.GetEnvironmentVariable("MADS_DATABASE_CONNECTION_STRING") ?? throw new ArgumentNullException("Missing env var MADS_DATABASE_CONNECTION_STRING");
-        config.ConnectionStringQuartz = Environment.GetEnvironmentVariable("MADS_DATABASE_CONNECTION_STRING_QUARTZ") ?? throw new ArgumentNullException("Missing env var MADS_DATABASE_CONNECTION_STRING_QUARTZ");
-        config.DiscordWebhook = Environment.GetEnvironmentVariable("MADS_DISCORD_WEBHOOK") ?? throw new ArgumentNullException("Missing env var MADS_DISCORD_WEBHOOK");
-        config.DmProxyChannelId = ulong.Parse(Environment.GetEnvironmentVariable("MADS_DM_PROXY_CHANNEL_ID") ?? throw new ArgumentNullException("Missing env var MADS_DM_PROXY_CHANNEL_ID"));
-        config.DeeplApiKey = Environment.GetEnvironmentVariable("MADS_DEEPL_API_KEY") ?? throw new ArgumentNullException("Missing env var MADS_DEEPL_API_KEY");
-        
+        var config = new MadsConfig
+        {
+            Token = Environment.GetEnvironmentVariable("MADS_DISCORD_TOKEN") ?? throw new ArgumentNullException("Missing env var MADS_DISCORD_TOKEN"),
+            Prefix = Environment.GetEnvironmentVariable("MADS_DEFAULT_PREFIX") ?? throw new ArgumentNullException("Missing env var MADS_DEFAULT_PREFIX"),
+            LogLevel = Enum.Parse<LogLevel>(Environment.GetEnvironmentVariable("MADS_MINIMUM_LOG_LEVEL") ?? throw new ArgumentNullException("Missing env var MADS_MINIMUM_LOG_LEVEL")),
+            ConnectionString = Environment.GetEnvironmentVariable("MADS_DATABASE_CONNECTION_STRING") ?? throw new ArgumentNullException("Missing env var MADS_DATABASE_CONNECTION_STRING"),
+            ConnectionStringQuartz = Environment.GetEnvironmentVariable("MADS_DATABASE_CONNECTION_STRING_QUARTZ") ?? throw new ArgumentNullException("Missing env var MADS_DATABASE_CONNECTION_STRING_QUARTZ"),
+            DiscordWebhook = Environment.GetEnvironmentVariable("MADS_DISCORD_WEBHOOK") ?? throw new ArgumentNullException("Missing env var MADS_DISCORD_WEBHOOK"),
+            DmProxyChannelId = ulong.Parse(Environment.GetEnvironmentVariable("MADS_DM_PROXY_CHANNEL_ID") ?? throw new ArgumentNullException("Missing env var MADS_DM_PROXY_CHANNEL_ID")),
+            DeeplApiKey = Environment.GetEnvironmentVariable("MADS_DEEPL_API_KEY") ?? throw new ArgumentNullException("Missing env var MADS_DEEPL_API_KEY")
+        };
+
         return config;
     }
     public static string GetPath(params string[] path)

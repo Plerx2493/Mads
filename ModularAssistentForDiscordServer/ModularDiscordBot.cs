@@ -86,6 +86,7 @@ public class ModularDiscordBot
                         .AddHostedService(s => s.GetRequiredService<VoiceAlertService>())
                         .AddSingleton(new Translator(_config.DeeplApiKey ?? ""))
                         .AddSingleton<TranslateInformationService>()
+                        .AddSingleton<LoggingService>()
                         .AddHttpClient();
 
                     Services = services.BuildServiceProvider();

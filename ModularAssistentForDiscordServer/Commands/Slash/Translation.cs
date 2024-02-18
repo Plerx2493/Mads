@@ -16,6 +16,7 @@ using DeepL;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
+using MADS.Commands.AutoCompletion;
 using MADS.Extensions;
 using MADS.Services;
 
@@ -33,12 +34,12 @@ public class Translation : MadsBaseApplicationCommand
         _translator = translator;
     }
     
-    [SlashCommand("setLanguage", "Set your prefered language")]
+    [SlashCommand("setLanguage", "Set your preferred language")]
     public async Task SetLanguageAsync
     (
         InteractionContext ctx,
-        [Option("language", "The language you want to set")] 
-        string language
+        [Option("language", "The language you want to get (default: en)", true), Autocomplete(typeof(TargetLanguageAutoCompletion))]
+        string language = "en"
     )
     {
         if (string.IsNullOrWhiteSpace(language))
@@ -64,7 +65,7 @@ public class Translation : MadsBaseApplicationCommand
         InteractionContext ctx,
         [Option("text", "The text you want to translate")]
         string text,
-        [Option("language", "The language you want to get (default: en)")]
+        [Option("language", "The language you want to get (default: en)", true), Autocomplete(typeof(TargetLanguageAutoCompletion))]
         string language = "en",
         [Option("publicResult", "Weather the result should be public or not (default: false)")]
         bool publicResult = false
@@ -79,14 +80,12 @@ public class Translation : MadsBaseApplicationCommand
             return;
         }
         
-        var code = TranslateInformationService.StandardizeLang(language);
-        
-        var translatedText = await _translator.TranslateTextAsync(text, null, code);
+        var translatedText = await _translator.TranslateTextAsync(text, null, language);
         
         var embed = new DiscordEmbedBuilder()
             .WithDescription(translatedText.Text)
             .WithColor(new DiscordColor(0, 255, 194))
-            .WithFooter($"Translated from {translatedText.DetectedSourceLanguageCode} to {code}")
+            .WithFooter($"Translated from {translatedText.DetectedSourceLanguageCode} to {language}")
             .WithTimestamp(DateTime.Now);
 
         await ctx.CreateResponseAsync(embed, publicResult);
