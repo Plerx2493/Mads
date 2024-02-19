@@ -27,6 +27,8 @@ namespace MADS;
 
 internal static class MainProgram
 {
+    public static DiscordWebhookClient WebhookClient = null!;
+
     public static async Task Main()
     {
         Log.Logger = new LoggerConfiguration()
@@ -47,10 +49,10 @@ internal static class MainProgram
         var config = DataProvider.GetConfig();
 
         //Create a discordWebhookClient and add the debug webhook from the config.json
-        var webhookClient = new DiscordWebhookClient();
+        WebhookClient = new DiscordWebhookClient();
         var webhookUrl = new Uri(config.DiscordWebhook);
-        await webhookClient.AddWebhookAsync(webhookUrl);
-        
+        await WebhookClient.AddWebhookAsync(webhookUrl);
+
         //Create a new instance of the bot
         ModularDiscordBot modularDiscordBot = new();
         //execute the bot and catch uncaught exceptions
@@ -65,21 +67,12 @@ internal static class MainProgram
             var _ = LogToWebhookAsync(e);
             Environment.Exit(69);
         }
-        
+
         cancellationSource.Token.WaitHandle.WaitOne();
     }
 
     public static async Task LogToWebhookAsync(Exception e)
     {
-        //retrieves the config.json
-        var config = DataProvider.GetConfig();
-
-        //Create a discordWebhookClient and add the debug webhook from the config.json
-        var webhookClient = new DiscordWebhookClient();
-        var webhookUrl = new Uri(config.DiscordWebhook);
-        webhookClient.AddWebhookAsync(webhookUrl).GetAwaiter().GetResult();
-
-
         var exceptionEmbed = new DiscordEmbedBuilder()
             .WithAuthor("Mads-Debug")
             .WithColor(DiscordColor.Red)
@@ -91,7 +84,7 @@ internal static class MainProgram
             .WithUsername("Mads-Debug")
             .AddEmbed(exceptionEmbed);
 
-        await webhookClient.BroadcastMessageAsync(webhookBuilder);
+        await WebhookClient.BroadcastMessageAsync(webhookBuilder);
     }
 
     [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "EFCore CLI tools rely on reflection.")]

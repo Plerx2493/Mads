@@ -22,7 +22,6 @@ using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.EventArgs;
-using MADS.Extensions;
 
 namespace MADS.EventListeners;
 
@@ -69,7 +68,7 @@ internal static partial class EventListener
 
         await e.Context.Channel.SendMessageAsync(discordEmbed);
     }
-    
+
     internal static async Task OnCNextErrored(CommandsNextExtension sender, CommandErrorEventArgs e)
     {
         var typeOfException = e.Exception.GetType();
@@ -83,15 +82,6 @@ internal static partial class EventListener
 
     internal static async Task OnClientErrored(DiscordClient sender, ClientErrorEventArgs e)
     {
-        //retrieves the config.json
-        var config = DataProvider.GetConfig();
-
-        //Create a discordWebhookClient and add the debug webhook from the config.json
-        var webhookClient = new DiscordWebhookClient();
-        var webhookUrl = new Uri(config.DiscordWebhook);
-        await webhookClient.AddWebhookAsync(webhookUrl);
-
-
         var exceptionEmbed = new DiscordEmbedBuilder()
             .WithAuthor("Mads-Debug")
             .WithColor(new DiscordColor(0, 255, 194))
@@ -103,7 +93,7 @@ internal static partial class EventListener
             .WithUsername("Mads-Debug")
             .AddEmbed(exceptionEmbed);
 
-        await webhookClient.BroadcastMessageAsync(webhookBuilder);
+        await MainProgram.WebhookClient.BroadcastMessageAsync(webhookBuilder);
     }
 
     internal static async Task OnAutocompleteError(SlashCommandsExtension sender, AutocompleteErrorEventArgs e)
