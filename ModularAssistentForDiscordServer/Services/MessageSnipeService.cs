@@ -29,7 +29,7 @@ public class MessageSnipeService : IHostedService
     private readonly IMemoryCache _memoryCache;
     private readonly MemoryCacheEntryOptions _options;
     private readonly DiscordClientService _discordClientService;
-    private DiscordClient Discord  => _discordClientService.DiscordClient;
+    private DiscordClient Discord => _discordClientService.DiscordClient;
 
     private static ILogger _logger = Log.ForContext<MessageSnipeService>();
 
@@ -42,13 +42,13 @@ public class MessageSnipeService : IHostedService
             .SetSize(1)
             .RegisterPostEvictionCallback(PostEvictionCallback);
     }
-    
+
     public Task StartAsync(CancellationToken cancellationToken)
     {
         _logger.Warning("Sniper active!");
         Discord.MessageDeleted += MessageSniperDeleted;
         Discord.MessageUpdated += MessageSniperEdited;
-        
+
         return Task.CompletedTask;
     }
 
@@ -56,7 +56,7 @@ public class MessageSnipeService : IHostedService
     {
         Discord.MessageDeleted -= MessageSniperDeleted;
         Discord.MessageUpdated -= MessageSniperEdited;
-        
+
         return Task.CompletedTask;
     }
 
@@ -66,11 +66,13 @@ public class MessageSnipeService : IHostedService
         MessageDeleteEventArgs e
     )
     {
+        if (e.Message is null) return Task.CompletedTask;
         if (e.Message.WebhookMessage ?? false) return Task.CompletedTask;
 
-        if ((string.IsNullOrEmpty(e.Message.Content) && !(e.Message.Attachments.Count > 0)) || (e.Message.Author?.IsBot ?? false))
+        if ((string.IsNullOrEmpty(e.Message.Content) && !(e.Message.Attachments.Count > 0)) ||
+            (e.Message.Author?.IsBot ?? false))
             return Task.CompletedTask;
-        
+
         AddMessage(e.Message);
         _logger.Warning("Sniped!");
         _logger.Verbose("Message added to cache");
@@ -85,13 +87,14 @@ public class MessageSnipeService : IHostedService
     )
     {
         if (e.Message.WebhookMessage ?? false) return Task.CompletedTask;
+        if (e.MessageBefore is null) return Task.CompletedTask;
 
         if ((string.IsNullOrEmpty(e.MessageBefore.Content) && !(e.MessageBefore.Attachments.Count > 0))
             || (e.Message.Author?.IsBot ?? false)) return Task.CompletedTask;
 
         AddEditedMessage(e.MessageBefore);
         _logger.Warning("Sniped!");
-        
+
         _logger.Verbose("Message edit added to cache");
         return Task.CompletedTask;
     }
@@ -118,7 +121,7 @@ public class MessageSnipeService : IHostedService
         var id = CacheHelper.GetMessageEditSnipeKey(channel);
         _memoryCache.Remove(id);
     }
-    
+
     public void DeleteMessage(ulong channel)
     {
         var id = CacheHelper.GetMessageSnipeKey(channel);
@@ -132,7 +135,6 @@ public class MessageSnipeService : IHostedService
         if (message is null) return false;
         _memoryCache.Remove(id);
         return true;
-
     }
 
     public bool TryGetEditedMessage(ulong channelId, out DiscordMessage? message)
@@ -142,6 +144,5 @@ public class MessageSnipeService : IHostedService
         if (message is null) return false;
         _memoryCache.Remove(id);
         return true;
-
     }
 }
