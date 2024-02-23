@@ -17,6 +17,7 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using MADS.Commands.AutoCompletion;
+using MADS.Entities;
 using MADS.Extensions;
 using MADS.Services;
 
@@ -25,7 +26,7 @@ namespace MADS.Commands.Slash;
 [SlashCommandGroup("voicealerts", "mangage voicealerts")]
 public sealed class VoiceAlerts : MadsBaseApplicationCommand
 {
-    private VoiceAlertService _voiceAlertService;
+    private readonly VoiceAlertService _voiceAlertService;
 
     public VoiceAlerts(VoiceAlertService voiceAlertService)
     {
@@ -56,7 +57,7 @@ public sealed class VoiceAlerts : MadsBaseApplicationCommand
             return;
         }
 
-        var currentAlerts = await _voiceAlertService.GetVoiceAlerts(ctx.User.Id);
+        IEnumerable<VoiceAlert> currentAlerts = await _voiceAlertService.GetVoiceAlerts(ctx.User.Id);
         if (currentAlerts.Any(x => x.ChannelId == channel.Id))
         {
             await CreateResponse_Error($"<#{channel.Id}> is already in your VoiceAlerts", true);
@@ -77,14 +78,14 @@ public sealed class VoiceAlerts : MadsBaseApplicationCommand
         string channel
     )
     {
-        var isId = ulong.TryParse(channel, out var id);
+        bool isId = ulong.TryParse(channel, out ulong id);
         if (!isId)
         {
             await CreateResponse_Error($"**{channel}** is not a valid id", true);
             return;
         }
 
-        var currentAlerts = await _voiceAlertService.GetVoiceAlerts(ctx.User.Id);
+        IEnumerable<VoiceAlert> currentAlerts = await _voiceAlertService.GetVoiceAlerts(ctx.User.Id);
         if (!currentAlerts.Any(x => x.ChannelId == id))
         {
             await CreateResponse_Error($"<#{id}> is not in your VoiceAlerts", true);
@@ -99,9 +100,9 @@ public sealed class VoiceAlerts : MadsBaseApplicationCommand
     [SlashCommand("list", "list all voicealerts")]
     public async Task ListAlerts(InteractionContext ctx)
     {
-        var alerts = await _voiceAlertService.GetVoiceAlerts(ctx.User.Id);
-        var builder = new StringBuilder();
-        foreach (var alert in alerts)
+        IEnumerable<VoiceAlert> alerts = await _voiceAlertService.GetVoiceAlerts(ctx.User.Id);
+        StringBuilder builder = new();
+        foreach (VoiceAlert alert in alerts)
         {
             builder.AppendLine($"<#{alert.ChannelId}> {(alert.IsRepeatable ? "repeated" : "")}");
         }

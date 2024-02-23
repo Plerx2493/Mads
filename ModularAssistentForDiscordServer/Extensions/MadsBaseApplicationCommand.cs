@@ -39,7 +39,7 @@ public class MadsBaseApplicationCommand : ApplicationCommandModule
     {
         _executionTimer.Stop();
 
-        var _ = CommandService.Logging.LogCommandExecutionAsync(ctx, _executionTimer.Elapsed);
+        _ = CommandService.Logging.LogCommandExecutionAsync(ctx, _executionTimer.Elapsed);
 
 
         return Task.CompletedTask;
@@ -56,7 +56,7 @@ public class MadsBaseApplicationCommand : ApplicationCommandModule
     {
         _executionTimer.Stop();
 
-        var _ = CommandService.Logging.LogCommandExecutionAsync(ctx, _executionTimer.Elapsed);
+        _ = CommandService.Logging.LogCommandExecutionAsync(ctx, _executionTimer.Elapsed);
 
         return Task.FromResult(true);
     }
@@ -72,12 +72,12 @@ public class MadsBaseApplicationCommand : ApplicationCommandModule
     
     protected async Task CreateResponse_Error(string message, bool isEphemeral = false)
     {
-        var embed = new DiscordEmbedBuilder()
+        DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
             .WithTitle("Error")
             .WithDescription(message)
             .WithColor(DiscordColor.Red);
         
-        var response = new DiscordInteractionResponseBuilder()
+        DiscordInteractionResponseBuilder response = new DiscordInteractionResponseBuilder()
             .AddEmbed(embed)
             .AsEphemeral(isEphemeral);
 
@@ -86,12 +86,12 @@ public class MadsBaseApplicationCommand : ApplicationCommandModule
     
     protected async Task CreateResponse_Success(string message, bool isEphemeral = false)
     {
-        var embed = new DiscordEmbedBuilder()
+        DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
             .WithTitle("Success")
             .WithDescription(message)
             .WithColor(DiscordColor.Green);
         
-        var response = new DiscordInteractionResponseBuilder()
+        DiscordInteractionResponseBuilder response = new DiscordInteractionResponseBuilder()
             .AddEmbed(embed)
             .AsEphemeral(isEphemeral);
 
@@ -100,12 +100,12 @@ public class MadsBaseApplicationCommand : ApplicationCommandModule
 
     protected async Task EditResponse_Error(string message)
     {
-        var embed = new DiscordEmbedBuilder()
+        DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
             .WithTitle("Error")
             .WithDescription(message)
             .WithColor(DiscordColor.Red);
         
-        var response = new DiscordWebhookBuilder()
+        DiscordWebhookBuilder response = new DiscordWebhookBuilder()
             .AddEmbed(embed);
 
         await _ctx!.EditResponseAsync(response);
@@ -113,12 +113,12 @@ public class MadsBaseApplicationCommand : ApplicationCommandModule
 
     protected async Task EditResponse_Success(string message)
     {
-        var embed = new DiscordEmbedBuilder()
+        DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
             .WithTitle("Success")
             .WithDescription(message)
             .WithColor(DiscordColor.Green);
 
-        var response = new DiscordWebhookBuilder()
+        DiscordWebhookBuilder response = new DiscordWebhookBuilder()
             .AddEmbed(embed);
 
         await _ctx!.EditResponseAsync(response);

@@ -23,7 +23,7 @@ namespace MADS.Commands.ContextMenu;
 
 public partial class StealEmojiMessage : MadsBaseApplicationCommand
 {
-    private HttpClient _httpClient;
+    private readonly HttpClient _httpClient;
     
     public StealEmojiMessage(HttpClient httpClient)
     {
@@ -42,7 +42,7 @@ public partial class StealEmojiMessage : MadsBaseApplicationCommand
             return;
         }
 
-        var matches = EmojiRegex().Matches(ctx.TargetMessage.Content.Replace("><", "> <"));
+        MatchCollection matches = EmojiRegex().Matches(ctx.TargetMessage.Content.Replace("><", "> <"));
 
         if (matches.Count < 1)
         {
@@ -50,22 +50,25 @@ public partial class StealEmojiMessage : MadsBaseApplicationCommand
             return;
         }
 
-        var distinctMatches = matches.DistinctBy(x => x.Value).ToList();
+        List<Match> distinctMatches = matches.DistinctBy(x => x.Value).ToList();
 
-        var newEmojis = new List<DiscordEmoji>();
+        List<DiscordEmoji> newEmojis = new();
 
-        foreach (var match in distinctMatches)
+        foreach (Match match in distinctMatches)
         {
             try
             {
-                var split = match.Groups[2].Value;
-                var emojiName = match.Groups[1].Value;
-                var animated = match.Value.StartsWith("<a");
+                string split = match.Groups[2].Value;
+                string emojiName = match.Groups[1].Value;
+                bool animated = match.Value.StartsWith("<a");
 
-                if (!ulong.TryParse(split, out var emojiId))
+                if (!ulong.TryParse(split, out ulong emojiId))
+                {
                     await ctx.EditResponseAsync(
                         new DiscordWebhookBuilder().WithContent("⚠️ Failed to fetch your new emoji."));
-                var success = await CopyEmoji(ctx, emojiName, emojiId, animated);
+                }
+
+                DiscordEmoji success = await CopyEmoji(ctx, emojiName, emojiId, animated);
 
                 newEmojis.Add(success);
             }
@@ -77,11 +80,11 @@ public partial class StealEmojiMessage : MadsBaseApplicationCommand
             await IntendedWait(500);
         }
 
-        var message = newEmojis.Aggregate("✅ Yoink! These emoji(s) have been added to your server: ",
+        string message = newEmojis.Aggregate("✅ Yoink! These emoji(s) have been added to your server: ",
             (current, emoji) => current + $" {emoji}");
         message += $" {newEmojis.Count}/{distinctMatches.Count} emojis added";
 
-        var discordWebhook = new DiscordWebhookBuilder().AddEmbed(
+        DiscordWebhookBuilder discordWebhook = new DiscordWebhookBuilder().AddEmbed(
             new DiscordEmbedBuilder().WithTitle(message));
 
         await ctx.EditResponseAsync(discordWebhook);
@@ -89,7 +92,7 @@ public partial class StealEmojiMessage : MadsBaseApplicationCommand
 
     private async Task<DiscordEmoji> CopyEmoji(ContextMenuContext ctx, string name, ulong id, bool animated)
     {
-        var downloadedEmoji =
+        Stream downloadedEmoji =
             await _httpClient.GetStreamAsync($"https://cdn.discordapp.com/emojis/{id}.{(animated ? "gif" : "png")}");
 
         MemoryStream memory = new();
@@ -97,7 +100,7 @@ public partial class StealEmojiMessage : MadsBaseApplicationCommand
         await downloadedEmoji.CopyToAsync(memory);
 
         await downloadedEmoji.DisposeAsync();
-        var newEmoji = await ctx.Guild.CreateEmojiAsync(name, memory);
+        DiscordGuildEmoji newEmoji = await ctx.Guild.CreateEmojiAsync(name, memory);
 
         return newEmoji;
     }

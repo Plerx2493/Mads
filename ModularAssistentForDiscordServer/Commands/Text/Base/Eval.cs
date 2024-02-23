@@ -29,16 +29,18 @@ public class Eval : MadsBaseCommand
     [Command("eval"), Description("Evaluate the result of c# code"), Hidden]
     public async Task EvalCommand(CommandContext ctx, [RemainingText] string code)
     {
-        var codeStart = code.IndexOf("```", StringComparison.Ordinal) + 3;
+        int codeStart = code.IndexOf("```", StringComparison.Ordinal) + 3;
         codeStart = code.IndexOf('\n', codeStart) + 1;
-        var codeEnd = code.LastIndexOf("```", StringComparison.Ordinal);
+        int codeEnd = code.LastIndexOf("```", StringComparison.Ordinal);
 
         if (codeStart == -1 || codeEnd == -1)
+        {
             throw new ArgumentException("⚠️ You need to wrap the code into a code block.");
+        }
 
-        var csCode = code[codeStart..codeEnd];
+        string csCode = code[codeStart..codeEnd];
 
-        var message = await ctx.RespondAsync(new DiscordEmbedBuilder()
+        DiscordMessage message = await ctx.RespondAsync(new DiscordEmbedBuilder()
             .WithColor(new DiscordColor("#FF007F"))
             .WithDescription("💭 Evaluating...")
             .Build());
@@ -47,7 +49,7 @@ public class Eval : MadsBaseCommand
         {
             TestVariables globalVariables = new(ctx.Message, ctx.Client, ctx, CommandService);
 
-            var scriptOptions = ScriptOptions.Default;
+            ScriptOptions? scriptOptions = ScriptOptions.Default;
             scriptOptions = scriptOptions.WithImports("System", "System.Collections.Generic", "System.Linq",
                 "System.Text", "System.Threading.Tasks", "DSharpPlus", "DSharpPlus.Entities", "DSharpPlus.CommandsNext",
                 "DSharpPlus.Interactivity", "DSharpPlus.SlashCommands",
@@ -58,23 +60,27 @@ public class Eval : MadsBaseCommand
                     && !string.IsNullOrWhiteSpace(
                         assembly.Location)));
 
-            var script = CSharpScript.Create(csCode, scriptOptions, typeof(TestVariables));
+            Script<object>? script = CSharpScript.Create(csCode, scriptOptions, typeof(TestVariables));
             script.Compile();
-            var result = await script.RunAsync(globalVariables);
+            ScriptState<object>? result = await script.RunAsync(globalVariables);
             if (result?.ReturnValue != null && !string.IsNullOrWhiteSpace(result.ReturnValue.ToString()))
+            {
                 await message.ModifyAsync(new DiscordEmbedBuilder
                 {
                     Title = "✅ Evaluation Result",
                     Description = result.ReturnValue.ToString()!,
                     Color = new DiscordColor("#089FDF")
                 }.Build());
+            }
             else
+            {
                 await message.ModifyAsync(new DiscordEmbedBuilder
                 {
                     Title = "✅ Evaluation Successful",
                     Description = "No result was returned.",
                     Color = new DiscordColor("#089FDF")
                 }.Build());
+            }
         }
         catch (Exception ex)
         {
@@ -98,8 +104,11 @@ public class TestVariables
         Channel = msg.Channel;
         Guild = Channel?.Guild;
         User = Message.Author;
-        if (Guild is not null && User is not null) 
+        if (Guild is not null && User is not null)
+        {
             Member = Guild.GetMemberAsync(User.Id).GetAwaiter().GetResult();
+        }
+
         Context = ctx;
     }
 

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using DeepL;
+using DeepL.Model;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
@@ -50,7 +51,7 @@ public class Translation : MadsBaseApplicationCommand
             return;
         }
 
-        var code = TranslateInformationService.StandardizeLang(language);
+        string code = TranslateInformationService.StandardizeLang(language);
         
         _translationUserInfo.SetPreferredLanguage(ctx.User.Id, code);
         
@@ -80,9 +81,9 @@ public class Translation : MadsBaseApplicationCommand
             return;
         }
         
-        var translatedText = await _translator.TranslateTextAsync(text, null, language);
+        TextResult translatedText = await _translator.TranslateTextAsync(text, null, language);
         
-        var embed = new DiscordEmbedBuilder()
+        DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
             .WithDescription(translatedText.Text)
             .WithColor(new DiscordColor(0, 255, 194))
             .WithFooter($"Translated from {translatedText.DetectedSourceLanguageCode} to {language}")

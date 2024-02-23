@@ -14,36 +14,47 @@
 
 using DSharpPlus;
 using DSharpPlus.Entities;
+using DSharpPlus.EventArgs;
 
 namespace MADS.EventListeners;
 
 internal static partial class EventListener
 {
-    internal static void EnableRoleSelectionListener(DiscordClient client)
+    internal static async Task OnRoleSelection(DiscordClient client, ComponentInteractionCreateEventArgs e)
     {
-        client.ComponentInteractionCreated += async Task (_, e) =>
+        if (e.Guild is null)
         {
-            if (e.Guild is null) return;
+            return;
+        }
 
-            if (e.Id != "RoleSelection:" + e.Guild.Id) return;
-            
-            //TODO Test if "await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);" is possible
-            await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
-                new DiscordInteractionResponseBuilder().WithContent("Roles granted/revoked").AsEphemeral());
+        if (e.Id != "RoleSelection:" + e.Guild.Id)
+        {
+            return;
+        }
 
-            var member = await e.Guild.GetMemberAsync(e.User.Id);
-            var roles = e.Values.Select(ulong.Parse).Select(x => e.Guild.GetRole(x)).ToList();
+        //TODO Test if "await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);" is possible
+        await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+            new DiscordInteractionResponseBuilder().WithContent("Roles granted/revoked").AsEphemeral());
 
-            var newRoles = new List<DiscordRole>();
-            newRoles.AddRange(roles);
-            newRoles.RemoveAll(x => member.Roles.Contains(x));
+        DiscordMember member = await e.Guild.GetMemberAsync(e.User.Id);
+        List<DiscordRole> roles = e.Values.Select(ulong.Parse).Select(x => e.Guild.GetRole(x)).ToList();
 
-            var oldRoles = new List<DiscordRole>();
-            oldRoles.AddRange(roles);
-            oldRoles.RemoveAll(x => !member.Roles.Contains(x));
+        List<DiscordRole> newRoles = [];
+        newRoles.AddRange(roles);
+        newRoles.RemoveAll(x => member.Roles.Contains(x));
 
-            foreach (var role in newRoles) await member.GrantRoleAsync(role);
-            foreach (var role in oldRoles) await member.RevokeRoleAsync(role);
-        };
+        List<DiscordRole> oldRoles = [];
+        oldRoles.AddRange(roles);
+        oldRoles.RemoveAll(x => !member.Roles.Contains(x));
+
+        foreach (DiscordRole role in newRoles)
+        {
+            await member.GrantRoleAsync(role);
+        }
+
+        foreach (DiscordRole role in oldRoles)
+        {
+            await member.RevokeRoleAsync(role);
+        }
     }
 }

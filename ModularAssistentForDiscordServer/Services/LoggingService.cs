@@ -20,6 +20,7 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 using DSharpPlus.SlashCommands;
+using MADS.Entities;
 using MADS.Extensions;
 using Microsoft.Extensions.Logging;
 using Serilog;
@@ -37,21 +38,21 @@ public class LoggingService
     private DiscordRestClient? _discordRestClient;
     private DiscordWebhookClient _discordWebhookClient = new();
     private bool _isSetup;
-    private List<DiscordDmChannel> _ownerChannel = new();
+    private List<DiscordDmChannel> _ownerChannel = [];
     
-    private static Serilog.ILogger _logger = Log.ForContext<LoggingService>();
+    private static readonly Serilog.ILogger _logger = Log.ForContext<LoggingService>();
 
     internal LoggingService(DiscordClientService dBot)
     {
         Log.Warning("LoggingService");
-        var startDate = DateTime.Now;
+        DateTime startDate = DateTime.Now;
         _modularDiscordBot = dBot;
         Directory.CreateDirectory(_dirPath);
-        var osVersion = Environment.OSVersion.VersionString;
+        string osVersion = Environment.OSVersion.VersionString;
         _logPath = DataProvider.GetPath("Logs",
             $"{startDate.Day}-{startDate.Month}-{startDate.Year}_{startDate.Hour}-{startDate.Minute}-{startDate.Second}.log");
 
-        var os = osVersion.StartsWith("Unix") ? FetchLinuxName() : Environment.OSVersion.VersionString;
+        string os = osVersion.StartsWith("Unix") ? FetchLinuxName() : Environment.OSVersion.VersionString;
 
         File.AppendAllText(_logPath, $".Net: {RuntimeInformation.FrameworkDescription}\n", Encoding.UTF8);
         File.AppendAllText(_logPath, $"Operating system: {os}\n", Encoding.UTF8);
@@ -63,8 +64,8 @@ public class LoggingService
     {
         try
         {
-            var result = File.ReadAllText("/etc/os-release");
-            var match = PrettyNameRegex.Match(result);
+            string result = File.ReadAllText("/etc/os-release");
+            Match match = PrettyNameRegex.Match(result);
             return !match.Success ? Environment.OSVersion.VersionString : match.Groups[1].Value.Replace("\"", "");
         }
         catch
@@ -75,7 +76,10 @@ public class LoggingService
 
     public void Setup()
     {
-        if (_isSetup) return;
+        if (_isSetup)
+        {
+            return;
+        }
 
         AddRestClient();
         AddOwnerChannels();
@@ -87,11 +91,14 @@ public class LoggingService
 
     private void AddRestClient()
     {
-        if (_discordRestClient != null) return;
+        if (_discordRestClient != null)
+        {
+            return;
+        }
 
-        var config = DataProvider.GetConfig();
+        MadsConfig config = DataProvider.GetConfig();
 
-        var discordConfig = new DiscordConfiguration
+        DiscordConfiguration discordConfig = new()
         {
             Token = config.Token
         };
@@ -101,13 +108,16 @@ public class LoggingService
 
     private async void AddOwnerChannels()
     {
-        var application = _modularDiscordBot.DiscordClient.CurrentApplication;
-        var owners = application.Owners?.ToArray();
-        if (owners is null || _ownerChannel.Count == owners.Length) return;
+        DiscordApplication application = _modularDiscordBot.DiscordClient.CurrentApplication;
+        DiscordUser[]? owners = application.Owners?.ToArray();
+        if (owners is null || _ownerChannel.Count == owners.Length)
+        {
+            return;
+        }
 
         _ownerChannel = new List<DiscordDmChannel>();
 
-        foreach (var owner in owners)
+        foreach (DiscordUser owner in owners)
         {
             DiscordDmChannel ownerChannel;
 
@@ -133,7 +143,10 @@ public class LoggingService
         //Button response with modal
         _modularDiscordBot.DiscordClient.ComponentInteractionCreated += async (_, e) =>
         {
-            if (e.Id != "feedback-button") return;
+            if (e.Id != "feedback-button")
+            {
+                return;
+            }
 
             DiscordInteractionResponseBuilder modal = new();
 
@@ -149,7 +162,10 @@ public class LoggingService
         //Modal processing
         _modularDiscordBot.DiscordClient.ModalSubmitted += async (_, e) =>
         {
-            if (e.Interaction.Data.CustomId != "feedback-modal") return;
+            if (e.Interaction.Data.CustomId != "feedback-modal")
+            {
+                return;
+            }
 
             DiscordInteractionResponseBuilder responseBuilder = new();
             DiscordEmbedBuilder embedBuilder = new();
@@ -163,20 +179,12 @@ public class LoggingService
                 .AsEphemeral();
 
             await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, responseBuilder);
-
-            string guildName;
             
             // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-            if (e.Interaction.Guild is null)
-            {
-                guildName = "Dms";
-            }
-            else
-            {
-                guildName = e.Interaction.Guild.Name;
-            }
+            string guildName =
+                e.Interaction.Guild is null ? "Dms" : e.Interaction.Guild.Name;
 
-            var discordEmbed = new DiscordEmbedBuilder
+            DiscordEmbedBuilder discordEmbed = new()
             {
                 Title = "Feedback",
                 Description = e.Values["feedback-text"],
@@ -195,14 +203,14 @@ public class LoggingService
     private void SetupWebhookLogging()
     {
         _discordWebhookClient = new DiscordWebhookClient();
-        var config = DataProvider.GetConfig();
-        var webhookUrl = new Uri(config.DiscordWebhook);
+        MadsConfig config = DataProvider.GetConfig();
+        Uri webhookUrl = new(config.DiscordWebhook);
         _discordWebhookClient.AddWebhookAsync(webhookUrl).GetAwaiter().GetResult();
     }
 
     public async Task LogEvent(string message, string sender, LogLevel lvl)
     {
-        var log = $"[{DateTime.Now:yyyy'-'MM'-'dd'T'HH':'mm':'ss}] [{lvl}] [{sender}] {message}";
+        string log = $"[{DateTime.Now:yyyy'-'MM'-'dd'T'HH':'mm':'ss}] [{lvl}] [{sender}] {message}";
         await File.AppendAllTextAsync(_logPath, log + "\n", Encoding.UTF8);
     }
 
@@ -226,14 +234,14 @@ public class LoggingService
 
     private async Task LogInfo(string input)
     {
-        var logEntry =
+        string logEntry =
             $"[{DateTime.Now:dd'.'MM'.'yyyy'-'HH':'mm':'ss}] [INFO]" + input;
         await File.AppendAllTextAsync(_logPath, logEntry + "\n", Encoding.UTF8);
     }
 
     public async Task<List<DiscordMessage>> LogToOwner(string message, string sender, LogLevel logLevel)
     {
-        var discordEmbed = new DiscordEmbedBuilder
+        DiscordEmbedBuilder discordEmbed = new()
         {
             Title = logLevel.ToString(),
             Description = message,
@@ -247,14 +255,17 @@ public class LoggingService
 
         List<DiscordMessage> messageList = new();
 
-        foreach (var channel in _ownerChannel) messageList.Add(await channel.SendMessageAsync(discordEmbed));
+        foreach (DiscordDmChannel channel in _ownerChannel)
+        {
+            messageList.Add(await channel.SendMessageAsync(discordEmbed));
+        }
 
         return messageList;
     }
 
     public async Task LogToWebhook(DiscordMessageBuilder message)
     {
-        var messageBuilder = new DiscordWebhookBuilder(message);
+        DiscordWebhookBuilder messageBuilder = new(message);
 
         await _discordWebhookClient.BroadcastMessageAsync(messageBuilder);
     }

@@ -23,16 +23,14 @@ namespace MADS.EventListeners;
 
 internal static partial class EventListener
 {
-    public static void GuildDownload(DiscordClient client)
-    {
-        client.GuildDownloadCompleted += async (_, args) => { await UpdateDb(args); };
-    }
+    public static void GuildDownload(DiscordClient client) 
+        => client.GuildDownloadCompleted += async (_, args) => { await UpdateDb(args); };
 
     private static async Task UpdateDb( GuildDownloadCompletedEventArgs args)
     {
-        var dbFactory = ModularDiscordBot.Services.GetRequiredService<IDbContextFactory<MadsContext>>();
-        var updateGuilds = UpdateGuilds(args, dbFactory);
-        var updateUsers = UpdateUsersDb(args, dbFactory);
+        IDbContextFactory<MadsContext> dbFactory = ModularDiscordBot.Services.GetRequiredService<IDbContextFactory<MadsContext>>();
+        Task updateGuilds = UpdateGuilds(args, dbFactory);
+        Task updateUsers = UpdateUsersDb(args, dbFactory);
         
         await Task.WhenAll(updateGuilds, updateUsers);
     }
@@ -43,10 +41,10 @@ internal static partial class EventListener
         IDbContextFactory<MadsContext> dbFactory
     )
     {
-        await using var db = await dbFactory.CreateDbContextAsync();
-        var oldDbUsers = db.Users.Select(x => x.Id).ToList();
+        await using MadsContext db = await dbFactory.CreateDbContextAsync();
+        List<ulong> oldDbUsers = db.Users.Select(x => x.Id).ToList();
         
-        var newUserIds = args.Guilds.Values
+        ulong[] newUserIds = args.Guilds.Values
             .SelectMany(x => x.Members.Values)
             .Select(x => x.Id)
             .Distinct()
@@ -61,11 +59,14 @@ internal static partial class EventListener
 
         foreach (ulong userId in newUserIds)
         {
-            var user = users.FirstOrDefault(x => x.Id == userId);
+            DiscordMember? user = users.FirstOrDefault(x => x.Id == userId);
                 
-            if (user is null) continue;
+            if (user is null)
+            {
+                continue;
+            }
 
-            var dbEntity = new UserDbEntity
+            UserDbEntity dbEntity = new()
             {
                 Id = user.Id,
                 Username = user.Username,
@@ -87,11 +88,11 @@ internal static partial class EventListener
         IDbContextFactory<MadsContext> dbFactory
     )
     {
-        await using var db = await dbFactory.CreateDbContextAsync();
+        await using MadsContext db = await dbFactory.CreateDbContextAsync();
 
-        var dbGuildIds = db.Guilds.Select(x => x.DiscordId).ToList();
+        List<ulong> dbGuildIds = db.Guilds.Select(x => x.DiscordId).ToList();
 
-        var newGuildEntities = args.Guilds
+        GuildDbEntity[] newGuildEntities = args.Guilds
             .Where(x => !dbGuildIds.Contains(x.Key))
             .Select(x => new GuildDbEntity
             {

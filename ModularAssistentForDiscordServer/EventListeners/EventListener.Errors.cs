@@ -18,6 +18,7 @@ using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Exceptions;
+using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
@@ -29,12 +30,14 @@ internal static partial class EventListener
 {
     internal static async Task OnSlashCommandErrored(SlashCommandsExtension sender, SlashCommandErrorEventArgs e)
     {
-        var typeOfException = e.Exception.GetType();
+        Type typeOfException = e.Exception.GetType();
         if (typeOfException == typeof(ArgumentException)
             || typeOfException == typeof(SlashExecutionChecksFailedException))
+        {
             return;
+        }
 
-        var embedDescription = new string((e.Exception.Message + ":\n" + e.Exception.StackTrace).Take(4093).ToArray());
+        string embedDescription = new((e.Exception.Message + ":\n" + e.Exception.StackTrace).Take(4093).ToArray());
         embedDescription += "...";
 
         DiscordEmbedBuilder discordEmbed = new()
@@ -71,10 +74,12 @@ internal static partial class EventListener
 
     internal static async Task OnCNextErrored(CommandsNextExtension sender, CommandErrorEventArgs e)
     {
-        var typeOfException = e.Exception.GetType();
+        Type typeOfException = e.Exception.GetType();
         if (typeOfException == typeof(ChecksFailedException) || typeOfException == typeof(ArgumentException)
                                                              || typeOfException == typeof(CommandNotFoundException))
+        {
             return;
+        }
 
         await e.Context.Message.RespondAsync($"OOPS your command just errored... \n {e.Exception.Message}");
         await e.Context.Message.RespondAsync(e.Exception.InnerException?.Message ?? "no inner exception");
@@ -82,14 +87,14 @@ internal static partial class EventListener
 
     internal static async Task OnClientErrored(DiscordClient sender, ClientErrorEventArgs e)
     {
-        var exceptionEmbed = new DiscordEmbedBuilder()
+        DiscordEmbedBuilder exceptionEmbed = new DiscordEmbedBuilder()
             .WithAuthor("Mads-Debug")
             .WithColor(new DiscordColor(0, 255, 194))
             .WithTimestamp(DateTime.UtcNow)
             .WithTitle($"Eventhandler exception: {e.EventName} - {e.Exception.GetType()}")
             .WithDescription(e.Exception.Message);
 
-        var webhookBuilder = new DiscordWebhookBuilder()
+        DiscordWebhookBuilder webhookBuilder = new DiscordWebhookBuilder()
             .WithUsername("Mads-Debug")
             .AddEmbed(exceptionEmbed);
 
@@ -100,12 +105,12 @@ internal static partial class EventListener
     {
         await e.Context.Channel.SendMessageAsync($"OOPS your command just errored... \n {e.Exception.Message}");
         await e.Context.Channel.SendMessageAsync(e.Exception.InnerException?.Message ?? "no inner exception");
-        var reallyLongString = e.Exception.StackTrace;
+        string? reallyLongString = e.Exception.StackTrace;
 
-        var interactivity = e.Context.Client.GetInteractivity();
+        InteractivityExtension interactivity = e.Context.Client.GetInteractivity();
         if (reallyLongString != null)
         {
-            var pages = interactivity.GeneratePagesInEmbed(reallyLongString);
+            IEnumerable<Page> pages = interactivity.GeneratePagesInEmbed(reallyLongString);
 
             await e.Context.Channel.SendPaginatedMessageAsync(e.Context.Member, pages, PaginationBehaviour.Ignore,
                 ButtonPaginationBehavior.DeleteButtons);

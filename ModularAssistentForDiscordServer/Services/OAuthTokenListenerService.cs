@@ -80,17 +80,17 @@ public class TokenListener : IDisposable, IHostedService
         while (!token.IsCancellationRequested)
         {
             // Will wait here until we hear from a connection
-            var ctx = await _listener.GetContextAsync();
+            HttpListenerContext ctx = await _listener.GetContextAsync();
 
             // Peel out the requests and response objects
-            var req = ctx.Request;
-            var resp = ctx.Response;
+            HttpListenerRequest req = ctx.Request;
+            HttpListenerResponse resp = ctx.Response;
 
             //TODO add token saving
-            var userToken = req.QueryString.Get("code");
+            string? userToken = req.QueryString.Get("code");
 
             // Write the response info
-            var data = Encoding.UTF8.GetBytes(PageData);
+            byte[] data = Encoding.UTF8.GetBytes(PageData);
             resp.ContentType = "text/html";
             resp.ContentEncoding = Encoding.UTF8;
             resp.ContentLength64 = data.LongLength;

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 
 namespace MADS.Extensions;
@@ -20,8 +21,8 @@ public sealed class SlashRequireOwnerAttribute : SlashCheckBaseAttribute
 {
     public override Task<bool> ExecuteChecksAsync(InteractionContext ctx)
     {
-        var app = ctx.Client.CurrentApplication;
-        var me = ctx.Client.CurrentUser;
+        DiscordApplication? app = ctx.Client.CurrentApplication;
+        DiscordUser me = ctx.Client.CurrentUser;
 
         // ReSharper disable once ConditionIsAlwaysTrueOrFalse
         return app is not null

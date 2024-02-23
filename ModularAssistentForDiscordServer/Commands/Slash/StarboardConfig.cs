@@ -51,15 +51,17 @@ public sealed class StarboardConfig : MadsBaseApplicationCommand
     {
         await ctx.DeferAsync(true);
 
-        var db = await _contextFactory.CreateDbContextAsync();
+        MadsContext db = await _contextFactory.CreateDbContextAsync();
 
-        var guildConfig = db.Configs.First(x => x.DiscordGuildId == ctx.Guild.Id);
+        GuildConfigDbEntity guildConfig = db.Configs.First(x => x.DiscordGuildId == ctx.Guild.Id);
 
-        if (!DiscordEmoji.TryFromUnicode(emojiString, out var emoji))
+        if (!DiscordEmoji.TryFromUnicode(emojiString, out DiscordEmoji emoji))
         {
-            var match = EmoteRegex.Match(emojiString);
+            Match match = EmoteRegex.Match(emojiString);
             if (match.Success)
+            {
                 DiscordEmoji.TryFromGuildEmote(ctx.Client, ulong.Parse(match.Groups["id"].Value), out emoji);
+            }
         }
 
         guildConfig.StarboardChannelId = channel.Id;

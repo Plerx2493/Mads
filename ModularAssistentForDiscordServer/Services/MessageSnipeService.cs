@@ -66,15 +66,22 @@ public class MessageSnipeService : IHostedService
         MessageDeleteEventArgs e
     )
     {
-        if (e.Message is null) return Task.CompletedTask;
-        if (e.Message.WebhookMessage ?? false) return Task.CompletedTask;
-
-        if ((string.IsNullOrEmpty(e.Message.Content) && !(e.Message.Attachments.Count > 0)) ||
-            (e.Message.Author?.IsBot ?? false))
+        if (e.Message is null)
+        {
             return Task.CompletedTask;
+        }
+        
+        if (e.Message.WebhookMessage ?? false)
+        {
+            return Task.CompletedTask;
+        }
+
+        if ((string.IsNullOrEmpty(e.Message.Content) && !(e.Message.Attachments.Count > 0)) || (e.Message.Author?.IsBot ?? false))
+        {
+            return Task.CompletedTask;
+        }
 
         AddMessage(e.Message);
-        _logger.Warning("Sniped!");
         _logger.Verbose("Message added to cache");
 
         return Task.CompletedTask;
@@ -86,15 +93,18 @@ public class MessageSnipeService : IHostedService
         MessageUpdateEventArgs e
     )
     {
-        if (e.Message.WebhookMessage ?? false) return Task.CompletedTask;
-        if (e.MessageBefore is null) return Task.CompletedTask;
+        if (e.Message.WebhookMessage ?? false)
+        {
+            return Task.CompletedTask;
+        }
 
-        if ((string.IsNullOrEmpty(e.MessageBefore.Content) && !(e.MessageBefore.Attachments.Count > 0))
-            || (e.Message.Author?.IsBot ?? false)) return Task.CompletedTask;
+        if ((string.IsNullOrEmpty(e.MessageBefore?.Content) && !(e.MessageBefore?.Attachments.Count > 0))
+            || (e.Message.Author?.IsBot ?? false))
+        {
+            return Task.CompletedTask;
+        }
 
         AddEditedMessage(e.MessageBefore);
-        _logger.Warning("Sniped!");
-
         _logger.Verbose("Message edit added to cache");
         return Task.CompletedTask;
     }
@@ -106,42 +116,50 @@ public class MessageSnipeService : IHostedService
 
     public void AddMessage(DiscordMessage message)
     {
-        var id = CacheHelper.GetMessageSnipeKey(message.ChannelId);
+        string id = CacheHelper.GetMessageSnipeKey(message.ChannelId);
         _memoryCache.Set(id, message, _options);
     }
 
     public void AddEditedMessage(DiscordMessage message)
     {
-        var id = CacheHelper.GetMessageEditSnipeKey(message.ChannelId);
+        string id = CacheHelper.GetMessageEditSnipeKey(message.ChannelId);
         _memoryCache.Set(id, message, _options);
     }
 
     public void DeleteEditedMessage(ulong channel)
     {
-        var id = CacheHelper.GetMessageEditSnipeKey(channel);
+        string id = CacheHelper.GetMessageEditSnipeKey(channel);
         _memoryCache.Remove(id);
     }
 
     public void DeleteMessage(ulong channel)
     {
-        var id = CacheHelper.GetMessageSnipeKey(channel);
+        string id = CacheHelper.GetMessageSnipeKey(channel);
         _memoryCache.Remove(id);
     }
 
     public bool TryGetMessage(ulong channelId, out DiscordMessage? message)
     {
-        var id = CacheHelper.GetMessageSnipeKey(channelId);
+        string id = CacheHelper.GetMessageSnipeKey(channelId);
         message = _memoryCache.Get<DiscordMessage?>(id);
-        if (message is null) return false;
+        if (message is null)
+        {
+            return false;
+        }
+
         _memoryCache.Remove(id);
         return true;
     }
 
     public bool TryGetEditedMessage(ulong channelId, out DiscordMessage? message)
     {
-        var id = CacheHelper.GetMessageEditSnipeKey(channelId);
+        string id = CacheHelper.GetMessageEditSnipeKey(channelId);
         message = _memoryCache.Get<DiscordMessage?>(id);
-        if (message is null) return false;
+        if (message is null)
+        {
+            return false;
+        }
+
         _memoryCache.Remove(id);
         return true;
     }

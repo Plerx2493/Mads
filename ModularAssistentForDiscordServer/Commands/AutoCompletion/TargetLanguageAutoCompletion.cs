@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using DeepL;
+using DeepL.Model;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 
@@ -29,8 +30,8 @@ public class TargetLanguageAutoCompletion : IAutocompleteProvider
     
     public async Task<IEnumerable<DiscordAutoCompleteChoice>> Provider(AutocompleteContext ctx)
     {
-        var sourceLangs = await _translator.GetTargetLanguagesAsync();
-        var choices = sourceLangs
+        TargetLanguage[] sourceLangs = await _translator.GetTargetLanguagesAsync();
+        IEnumerable<DiscordAutoCompleteChoice> choices = sourceLangs
             .Select(x => new DiscordAutoCompleteChoice(x.Name, x.Code))
             .Take(25);
         return choices;

@@ -51,40 +51,67 @@ public class VoiceAlertService : IHostedService
     
     public async Task HandleEvent(DiscordClient client, VoiceStateUpdateEventArgs e)
     {
-        if (e.After.Channel is null) return;
-        if (e.Before?.Channel?.Id == e.After.Channel.Id) return;
-        
-        await using var context = _contextFactory.CreateDbContext();
-        var alerts = await context.VoiceAlerts
+        if (e.After.Channel is null)
+        {
+            return;
+        }
+
+        if (e.Before?.Channel?.Id == e.After.Channel.Id)
+        {
+            return;
+        }
+
+        await using MadsContext context = await _contextFactory.CreateDbContextAsync();
+        List<VoiceAlert> alerts = await context.VoiceAlerts
             .Where(x => x.ChannelId == e.After.Channel.Id)
             .ToListAsync();
         
-        if (!alerts.Any()) return;
-        
-        var embed = new DiscordEmbedBuilder
+        if (!alerts.Any())
+        {
+            return;
+        }
+
+        DiscordEmbedBuilder embed = new()
         {
             Title = "Voice Alert",
             Description = $"{e.User.Mention} joined {e.After.Channel.Mention}",
             Color = DiscordColor.Green
         };
         
-        foreach (var alert in alerts)
+        foreach (VoiceAlert alert in alerts)
         {
-            if (e.User.Id == alert.UserId) continue;
-            if (e.Channel.Users.Any(x => x.Id == alert.UserId)) continue;
+            if (e.User.Id == alert.UserId)
+            {
+                continue;
+            }
+
+            if (e.Channel.Users.Any(x => x.Id == alert.UserId))
+            {
+                continue;
+            }
+
             if (alert.MinTimeBetweenAlerts is null)
             {
-                if (alert.LastAlert is not null && alert.LastAlert + alert.MinTimeBetweenAlerts > DateTimeOffset.UtcNow) continue;
+                if (alert.LastAlert is not null && alert.LastAlert + alert.MinTimeBetweenAlerts > DateTimeOffset.UtcNow)
+                {
+                    continue;
+                }
             };
             
             try
             {
-                var member = await e.Guild.GetMemberAsync(alert.UserId);
-                if (member is null) continue;
+                DiscordMember? member = await e.Guild.GetMemberAsync(alert.UserId);
+                if (member is null)
+                {
+                    continue;
+                }
 
                 await member.SendMessageAsync(embed);
                 
-                if (!alert.IsRepeatable) context.VoiceAlerts.Remove(alert); 
+                if (!alert.IsRepeatable)
+                {
+                    context.VoiceAlerts.Remove(alert);
+                }
             }
             catch (DiscordException exception)
             {
@@ -97,8 +124,8 @@ public class VoiceAlertService : IHostedService
     
     public async Task AddVoiceAlertAsync(ulong userId, ulong channelId, ulong guildId, bool isRepeatable = false, TimeSpan minTimeBetweenAlerts = new())
     {
-        await using var context = _contextFactory.CreateDbContext();
-        var user = await context.Users
+        await using MadsContext context = await _contextFactory.CreateDbContextAsync();
+        UserDbEntity? user = await context.Users
             .Include(x => x.VoiceAlerts)
             .FirstOrDefaultAsync(x => x.Id == userId);
         if (user == null)
@@ -112,7 +139,7 @@ public class VoiceAlertService : IHostedService
             await context.Users.AddAsync(user);
         }
 
-        var alert = new VoiceAlert
+        VoiceAlert alert = new()
         {
             ChannelId = channelId,
             GuildId = guildId,
@@ -133,8 +160,8 @@ public class VoiceAlertService : IHostedService
     
     public async Task RemoveVoiceAlert(ulong userId, ulong channelId, ulong guildId)
     {
-        await using var context = _contextFactory.CreateDbContext();
-        var user = await context.Users
+        await using MadsContext context = await _contextFactory.CreateDbContextAsync();
+        UserDbEntity? user = await context.Users
             .Include(x => x.VoiceAlerts)
             .FirstOrDefaultAsync(x => x.Id == userId);
         if (user == null)
@@ -142,7 +169,7 @@ public class VoiceAlertService : IHostedService
             return;
         }
 
-        var alert = user.VoiceAlerts.FirstOrDefault(x => x.ChannelId == channelId && x.GuildId == guildId);
+        VoiceAlert? alert = user.VoiceAlerts.FirstOrDefault(x => x.ChannelId == channelId && x.GuildId == guildId);
         if (alert == null)
         {
             return;
@@ -154,8 +181,8 @@ public class VoiceAlertService : IHostedService
     
     public async Task RemoveVoiceAlert(ulong alertId)
     {
-        await using var context = _contextFactory.CreateDbContext();
-        var alert = await context.VoiceAlerts.FirstOrDefaultAsync(x => x.AlertId == alertId);
+        await using MadsContext context = await _contextFactory.CreateDbContextAsync();
+        VoiceAlert? alert = await context.VoiceAlerts.FirstOrDefaultAsync(x => x.AlertId == alertId);
         if (alert == null)
         {
             return;
@@ -167,8 +194,8 @@ public class VoiceAlertService : IHostedService
     
     public async Task<IEnumerable<VoiceAlert>> GetVoiceAlerts(ulong userId)
     {
-        await using var context = _contextFactory.CreateDbContext();
-        var user = await context.Users
+        await using MadsContext context = await _contextFactory.CreateDbContextAsync();
+        UserDbEntity? user = await context.Users
             .Include(x => x.VoiceAlerts)
             .FirstOrDefaultAsync(x => x.Id == userId);
         if (user == null)

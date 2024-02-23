@@ -27,7 +27,7 @@ public static class ExtensionMethods
     public static IServiceCollection AddDbFactoryDebugOrRelease(this IServiceCollection serviceCollection,
         MadsConfig config)
     {
-        var logger = new LoggerFactory().AddSerilog(new LoggerConfiguration()
+        ILoggerFactory logger = new LoggerFactory().AddSerilog(new LoggerConfiguration()
             .WriteTo.Console()
             .MinimumLevel.Warning()
             .CreateLogger());
@@ -47,7 +47,7 @@ public static class ExtensionMethods
     public static IServiceCollection AddDiscordRestClient(this IServiceCollection serviceCollection,
         MadsConfig config)
     {
-        var discordRestConfig = new DiscordConfiguration
+        DiscordConfiguration discordRestConfig = new()
         {
             Token = config.Token,
             LoggerFactory = new LoggerFactory().AddSerilog()
@@ -59,10 +59,10 @@ public static class ExtensionMethods
 
     public static async Task<DiscordEmbed> GetEmbedAsync(this QuoteDbEntity quote, DiscordClient client)
     {
-        var quotedUser = await client.GetUserAsync(quote.QuotedUserId);
-        var user = await client.GetUserAsync(quote.UserId);
+        DiscordUser quotedUser = await client.GetUserAsync(quote.QuotedUserId);
+        DiscordUser user = await client.GetUserAsync(quote.UserId);
 
-        var embed = new DiscordEmbedBuilder()
+        DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
             .WithAuthor(quotedUser.Username, quotedUser.AvatarUrl, quotedUser.AvatarUrl)
             .WithTitle($"Said following {Formatter.Timestamp(quote.CreatedAt)}:")
             .WithDescription(quote.Content)
@@ -74,12 +74,15 @@ public static class ExtensionMethods
     public static async Task<DiscordMessageBuilder> GetMessageAsync(this ReminderDbEntity reminder,
         DiscordClient client)
     {
-        var message = new DiscordMessageBuilder();
-        if (reminder.MentionedMessage != 0) message.WithReply(reminder.MentionedMessage);
+        DiscordMessageBuilder message = new();
+        if (reminder.MentionedMessage != 0)
+        {
+            message.WithReply(reminder.MentionedMessage);
+        }
 
-        var user = await client.GetUserAsync(reminder.UserId);
-        var userMention = new UserMention(user);
-        var embed = new DiscordEmbedBuilder();
+        DiscordUser user = await client.GetUserAsync(reminder.UserId);
+        UserMention userMention = new(user);
+        DiscordEmbedBuilder embed = new();
 
         embed.WithTitle($"{reminder.GetCreationTimestamp()} you wanted to be reminded:")
             .WithDescription(reminder.ReminderText)
@@ -94,13 +97,13 @@ public static class ExtensionMethods
 
     public static string GetExecutionTimestamp(this ReminderDbEntity reminder)
     {
-        var timespan = reminder.ExecutionTime - DateTime.UtcNow;
+        TimeSpan timespan = reminder.ExecutionTime - DateTime.UtcNow;
         return Formatter.Timestamp(timespan);
     }
 
     public static string GetCreationTimestamp(this ReminderDbEntity reminder)
     {
-        var timespan = reminder.CreationTime - DateTime.UtcNow;
+        TimeSpan timespan = reminder.CreationTime - DateTime.UtcNow;
         return Formatter.Timestamp(timespan);
     }
 }

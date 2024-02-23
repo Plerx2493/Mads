@@ -38,29 +38,29 @@ public sealed class BotStats : MadsBaseApplicationCommand
     [SlashCommand("botstats", "Get statistics about the bot")]
     public async Task GetBotStatsAsync(InteractionContext ctx)
     {
-        await using var db = await _contextFactory.CreateDbContextAsync();
-        var swDb = new Stopwatch();
-        var swRest = new Stopwatch();
+        await using MadsContext db = await _contextFactory.CreateDbContextAsync();
+        Stopwatch swDb = new();
+        Stopwatch swRest = new();
 
-        var _ = await db.Users.FirstOrDefaultAsync();
+        _ = await db.Users.FirstOrDefaultAsync();
         swDb.Start();
-        var __ = await db.Guilds.FirstOrDefaultAsync();
+        _ = await db.Guilds.FirstOrDefaultAsync();
         swDb.Stop();
 
-        var ___ = await _discordRestClient.GetChannelAsync(ctx.Guild.Channels.Values.First().Id);
+        _ = await _discordRestClient.GetChannelAsync(ctx.Guild.Channels.Values.First().Id);
         swRest.Start();
-        var ____ = await _discordRestClient.GetChannelAsync(ctx.Channel.Id);
+        _ = await _discordRestClient.GetChannelAsync(ctx.Channel.Id);
         swRest.Stop();
 
-        using var process = Process.GetCurrentProcess();
+        using Process process = Process.GetCurrentProcess();
 
-        var members = db.Users.Count();
-        var guilds = db.Guilds.Count();
-        var ping = ctx.Client.Ping;
+        int members = db.Users.Count();
+        int guilds = db.Guilds.Count();
+        int ping = ctx.Client.Ping;
         GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
-        var heapMemory = $"{process.PrivateMemorySize64 / 1024 / 1024} MB";
+        string heapMemory = $"{process.PrivateMemorySize64 / 1024 / 1024} MB";
 
-        var embed = new DiscordEmbedBuilder();
+        DiscordEmbedBuilder embed = new();
         embed
             .WithTitle("Statistics")
             .WithColor(new DiscordColor(0, 255, 194))

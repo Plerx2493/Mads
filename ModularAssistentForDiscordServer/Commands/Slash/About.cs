@@ -25,14 +25,14 @@ public sealed class About : MadsBaseApplicationCommand
     [SlashCommand("about", "Infos about the bot")]
     public async Task AboutCommand(InteractionContext ctx)
     {
-        var discordEmbedBuilder = CommandUtility.GetDiscordEmbed();
-        var discordMessageBuilder = new DiscordInteractionResponseBuilder();
-        var inviteUri = ctx.Client.CurrentApplication.GenerateOAuthUri(null, Permissions.Administrator, DiscordOAuthScope.Bot,
+        DiscordEmbedBuilder discordEmbedBuilder = new();
+        DiscordInteractionResponseBuilder discordMessageBuilder = new();
+        string inviteUri = ctx.Client.CurrentApplication.GenerateOAuthUri(null, Permissions.Administrator, DiscordOAuthScope.Bot,
             DiscordOAuthScope.ApplicationsCommands);
-        var addMe = $"[Click here!]({inviteUri.Replace(" ", "%20")})";
+        string addMe = $"[Click here!]({inviteUri.Replace(" ", "%20")})";
 
-        var diff = DateTime.Now - CommandService.StartTime;
-        var date = $"{diff.Days} days {diff.Hours} hours {diff.Minutes} minutes";
+        TimeSpan diff = DateTime.Now - CommandService.StartTime;
+        string date = $"{diff.Days} days {diff.Hours} hours {diff.Minutes} minutes";
 
         discordEmbedBuilder
             .WithTitle("About me")

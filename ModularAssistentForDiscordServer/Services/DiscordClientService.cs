@@ -13,6 +13,7 @@
 // limitations under the License.
 
 
+using System.Diagnostics;
 using System.Reflection;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
@@ -35,10 +36,10 @@ namespace MADS.Services;
 public class DiscordClientService : IHostedService
 {
     private readonly IDbContextFactory<MadsContext> _dbContextFactory;
-    public CommandsNextExtension CommandsNext;
-    public DiscordClient DiscordClient;
-    public LoggingService Logging;
-    public SlashCommandsExtension SlashCommands;
+    public readonly CommandsNextExtension CommandsNext;
+    public readonly DiscordClient DiscordClient;
+    public readonly LoggingService Logging;
+    public readonly SlashCommandsExtension SlashCommands;
     public DateTime StartTime;
     
     private static ILogger _logger = Log.ForContext<DiscordClientService>();
@@ -52,7 +53,7 @@ public class DiscordClientService : IHostedService
         _logger.Warning("DiscordClientService");
 
         StartTime = DateTime.Now;
-        var config = pConfig;
+        MadsConfig config = pConfig;
         _dbContextFactory = dbDbContextFactory;
         Logging = new LoggingService(this);
 
@@ -71,8 +72,10 @@ public class DiscordClientService : IHostedService
         DiscordClient.GuildCreated += EventListener.OnGuildCreated;
         DiscordClient.GuildDeleted += EventListener.OnGuildDeleted;
         DiscordClient.GuildAvailable += EventListener.OnGuildAvailable;
+        DiscordClient.ComponentInteractionCreated += EventListener.ActionButtons;
+        DiscordClient.ComponentInteractionCreated += EventListener.OnRoleSelection;
 
-        var asm = Assembly.GetExecutingAssembly();
+        Assembly asm = Assembly.GetExecutingAssembly();
 
         //CNext
         CommandsNextConfiguration cnextConfig = new()
@@ -101,10 +104,6 @@ public class DiscordClientService : IHostedService
         SlashCommands.SlashCommandErrored += EventListener.OnSlashCommandErrored;
         SlashCommands.AutocompleteErrored += EventListener.OnAutocompleteError;
 
-        //Custom buttons
-        EventListener.EnableButtonListener(DiscordClient);
-        EventListener.EnableRoleSelectionListener(DiscordClient);
-
         //Interactivity
         InteractivityConfiguration interactivityConfig = new()
         {
@@ -127,10 +126,18 @@ public class DiscordClientService : IHostedService
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         _logger.Warning("DiscordClientService started");
+        
         //Update database to latest migration
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        if ((await context.Database.GetPendingMigrationsAsync(cancellationToken)).Any())
+        await using MadsContext context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        IEnumerable<string> pendingMigrations = await context.Database.GetPendingMigrationsAsync(cancellationToken);
+        if (pendingMigrations.Any())
+        {
+            Stopwatch sw = new();
+            sw.Start();
             await context.Database.MigrateAsync(cancellationToken);
+            sw.Stop();
+            _logger.Warning("Applied pending migrations in {Time} ms", sw.ElapsedMilliseconds);
+        }
         
         DiscordActivity act = new("Messing with code", ActivityType.Custom);
         

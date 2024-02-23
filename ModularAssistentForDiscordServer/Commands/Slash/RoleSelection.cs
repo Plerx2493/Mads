@@ -14,6 +14,8 @@
 
 using DSharpPlus;
 using DSharpPlus.Entities;
+using DSharpPlus.EventArgs;
+using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.Attributes;
@@ -54,8 +56,8 @@ public sealed class RoleSelection : MadsBaseApplicationCommand
         }
 
         //get all roles and Create a list of select menu options
-        var options = Enumerable.Empty<DiscordSelectComponentOption>();
-        var roles = ctx.Guild.Roles.Values.ToList();
+        IEnumerable<DiscordSelectComponentOption> options = [];
+        List<DiscordRole> roles = ctx.Guild.Roles.Values.ToList();
 
         //remove all roles from bots etc
         roles.RemoveAll(x => x.IsManaged);
@@ -72,8 +74,8 @@ public sealed class RoleSelection : MadsBaseApplicationCommand
         await ctx.EditResponseAsync(new DiscordWebhookBuilder().AddComponents(select));
 
         //Get the initial response an wait for a component interaction
-        var response = await ctx.GetOriginalResponseAsync();
-        var selectResponse = await response.WaitForSelectAsync(ctx.Member, "roleSelectionStart-" + ctx.Channel.Id,
+        DiscordMessage response = await ctx.GetOriginalResponseAsync();
+        InteractivityResult<ComponentInteractionCreateEventArgs> selectResponse = await response.WaitForSelectAsync(ctx.Member, "roleSelectionStart-" + ctx.Channel.Id,
             TimeSpan.FromSeconds(60 * 3));
 
         //Notify the user when the interaction times out and abort

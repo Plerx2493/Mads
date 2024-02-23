@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using DeepL;
+using DeepL.Model;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
@@ -39,14 +40,17 @@ public class TranslateMessage : MadsBaseApplicationCommand
     {
         await ctx.DeferAsync(true);
 
-        var preferredLanguage = await _translateInformationService.GetPreferredLanguage(ctx.User.Id);
+        string? preferredLanguage = await _translateInformationService.GetPreferredLanguage(ctx.User.Id);
         bool isPreferredLanguageSet = !preferredLanguage.IsNullOrWhiteSpace();
        
-        if(!isPreferredLanguageSet) preferredLanguage = "en-US";
-        
-        var messageId = ctx.TargetMessage.Id;
-        var message = await ctx.Channel.GetMessageAsync(messageId);
-        var messageContent = message.Content;
+        if(!isPreferredLanguageSet)
+        {
+            preferredLanguage = "en-US";
+        }
+
+        ulong messageId = ctx.TargetMessage.Id;
+        DiscordMessage message = await ctx.Channel.GetMessageAsync(messageId);
+        string? messageContent = message.Content;
 
         if (messageContent.IsNullOrWhiteSpace() || messageContent is null)
         {
@@ -60,22 +64,25 @@ public class TranslateMessage : MadsBaseApplicationCommand
             return;
         }
         
-        var transaltedMessage = 
+        TextResult translatedMessage = 
             await _translator.TranslateTextAsync(messageContent, null, preferredLanguage);
         
-        var embed = new DiscordEmbedBuilder()
+        DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
             .WithAuthor(message.Author?.Username, 
                 message.Author?.AvatarUrl)
-            .WithDescription(transaltedMessage.Text)
+            .WithDescription(translatedMessage.Text)
             .WithColor(new DiscordColor(0, 255, 194))
-            .WithFooter($"Translated from {transaltedMessage.DetectedSourceLanguageCode} to {preferredLanguage}")
+            .WithFooter($"Translated from {translatedMessage.DetectedSourceLanguageCode} to {preferredLanguage}")
             .WithTimestamp(DateTime.Now);
 
         await ctx.CreateResponseAsync(embed);
 
-        if (isPreferredLanguageSet) return;
+        if (isPreferredLanguageSet)
+        {
+            return;
+        }
 
-        var followUpMessage = new DiscordFollowupMessageBuilder()
+        DiscordFollowupMessageBuilder followUpMessage = new DiscordFollowupMessageBuilder()
             .WithContent("⚠️ You haven't set a preferred language yet. Default is english.")
             .AddComponents(new DiscordButtonComponent(ButtonStyle.Primary, "setLanguage", "Set language").AsActionButton(ActionDiscordButtonEnum.SetTranslationLanguage))
             .AddComponents(new DiscordButtonComponent(ButtonStyle.Primary, "setLanguage", "Set your language to en-US").AsActionButton(ActionDiscordButtonEnum.SetTranslationLanguage, "en-US"))

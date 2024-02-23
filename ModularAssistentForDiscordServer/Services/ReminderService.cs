@@ -51,10 +51,22 @@ public class ReminderService : IHostedService
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        if (_isRunning) return;
-        if (_isDisposed) throw new UnreachableException();
+        if (_isRunning)
+        {
+            return;
+        }
+
+        if (_isDisposed)
+        {
+            throw new UnreachableException();
+        }
+
         //_reminderScheduler = await _schedulerFactory.GetScheduler("reminder-scheduler");
-        if (ReminderScheduler == null) throw new NullReferenceException();
+        if (ReminderScheduler == null)
+        {
+            throw new NullReferenceException();
+        }
+
         await ReminderScheduler.Start();
         _isRunning = true;
         _logger.Information("Reminders active");
@@ -62,8 +74,16 @@ public class ReminderService : IHostedService
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
-        if (!_isRunning) return;
-        if (_isDisposed) return;
+        if (!_isRunning)
+        {
+            return;
+        }
+
+        if (_isDisposed)
+        {
+            return;
+        }
+
         _isDisposed = true;
         _isRunning = false;
         await ReminderScheduler.Shutdown();
@@ -74,38 +94,42 @@ public class ReminderService : IHostedService
     {
         DiscordChannel channel;
         if (!reminder.IsPrivate)
+        {
             channel = await _client.GetChannelAsync(reminder.ChannelId);
+        }
         else
+        {
             channel = await _restClient.CreateDmAsync(reminder.UserId);
+        }
 
         await channel.SendMessageAsync(await reminder.GetMessageAsync(_client));
-        await using var db = await _dbContextFactory.CreateDbContextAsync();
+        await using MadsContext db = await _dbContextFactory.CreateDbContextAsync();
         db.Reminders.Remove(reminder);
         await db.SaveChangesAsync();
     }
 
     public async Task<ReminderDbEntity> AddReminder(ReminderDbEntity reminder)
     {
-        await using var db = await _dbContextFactory.CreateDbContextAsync();
+        await using MadsContext db = await _dbContextFactory.CreateDbContextAsync();
 
         db.Reminders.Add(reminder);
 
         await db.SaveChangesAsync();
 
-        var dbEntity =
+        ReminderDbEntity? dbEntity =
             db.Reminders.FirstOrDefault(x => x.UserId == reminder.UserId && x.ExecutionTime == reminder.ExecutionTime);
 
         ArgumentNullException.ThrowIfNull(dbEntity);
         
-        var jobKey = new JobKey($"reminder-{dbEntity.Id}", "reminders");
-        var triggerKey = new TriggerKey($"reminder-trigger-{dbEntity.Id}", "reminders");
+        JobKey jobKey = new($"reminder-{dbEntity.Id}", "reminders");
+        TriggerKey triggerKey = new($"reminder-trigger-{dbEntity.Id}", "reminders");
 
-        var job = JobBuilder.Create<ReminderJob>()
+        IJobDetail job = JobBuilder.Create<ReminderJob>()
             .UsingJobData("reminderId", dbEntity.Id)
             .WithIdentity(jobKey)
             .Build();
 
-        var trigger = TriggerBuilder.Create()
+        ITrigger trigger = TriggerBuilder.Create()
             .WithIdentity(triggerKey)
             .StartAt(reminder.ExecutionTime)
             .Build();
@@ -116,21 +140,24 @@ public class ReminderService : IHostedService
 
     public async Task<List<ReminderDbEntity>> GetByUserAsync(ulong userId)
     {
-        await using var db = await _dbContextFactory.CreateDbContextAsync();
+        await using MadsContext db = await _dbContextFactory.CreateDbContextAsync();
         return db.Reminders.Where(x => x.UserId == userId).ToList();
     }
 
     public async Task<bool> TryDeleteById(ulong reminderId)
     {
-        await using var db = await _dbContextFactory.CreateDbContextAsync();
+        await using MadsContext db = await _dbContextFactory.CreateDbContextAsync();
 
         ReminderDbEntity reminder;
 
         reminder = db.Reminders.FirstOrDefault(x => x.Id == reminderId);
 
-        if (reminder is null) return false;
+        if (reminder is null)
+        {
+            return false;
+        }
 
-        var jobKey = new JobKey($"reminder-{reminder.Id}", "reminders");
+        JobKey jobKey = new($"reminder-{reminder.Id}", "reminders");
         await ReminderScheduler.DeleteJob(jobKey);
 
         db.Reminders.Remove(reminder);
@@ -140,7 +167,7 @@ public class ReminderService : IHostedService
 
     public async Task<ReminderDbEntity?> TryGetByIdAsync(ulong id)
     {
-        await using var db = await _dbContextFactory.CreateDbContextAsync();
+        await using MadsContext db = await _dbContextFactory.CreateDbContextAsync();
 
         ReminderDbEntity reminder;
         reminder = db.Reminders.FirstOrDefault(x => x.Id == id);
@@ -159,11 +186,11 @@ public class ReminderService : IHostedService
 
         public async Task Execute(IJobExecutionContext context)
         {
-            var dataMap = context.MergedJobDataMap;
+            JobDataMap dataMap = context.MergedJobDataMap;
 
-            var reminderId = Convert.ToUInt64(dataMap.Get("reminderId"));
+            ulong reminderId = Convert.ToUInt64(dataMap.Get("reminderId"));
 
-            var reminder = await _reminder.TryGetByIdAsync(reminderId);
+            ReminderDbEntity? reminder = await _reminder.TryGetByIdAsync(reminderId);
 
             if (reminder is null)
             {

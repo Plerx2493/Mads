@@ -24,7 +24,7 @@ internal static partial class EventListener
 {
     public static async Task OnGuildCreated(DiscordClient sender, GuildCreateEventArgs args)
     {
-        var embed = new DiscordEmbedBuilder()
+        DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
             .WithTitle($"New guild added: {args.Guild.Name}")
             .AddField("Id:", args.Guild.Id.ToString())
             .AddField("Owner:", args.Guild.Owner.Username + "#" + args.Guild.Owner.Discriminator)
@@ -40,7 +40,7 @@ internal static partial class EventListener
 
     public static async Task OnGuildDeleted(DiscordClient sender, GuildDeleteEventArgs args)
     {
-        var embed = new DiscordEmbedBuilder()
+        DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
             .WithTitle($"Guild removed: {args.Guild.Name}")
             .AddField("Id:", args.Guild.Id.ToString())
             .AddField("Owner:", args.Guild.Owner.Username + "#" + args.Guild.Owner.Discriminator)

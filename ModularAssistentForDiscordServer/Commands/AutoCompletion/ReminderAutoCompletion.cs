@@ -40,8 +40,8 @@ public class ReminderAutoCompletion : IAutocompleteProvider
         }
         */
         
-        await using var db = await _factory.CreateDbContextAsync();
-        var choices = db.Reminders
+        await using MadsContext db = await _factory.CreateDbContextAsync();
+        IEnumerable<DiscordAutoCompleteChoice> choices = db.Reminders
             .Where(x => x.UserId == ctx.User.Id)
             .Select(x => x.Id.ToString())
             .ToList()

@@ -28,23 +28,27 @@ public class TranslateInformationService
     
     public async void SetPreferredLanguage(ulong userId, string language)
     {
-        await using var db = await _dbContextFactory.CreateDbContextAsync();
-        var user = db.Users.FirstOrDefault(x => x.Id == userId);
-        if (user == null) return;
+        await using MadsContext? db = await _dbContextFactory.CreateDbContextAsync();
+        UserDbEntity? user = db.Users.FirstOrDefault(x => x.Id == userId);
+        if (user == null)
+        {
+            return;
+        }
+
         user.PreferedLanguage = language;
         await db.SaveChangesAsync();
     }
     
     public async Task<string?> GetPreferredLanguage(ulong userId)
     {
-        await using var db = await _dbContextFactory.CreateDbContextAsync();
-        var user = db.Users.FirstOrDefault(x => x.Id == userId);
+        await using MadsContext? db = await _dbContextFactory.CreateDbContextAsync();
+        UserDbEntity? user = db.Users.FirstOrDefault(x => x.Id == userId);
         return user?.PreferedLanguage;
     }
     
     internal static string StandardizeLang(string code)
     {
-        string[] strArray = code.Split(new char[1]{ '-' }, 2);
+        string[] strArray = code.Split(['-'], 2);
         return strArray.Length != 1 ? strArray[0].ToLowerInvariant() + "-" + strArray[1].ToUpperInvariant() : strArray[0].ToLowerInvariant();
     }
 }

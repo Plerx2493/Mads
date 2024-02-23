@@ -26,22 +26,28 @@ public class UserInfoUser : MadsBaseApplicationCommand
     [ContextMenu(ApplicationCommandType.UserContextMenu, "Info")]
     public async Task GetUserInfo(ContextMenuContext ctx)
     {
-        var user = ctx.TargetUser;
+        DiscordUser user = ctx.TargetUser;
 
         DiscordMember? member = null;
         
         try
         {
-            if (!ctx.Channel.IsPrivate) member = await ctx.Guild.GetMemberAsync(user.Id);
+            if (!ctx.Channel.IsPrivate)
+            {
+                member = await ctx.Guild.GetMemberAsync(user.Id);
+            }
         }
         catch (DiscordException e)
         {
-            if (e.GetType() != typeof(NotFoundException)) throw;
+            if (e.GetType() != typeof(NotFoundException))
+            {
+                throw;
+            }
         }
 
         DiscordEmbedBuilder embed = new();
 
-        var userUrl = "https://discordapp.com/users/" + user.Id;
+        string userUrl = "https://discordapp.com/users/" + user.Id;
 
         embed
             .WithAuthor($"{user.Username}#{user.Discriminator}", userUrl, user.AvatarUrl)
@@ -56,7 +62,10 @@ public class UserInfoUser : MadsBaseApplicationCommand
             embed.AddField("Joined at:",
                 $"{member.JoinedAt.Humanize()} {Formatter.Timestamp(member.JoinedAt, TimestampFormat.ShortDate)}",
                 true);
-            if (member.MfaEnabled.HasValue) embed.AddField("2FA:", member.MfaEnabled.ToString()!);
+            if (member.MfaEnabled.HasValue)
+            {
+                embed.AddField("2FA:", member.MfaEnabled.ToString()!);
+            }
 
             embed.AddField("Permissions:", member.Permissions.Humanize());
 
@@ -64,7 +73,10 @@ public class UserInfoUser : MadsBaseApplicationCommand
                 member.Hierarchy != int.MaxValue ? member.Hierarchy.ToString() : "Server owner", true);
 
 
-            if (member.Roles.Any()) embed.AddField("Roles", member.Roles.Select(x => x.Name).Humanize());
+            if (member.Roles.Any())
+            {
+                embed.AddField("Roles", member.Roles.Select(x => x.Name).Humanize());
+            }
         }
 
         await ctx.CreateResponseAsync(embed.Build(), true);

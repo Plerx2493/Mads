@@ -22,7 +22,7 @@ internal static class DataProvider
 {
     public static MadsConfig GetConfig()
     {
-        var config = new MadsConfig
+        MadsConfig config = new()
         {
             Token = Environment.GetEnvironmentVariable("MADS_DISCORD_TOKEN") ?? throw new ArgumentNullException("Missing env var MADS_DISCORD_TOKEN"),
             Prefix = Environment.GetEnvironmentVariable("MADS_DEFAULT_PREFIX") ?? throw new ArgumentNullException("Missing env var MADS_DEFAULT_PREFIX"),

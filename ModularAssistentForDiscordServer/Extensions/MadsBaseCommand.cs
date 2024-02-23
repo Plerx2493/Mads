@@ -35,7 +35,7 @@ public class MadsBaseCommand : BaseCommandModule
     {
         _executionTimer.Stop();
 
-        var _ = CommandService.Logging.LogCommandExecutionAsync(ctx, _executionTimer.Elapsed);
+        _ = CommandService.Logging.LogCommandExecutionAsync(ctx, _executionTimer.Elapsed);
 
 
         return Task.FromResult(true);

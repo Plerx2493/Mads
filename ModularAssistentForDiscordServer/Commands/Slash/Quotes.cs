@@ -24,7 +24,7 @@ namespace MADS.Commands.Slash;
 [SlashCommandGroup("Quotes", "Commands related to adding and retrieving quotes"), SlashRequireGuild]
 public sealed class Quotes : MadsBaseApplicationCommand
 {
-    private QuotesService _quotesService;
+    private readonly QuotesService _quotesService;
 
     public Quotes(QuotesService quotesService)
     {
@@ -42,7 +42,7 @@ public sealed class Quotes : MadsBaseApplicationCommand
         await ctx.DeferAsync(true);
 
 
-        var newQuote = new QuoteDbEntity
+        QuoteDbEntity newQuote = new()
         {
             Content = content,
             CreatedAt = DateTime.Now,
@@ -54,7 +54,7 @@ public sealed class Quotes : MadsBaseApplicationCommand
 
         _quotesService.AddQuote(newQuote);
 
-        var embed = await newQuote.GetEmbedAsync(ctx.Client);
+        DiscordEmbed embed = await newQuote.GetEmbedAsync(ctx.Client);
 
         await ctx.EditResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
     }
@@ -67,9 +67,9 @@ public sealed class Quotes : MadsBaseApplicationCommand
     {
         await ctx.DeferAsync(true);
 
-        var quote = await _quotesService.GetRndGuildAsync(ctx.Guild.Id);
+        QuoteDbEntity quote = await _quotesService.GetRndGuildAsync(ctx.Guild.Id);
 
-        var embed = await quote.GetEmbedAsync(ctx.Client);
+        DiscordEmbed embed = await quote.GetEmbedAsync(ctx.Client);
 
         await ctx.EditResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
     }

@@ -53,7 +53,7 @@ public sealed class Reminder : MadsBaseApplicationCommand
             return;
         }
 
-        var newReminder = new ReminderDbEntity
+        ReminderDbEntity newReminder = new()
         {
             UserId = ctx.User.Id,
             ChannelId = ctx.Channel.Id,
@@ -76,14 +76,14 @@ public sealed class Reminder : MadsBaseApplicationCommand
     {
         await ctx.DeferAsync(true);
 
-        var reminders = await _reminderService.GetByUserAsync(ctx.User.Id);
-        var remindersTextList = reminders
+        List<ReminderDbEntity> reminders = await _reminderService.GetByUserAsync(ctx.User.Id);
+        IEnumerable<string> remindersTextList = reminders
             .Select(x =>
                 $"```-Id: {x.Id}\n-Remindertext:\n {x.ReminderText}\n-ExecutionTime: {x.ExecutionTime.Humanize()}\n ({x.ExecutionTime.ToUniversalTime()} UTC)```");
 
-        var reminderText = new StringBuilder().AppendJoin("\n", remindersTextList);
+        StringBuilder reminderText = new StringBuilder().AppendJoin("\n", remindersTextList);
 
-        var embed = new DiscordEmbedBuilder()
+        DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
             .WithTitle("Your reminders:")
             .WithDescription(reminderText.ToString());
 
@@ -100,7 +100,7 @@ public sealed class Reminder : MadsBaseApplicationCommand
     )
     {
         await ctx.DeferAsync(true);
-        var reminder = await _reminderService.TryGetByIdAsync((ulong) id);
+        ReminderDbEntity? reminder = await _reminderService.TryGetByIdAsync((ulong) id);
 
         if (reminder is null)
         {
@@ -108,7 +108,7 @@ public sealed class Reminder : MadsBaseApplicationCommand
             return;
         }
 
-        var success = await _reminderService.TryDeleteById((ulong) id);
+        bool success = await _reminderService.TryDeleteById((ulong) id);
 
         if (!success)
         {
@@ -116,7 +116,7 @@ public sealed class Reminder : MadsBaseApplicationCommand
             return;
         }
 
-        var embed = new DiscordEmbedBuilder()
+        DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
             .WithTitle("Reminder removed")
             .WithDescription(
                 $"```-Id: {reminder.Id}\n-Remindertext:\n{reminder.ReminderText}```\nWould have fired {reminder.GetExecutionTimestamp()}");

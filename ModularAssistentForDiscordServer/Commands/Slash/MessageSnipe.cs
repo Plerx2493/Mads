@@ -45,11 +45,9 @@ public sealed class MessageSnipe : MadsBaseApplicationCommand
     private async Task DoSnipeAsync(InteractionContext ctx, bool edit)
     {
         await ctx.DeferAsync(true);
-        DiscordMessage? message;
-        bool result;
 
-        result = !edit
-            ? _messageSnipeService.TryGetMessage(ctx.Channel.Id, out message)
+        bool result = !edit
+            ? _messageSnipeService.TryGetMessage(ctx.Channel.Id, out DiscordMessage? message)
             : _messageSnipeService.TryGetEditedMessage(ctx.Channel.Id, out message);
 
         if (!result || message is null)
@@ -58,11 +56,15 @@ public sealed class MessageSnipe : MadsBaseApplicationCommand
             return;
         }
 
-        var content = message.Content;
-        if (content is not null && content.Length > 500) content = string.Concat(content.AsSpan(0, 497), "...");
+        string? content = message.Content;
+        if (content is not null && content.Length > 500)
+        {
+            content = string.Concat(content.AsSpan(0, 497), "...");
+        }
+
         DiscordMember? member = message.Author is not null ? await ctx.Guild.GetMemberAsync(message.Author.Id) : null;
 
-        var embed = new DiscordEmbedBuilder()
+        DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
             .WithAuthor(
                 $"{member?.DisplayName ?? message.Author?.GlobalName}" + (edit ? " (Edited)" : ""),
                 iconUrl: message.Author?.GetAvatarUrl(ImageFormat.Png))
@@ -70,28 +72,35 @@ public sealed class MessageSnipe : MadsBaseApplicationCommand
                 $"{(edit ? "Edit" : "Deletion")} sniped by {ctx.Member.DisplayName}",
                 ctx.User.AvatarUrl);
 
-        if (!string.IsNullOrEmpty(content)) embed.WithDescription(content);
+        if (!string.IsNullOrEmpty(content))
+        {
+            embed.WithDescription(content);
+        }
 
         embed.WithTimestamp(message.Id);
 
-        var embeds = new List<DiscordEmbedBuilder>();
-        var attachments = message.Attachments.Where(x => x.MediaType?.StartsWith("image/") ?? false).ToList();
+        List<DiscordEmbedBuilder> embeds = [];
+        List<DiscordAttachment> attachments = message.Attachments.Where(x => x.MediaType?.StartsWith("image/") ?? false).ToList();
 
 
-        for (var i = 0; i < attachments.Count; i++)
+        for (int i = 0; i < attachments.Count; i++)
         {
-            var attachment = attachments.ElementAt(i);
+            DiscordAttachment attachment = attachments.ElementAt(i);
             if (i == 0 && attachment.Url is not null)
+            {
                 embed.WithThumbnail(attachment.Url);
+            }
             else if (attachment.Url is not null)
+            {
                 embeds.Add(new DiscordEmbedBuilder()
                     .WithTitle("Additional Image").WithThumbnail(attachment.Url));
+            }
         }
 
-        var response = new DiscordWebhookBuilder()
+        DiscordWebhookBuilder response = new DiscordWebhookBuilder()
             .AddEmbeds(embeds.Prepend(embed).Select(x => x.Build()));
 
-        var btn = new DiscordButtonComponent(ButtonStyle.Danger, "placeholder", "Delete (Author only)",
+        DiscordButtonComponent btn = new(ButtonStyle.Danger, "placeholder", "Delete (Author only)",
             emoji: new DiscordComponentEmoji("🗑"));
         btn = btn.AsActionButton(ActionDiscordButtonEnum.DeleteOneUserOnly, message.Author!.Id);
 
@@ -99,10 +108,19 @@ public sealed class MessageSnipe : MadsBaseApplicationCommand
 
         if (edit)
         {
-            var btn1 = new DiscordLinkButtonComponent(message.JumpLink.ToString(), "Go to message");
+            DiscordLinkButtonComponent btn1 = new(message.JumpLink.ToString(), "Go to message");
             response.AddComponents(btn1);
         }
 
         await ctx.EditResponseAsync(response);
+    }
+    
+    [SlashCommand("deletesnipe", "Deletes cached messages for this channel.")]
+    public async Task DeleteSnipeAsync(InteractionContext ctx)
+    {
+        await ctx.DeferAsync(true);
+        _messageSnipeService.DeleteMessage(ctx.Channel.Id);
+        _messageSnipeService.DeleteEditedMessage(ctx.Channel.Id);
+        await EditResponse_Success("✅ Snipe cache cleared!");
     }
 }
