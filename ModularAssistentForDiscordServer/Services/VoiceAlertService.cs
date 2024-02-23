@@ -29,7 +29,7 @@ public class VoiceAlertService : IHostedService
     private readonly IDbContextFactory<MadsContext> _contextFactory;
     private readonly DiscordClient _discordClient;
     
-    private static ILogger _logger = Log.ForContext<VoiceAlertService>();
+    private static readonly ILogger _logger = Log.ForContext<VoiceAlertService>();
     
     public VoiceAlertService(IDbContextFactory<MadsContext> contextFactory, DiscordClientService discordClientService)
     {
@@ -90,7 +90,7 @@ public class VoiceAlertService : IHostedService
                 continue;
             }
 
-            if (alert.MinTimeBetweenAlerts is null)
+            if (alert.MinTimeBetweenAlerts is not null)
             {
                 if (alert.LastAlert is not null && alert.LastAlert + alert.MinTimeBetweenAlerts > DateTimeOffset.UtcNow)
                 {

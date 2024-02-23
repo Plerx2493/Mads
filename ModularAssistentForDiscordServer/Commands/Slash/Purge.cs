@@ -38,10 +38,10 @@ public sealed class Purge : MadsBaseApplicationCommand
 
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource,
             new DiscordInteractionResponseBuilder());
-        var response = await ctx.GetOriginalResponseAsync();
+        DiscordMessage response = await ctx.GetOriginalResponseAsync();
         
         List<DiscordMessage> messages = [];
-        await foreach (var msg in ctx.Channel.GetMessagesAsync((int) amount))
+        await foreach (DiscordMessage msg in ctx.Channel.GetMessagesAsync((int) amount))
         {
             messages.Add(msg);
         }

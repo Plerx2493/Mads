@@ -38,7 +38,7 @@ internal static class MainProgram
             .CreateLogger();
 
         //Create cancellationToken and hook the cancelKey
-        var cancellationSource = new CancellationTokenSource();
+        CancellationTokenSource cancellationSource = new CancellationTokenSource();
         Console.CancelKeyPress += async (_, args) =>
         {
             args.Cancel = true;
@@ -46,11 +46,11 @@ internal static class MainProgram
         };
 
         //retrieves the config.json
-        var config = DataProvider.GetConfig();
+        MadsConfig config = DataProvider.GetConfig();
 
         //Create a discordWebhookClient and add the debug webhook from the config.json
         WebhookClient = new DiscordWebhookClient();
-        var webhookUrl = new Uri(config.DiscordWebhook);
+        Uri webhookUrl = new Uri(config.DiscordWebhook);
         await WebhookClient.AddWebhookAsync(webhookUrl);
 
         //Create a new instance of the bot
@@ -62,9 +62,13 @@ internal static class MainProgram
         }
         catch (Exception e)
         {
-            if (e is TaskCanceledException) return;
+            if (e is TaskCanceledException)
+            {
+                return;
+            }
+
             Log.Error(e, "An uncaught exception occurred");
-            var _ = LogToWebhookAsync(e);
+            Task _ = LogToWebhookAsync(e);
             Environment.Exit(69);
         }
 
@@ -73,14 +77,14 @@ internal static class MainProgram
 
     public static async Task LogToWebhookAsync(Exception e)
     {
-        var exceptionEmbed = new DiscordEmbedBuilder()
+        DiscordEmbedBuilder exceptionEmbed = new DiscordEmbedBuilder()
             .WithAuthor("Mads-Debug")
             .WithColor(DiscordColor.Red)
             .WithTimestamp(DateTime.UtcNow)
             .WithTitle($"Ooopsie...  {e.GetType()}")
             .WithDescription(e.Message);
 
-        var webhookBuilder = new DiscordWebhookBuilder()
+        DiscordWebhookBuilder webhookBuilder = new DiscordWebhookBuilder()
             .WithUsername("Mads-Debug")
             .AddEmbed(exceptionEmbed);
 
@@ -90,8 +94,8 @@ internal static class MainProgram
     [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "EFCore CLI tools rely on reflection.")]
     public static IHostBuilder CreateHostBuilder(string[] args)
     {
-        var builder = Host.CreateDefaultBuilder(args);
-        var config = DataProvider.GetConfig();
+        IHostBuilder builder = Host.CreateDefaultBuilder(args);
+        MadsConfig config = DataProvider.GetConfig();
 
         builder.ConfigureServices((_, services) => services.AddDbContextFactory<MadsContext>(
             options => options.UseMySql(
