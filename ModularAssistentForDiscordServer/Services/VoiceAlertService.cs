@@ -108,6 +108,8 @@ public class VoiceAlertService : IHostedService
 
                 await member.SendMessageAsync(embed);
                 
+                alert.LastAlert = DateTimeOffset.UtcNow;
+                
                 if (!alert.IsRepeatable)
                 {
                     context.VoiceAlerts.Remove(alert);
