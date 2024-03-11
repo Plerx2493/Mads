@@ -22,6 +22,7 @@ using DSharpPlus.Exceptions;
 using DSharpPlus.SlashCommands;
 using MADS.Entities;
 using MADS.Extensions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
 
@@ -32,7 +33,7 @@ public class LoggingService
     private static readonly Regex PrettyNameRegex = new("PRETTY_NAME=(.*)", RegexOptions.Compiled);
     private readonly string _dirPath = DataProvider.GetPath("Logs");
     private readonly string _logPath;
-    private readonly DiscordRestClient _discordRestClient;
+    private DiscordRestClient _discordRestClient;
     private DiscordClientService? _modularDiscordBot;
     private DiscordWebhookClient _discordWebhookClient = new();
     private bool _isSetup;
@@ -40,9 +41,8 @@ public class LoggingService
     
     private static readonly Serilog.ILogger _logger = Log.ForContext<LoggingService>();
 
-    internal LoggingService(DiscordRestClient discordRestClient)
+    internal LoggingService()
     {
-        _discordRestClient = discordRestClient;
         Directory.CreateDirectory(_dirPath);
         
         DateTime startDate = DateTime.Now;
@@ -79,7 +79,7 @@ public class LoggingService
         {
             return;
         }
-        
+        _discordRestClient = ModularDiscordBot.Services.GetRequiredService<DiscordRestClient>();
         AddOwnerChannels();
         SetupFeedback();
         SetupWebhookLogging();
