@@ -26,12 +26,14 @@ public class UserEntityConfig : IEntityTypeConfiguration<UserDbEntity>
         builder.HasMany(u => u.Reminders)
             .WithOne(x => x.User)
             .HasPrincipalKey(x => x.Id)
-            .HasForeignKey(x => x.UserId);
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
         
         builder.HasMany(u => u.VoiceAlerts)
             .WithOne(x => x.User)
             .HasPrincipalKey(x => x.Id)
-            .HasForeignKey(x => x.UserId);
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany(u => u.Incidents)
             .WithOne(x => x.TargetUser)

@@ -15,7 +15,6 @@
 using DSharpPlus;
 using DSharpPlus.Entities;
 using MADS.Entities;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
@@ -24,25 +23,6 @@ namespace MADS.Extensions;
 
 public static class ExtensionMethods
 {
-    public static IServiceCollection AddDbFactoryDebugOrRelease(this IServiceCollection serviceCollection,
-        MadsConfig config)
-    {
-        ILoggerFactory logger = new LoggerFactory().AddSerilog(new LoggerConfiguration()
-            .WriteTo.Console()
-            .MinimumLevel.Warning()
-            .CreateLogger());
-
-        serviceCollection.AddDbContextFactory<MadsContext>(
-            options =>
-            {
-                options.UseMySql(config.ConnectionString, ServerVersion.AutoDetect(config.ConnectionString));
-                options.UseLoggerFactory(logger);
-                options.EnableDetailedErrors();
-            }
-        );
-
-        return serviceCollection;
-    }
 
     public static IServiceCollection AddDiscordRestClient(this IServiceCollection serviceCollection,
         MadsConfig config)

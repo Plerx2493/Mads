@@ -7,6 +7,7 @@ RUN dotnet publish -c Release -o out
 
 # RUNNER IMAGE
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine
+RUN apk add --no-cache icu-libs
 WORKDIR /app
 COPY --from=build /src/out .
 WORKDIR /config 

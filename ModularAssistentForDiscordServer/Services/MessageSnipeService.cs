@@ -114,13 +114,13 @@ public class MessageSnipeService : IHostedService
         _logger.Verbose("MessageSniper: Message eviction - {Reason}", reason.Humanize());
     }
 
-    public void AddMessage(DiscordMessage message)
+    private void AddMessage(DiscordMessage message)
     {
         string id = CacheHelper.GetMessageSnipeKey(message.ChannelId);
         _memoryCache.Set(id, message, _options);
     }
 
-    public void AddEditedMessage(DiscordMessage message)
+    private void AddEditedMessage(DiscordMessage message)
     {
         string id = CacheHelper.GetMessageEditSnipeKey(message.ChannelId);
         _memoryCache.Set(id, message, _options);

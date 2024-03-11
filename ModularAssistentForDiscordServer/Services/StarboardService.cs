@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections.Concurrent;
+using System.Threading.Channels;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
@@ -29,15 +29,17 @@ public class StarboardService : IHostedService
 {
     private readonly DiscordClient _client;
     private readonly IDbContextFactory<MadsContext> _dbFactory;
-    private readonly BlockingCollection<DiscordReactionUpdateEvent> _messageQueue;
+    private readonly Channel<DiscordReactionUpdateEvent> _messageChannel;
+    private readonly CancellationTokenSource _cts = new();
+    private Task? _handleQueueTask;
     private bool _stopped;
 
     private static readonly ILogger _logger = Log.ForContext<StarboardService>();
-    
+
     public StarboardService(DiscordClientService client, IDbContextFactory<MadsContext> dbFactory)
     {
         _client = client.DiscordClient;
-        _messageQueue = new BlockingCollection<DiscordReactionUpdateEvent>();
+        _messageChannel = Channel.CreateUnbounded<DiscordReactionUpdateEvent>();
         _dbFactory = dbFactory;
     }
 
@@ -47,7 +49,10 @@ public class StarboardService : IHostedService
         _client.MessageReactionRemoved += HandleReactionRemoved;
         _client.MessageReactionsCleared += HandleReactionsCleared;
         _client.MessageReactionRemovedEmoji += HandleReactionEmojiRemoved;
-        StartHandleQueue();
+
+        _handleQueueTask = Task.Factory.StartNew(HandleQueueAsync, _cts.Token, TaskCreationOptions.LongRunning,
+            TaskScheduler.Default);
+
         _logger.Information("Starboard active");
         return Task.CompletedTask;
     }
@@ -58,12 +63,16 @@ public class StarboardService : IHostedService
         _client.MessageReactionRemoved -= HandleReactionRemoved;
         _client.MessageReactionsCleared -= HandleReactionsCleared;
         _client.MessageReactionRemovedEmoji -= HandleReactionEmojiRemoved;
+        
         _stopped = true;
         _logger.Information("Starboard stopped");
+        _cts.Cancel();
+        _handleQueueTask?.Dispose();
+        _handleQueueTask = null;
         return Task.CompletedTask;
     }
 
-    private Task HandleReactionAdded(DiscordClient s, MessageReactionAddEventArgs e)
+    private async Task HandleReactionAdded(DiscordClient s, MessageReactionAddEventArgs e)
     {
         DiscordReactionUpdateEvent msg = new()
         {
@@ -71,11 +80,10 @@ public class StarboardService : IHostedService
             EventArgs = e,
             Type = DiscordReactionUpdateType.ReactionAdded
         };
-        _messageQueue.Add(msg);
-        return Task.CompletedTask;
+        await _messageChannel.Writer.WriteAsync(msg);
     }
 
-    private Task HandleReactionRemoved(DiscordClient s, MessageReactionRemoveEventArgs e)
+    private async Task HandleReactionRemoved(DiscordClient s, MessageReactionRemoveEventArgs e)
     {
         DiscordReactionUpdateEvent msg = new()
         {
@@ -83,23 +91,21 @@ public class StarboardService : IHostedService
             EventArgs = e,
             Type = DiscordReactionUpdateType.ReactionRemoved
         };
-        _messageQueue.Add(msg);
-        return Task.CompletedTask;
+        await _messageChannel.Writer.WriteAsync(msg);
     }
 
-    private Task HandleReactionsCleared(DiscordClient s, MessageReactionsClearEventArgs e)
+    private async Task HandleReactionsCleared(DiscordClient s, MessageReactionsClearEventArgs e)
     {
         DiscordReactionUpdateEvent msg = new()
         {
             Message = e.Message,
             EventArgs = e,
-            Type = DiscordReactionUpdateType.ReactionsCleard
+            Type = DiscordReactionUpdateType.ReactionsCleared
         };
-        _messageQueue.Add(msg);
-        return Task.CompletedTask;
+        await _messageChannel.Writer.WriteAsync(msg);
     }
 
-    private Task HandleReactionEmojiRemoved(DiscordClient s, MessageReactionRemoveEmojiEventArgs e)
+    private async Task HandleReactionEmojiRemoved(DiscordClient s, MessageReactionRemoveEmojiEventArgs e)
     {
         DiscordReactionUpdateEvent msg = new()
         {
@@ -107,29 +113,25 @@ public class StarboardService : IHostedService
             EventArgs = e,
             Type = DiscordReactionUpdateType.ReactionEmojiRemoved
         };
-        _messageQueue.Add(msg);
-        return Task.CompletedTask;
+        await _messageChannel.Writer.WriteAsync(msg);
     }
 
-    private void StartHandleQueue()
+    private async Task HandleQueueAsync()
     {
-        Task.Run(async () =>
+        while (!_stopped)
         {
-            while (!_stopped)
+            try
             {
-                try
-                {
-                    _logger.Verbose("StarboardService: waiting for message");
-                    DiscordReactionUpdateEvent msg = _messageQueue.Take();
-                    _logger.Verbose("StarboardService: message received");
-                    await HandleEvent(msg);
-                }
-                catch (Exception e)
-                {
-                    _logger.Error("Exception in {Source}: {Message}", nameof(StarboardService), e.Message);
-                }
+                _logger.Verbose("StarboardService: waiting for message");
+                DiscordReactionUpdateEvent msg = await _messageChannel.Reader.ReadAsync();
+                _logger.Verbose("StarboardService: message received");
+                await HandleEvent(msg);
             }
-        });
+            catch (Exception e)
+            {
+                _logger.Error("Exception in {Source}: {Message}", nameof(StarboardService), e.Message);
+            }
+        }
     }
 
     private async Task HandleEvent(DiscordReactionUpdateEvent e)
@@ -155,7 +157,8 @@ public class StarboardService : IHostedService
 
         await using MadsContext db = await _dbFactory.CreateDbContextAsync();
 
-        GuildConfigDbEntity? guildSettings = db.Configs.FirstOrDefault(x => x.DiscordGuildId == e.Message.Channel!.GuildId );
+        GuildConfigDbEntity? guildSettings =
+            db.Configs.FirstOrDefault(x => x.DiscordGuildId == e.Message.Channel!.GuildId);
 
         if (guildSettings is null)
         {
@@ -221,7 +224,7 @@ public class StarboardService : IHostedService
                 break;
             }
 
-            case DiscordReactionUpdateType.ReactionsCleard:
+            case DiscordReactionUpdateType.ReactionsCleared:
                 IQueryable<StarboardMessageDbEntity> msgs = db.Starboard.Where(x =>
                     x.DiscordMessageId == e.Message.Id && x.DiscordChannelId == e.Message.ChannelId);
                 db.Starboard.RemoveRange(msgs);
@@ -253,7 +256,7 @@ public class StarboardService : IHostedService
             default:
                 throw new ArgumentOutOfRangeException();
         }
-        
+
         StarboardMessageDbEntity? starData;
         bool isNew = false;
         starData = db.Starboard.FirstOrDefault(x =>
@@ -270,7 +273,7 @@ public class StarboardService : IHostedService
             };
             isNew = true;
         }
-        
+
         if (e.Type is DiscordReactionUpdateType.ReactionAdded)
         {
             starData.Stars++;
@@ -331,7 +334,8 @@ public class StarboardService : IHostedService
         }
         catch (Exception)
         {
-            _logger.Error("{Source}: Message with id {Id} not found", nameof(StarboardService), starData.DiscordMessageId);
+            _logger.Error("{Source}: Message with id {Id} not found", nameof(StarboardService),
+                starData.DiscordMessageId);
             return;
         }
 
@@ -342,7 +346,7 @@ public class StarboardService : IHostedService
         StarboardMessageDbEntity? starDataOld = db.Starboard.FirstOrDefault(
             x => x.DiscordMessageId == starData.DiscordMessageId && x.DiscordChannelId == starData.DiscordChannelId
         );
-        
+
         if (starDataOld is null)
         {
             return;
@@ -366,7 +370,8 @@ public class StarboardService : IHostedService
         }
         catch (Exception)
         {
-            _logger.Error("{Source}: Message with id {Id} not found", nameof(StarboardService), starData.DiscordMessageId);
+            _logger.Error("{Source}: Message with id {Id} not found", nameof(StarboardService),
+                starData.DiscordMessageId);
             return;
         }
 
@@ -391,7 +396,7 @@ public class StarboardService : IHostedService
         StarboardMessageDbEntity? starDataOld = db.Starboard.FirstOrDefault(
             x => x.DiscordMessageId == starData.DiscordMessageId && x.DiscordChannelId == starData.DiscordChannelId
         );
-        
+
         if (starDataOld is null)
         {
             return;
@@ -420,7 +425,8 @@ public class StarboardService : IHostedService
         }
         catch (Exception)
         {
-            _logger.Error("{Source}: Message with id {Id} not found", nameof(StarboardService), starData.DiscordMessageId);
+            _logger.Error("{Source}: Message with id {Id} not found", nameof(StarboardService),
+                starData.DiscordMessageId);
             throw;
         }
 

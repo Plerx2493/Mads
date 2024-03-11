@@ -47,7 +47,8 @@ public class DiscordClientService : IHostedService
     public DiscordClientService
     (
         MadsConfig pConfig,
-        IDbContextFactory<MadsContext> dbDbContextFactory
+        IDbContextFactory<MadsContext> dbDbContextFactory,
+        LoggingService loggingService
     )
     {
         _logger.Warning("DiscordClientService");
@@ -55,7 +56,7 @@ public class DiscordClientService : IHostedService
         StartTime = DateTime.Now;
         MadsConfig config = pConfig;
         _dbContextFactory = dbDbContextFactory;
-        Logging = new LoggingService(this);
+        Logging = loggingService;
 
         DiscordConfiguration discordConfig = new()
         {
@@ -152,7 +153,7 @@ public class DiscordClientService : IHostedService
 
     private Task OnGuildDownloadCompleted(DiscordClient sender, GuildDownloadCompletedEventArgs e)
     {
-        Logging.Setup();
+        Logging.Setup(this);
         return Task.CompletedTask;
     }
 }

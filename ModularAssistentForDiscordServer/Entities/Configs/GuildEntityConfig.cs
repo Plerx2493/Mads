@@ -24,16 +24,19 @@ public class GuildEntityConfig : IEntityTypeConfiguration<GuildDbEntity>
         builder.HasMany(u => u.Incidents)
             .WithOne(i => i.Guild)
             .HasForeignKey(i => i.GuildId)
-            .HasPrincipalKey(x => x.DiscordId);
+            .HasPrincipalKey(x => x.DiscordId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(a => a.Settings)
             .WithOne(b => b.Guild)
             .HasForeignKey<GuildDbEntity>(b => b.DiscordId)
-            .HasPrincipalKey<GuildConfigDbEntity>(x => x.DiscordGuildId);
+            .HasPrincipalKey<GuildConfigDbEntity>(x => x.DiscordGuildId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany(x => x.Quotes)
             .WithOne(x => x.Guild)
             .HasForeignKey(x => x.DiscordGuildId)
-            .HasPrincipalKey(x => x.DiscordId);
+            .HasPrincipalKey(x => x.DiscordId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

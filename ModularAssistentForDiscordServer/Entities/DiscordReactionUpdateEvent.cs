@@ -28,6 +28,6 @@ public enum DiscordReactionUpdateType
 {
     ReactionAdded,
     ReactionRemoved,
-    ReactionsCleard,
+    ReactionsCleared,
     ReactionEmojiRemoved
 }

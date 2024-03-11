@@ -13,10 +13,10 @@
 // limitations under the License.
 
 using DeepL;
-using DSharpPlus;
 using MADS.Entities;
 using MADS.Extensions;
 using MADS.Services;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -46,7 +46,13 @@ public class ModularDiscordBot
                         .AddSingleton<DiscordClientService>()
                         .AddHostedService(s => s.GetRequiredService<DiscordClientService>())
                         .AddSingleton(s => s.GetRequiredService<DiscordClientService>().DiscordClient)
-                        .AddDbFactoryDebugOrRelease(_config)
+                        .AddDbContextFactory<MadsContext>(
+                            options =>
+                            {
+                                options.UseMySql(_config.ConnectionString, ServerVersion.AutoDetect(_config.ConnectionString));
+                                options.EnableDetailedErrors();
+                            }
+                        )
                         .AddDiscordRestClient(_config)
                         .AddMemoryCache(options =>
                         {
@@ -77,9 +83,6 @@ public class ModularDiscordBot
                         .AddSingleton<QuotesService>()
                         .AddSingleton<StarboardService>()
                         .AddHostedService(s => s.GetRequiredService<StarboardService>())
-                        .AddSingleton(s =>
-                            new TokenListener("51151", "/api/v1/mads/token/"))
-                        .AddHostedService(s => s.GetRequiredService<TokenListener>())
                         .AddSingleton<ReminderService>()
                         .AddHostedService(s => s.GetRequiredService<ReminderService>())
                         .AddSingleton<VoiceAlertService>()

@@ -28,7 +28,7 @@ public class TranslateInformationService
     
     public async void SetPreferredLanguage(ulong userId, string language)
     {
-        await using MadsContext? db = await _dbContextFactory.CreateDbContextAsync();
+        await using MadsContext db = await _dbContextFactory.CreateDbContextAsync();
         UserDbEntity? user = db.Users.FirstOrDefault(x => x.Id == userId);
         if (user == null)
         {
@@ -41,7 +41,7 @@ public class TranslateInformationService
     
     public async Task<string?> GetPreferredLanguage(ulong userId)
     {
-        await using MadsContext? db = await _dbContextFactory.CreateDbContextAsync();
+        await using MadsContext db = await _dbContextFactory.CreateDbContextAsync();
         UserDbEntity? user = db.Users.FirstOrDefault(x => x.Id == userId);
         return user?.PreferedLanguage;
     }

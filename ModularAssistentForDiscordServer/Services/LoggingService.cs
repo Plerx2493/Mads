@@ -30,28 +30,26 @@ namespace MADS.Services;
 public class LoggingService
 {
     private static readonly Regex PrettyNameRegex = new("PRETTY_NAME=(.*)", RegexOptions.Compiled);
-
-    //Utilities
     private readonly string _dirPath = DataProvider.GetPath("Logs");
     private readonly string _logPath;
-    private readonly DiscordClientService _modularDiscordBot;
-    private DiscordRestClient? _discordRestClient;
+    private readonly DiscordRestClient _discordRestClient;
+    private DiscordClientService? _modularDiscordBot;
     private DiscordWebhookClient _discordWebhookClient = new();
     private bool _isSetup;
     private List<DiscordDmChannel> _ownerChannel = [];
     
     private static readonly Serilog.ILogger _logger = Log.ForContext<LoggingService>();
 
-    internal LoggingService(DiscordClientService dBot)
+    internal LoggingService(DiscordRestClient discordRestClient)
     {
-        Log.Warning("LoggingService");
-        DateTime startDate = DateTime.Now;
-        _modularDiscordBot = dBot;
+        _discordRestClient = discordRestClient;
         Directory.CreateDirectory(_dirPath);
-        string osVersion = Environment.OSVersion.VersionString;
+        
+        DateTime startDate = DateTime.Now;
         _logPath = DataProvider.GetPath("Logs",
             $"{startDate.Day}-{startDate.Month}-{startDate.Year}_{startDate.Hour}-{startDate.Minute}-{startDate.Second}.log");
 
+        string osVersion = Environment.OSVersion.VersionString;
         string os = osVersion.StartsWith("Unix") ? FetchLinuxName() : Environment.OSVersion.VersionString;
 
         File.AppendAllText(_logPath, $".Net: {RuntimeInformation.FrameworkDescription}\n", Encoding.UTF8);
@@ -74,43 +72,26 @@ public class LoggingService
         }
     }
 
-    public void Setup()
+    public void Setup(DiscordClientService modularDiscordBot)
     {
+        _modularDiscordBot = modularDiscordBot;
         if (_isSetup)
         {
             return;
         }
-
-        AddRestClient();
+        
         AddOwnerChannels();
         SetupFeedback();
         SetupWebhookLogging();
 
         _isSetup = true;
     }
-
-    private void AddRestClient()
-    {
-        if (_discordRestClient != null)
-        {
-            return;
-        }
-
-        MadsConfig config = DataProvider.GetConfig();
-
-        DiscordConfiguration discordConfig = new()
-        {
-            Token = config.Token
-        };
-
-        _discordRestClient = new DiscordRestClient(discordConfig);
-    }
-
+    
     private async void AddOwnerChannels()
     {
-        DiscordApplication application = _modularDiscordBot.DiscordClient.CurrentApplication;
-        DiscordUser[]? owners = application.Owners?.ToArray();
-        if (owners is null || _ownerChannel.Count == owners.Length)
+        DiscordApplication? application = _modularDiscordBot?.DiscordClient.CurrentApplication;
+        DiscordUser[]? owners = application?.Owners?.ToArray();
+        if (owners is null || owners.Length == 0)
         {
             return;
         }
@@ -123,7 +104,7 @@ public class LoggingService
 
             try
             {
-                ownerChannel = await _discordRestClient!.CreateDmAsync(owner.Id);
+                ownerChannel = await _discordRestClient.CreateDmAsync(owner.Id);
             }
             catch (DiscordException)
             {
@@ -140,6 +121,11 @@ public class LoggingService
 
     private void SetupFeedback()
     {
+        if (_modularDiscordBot is null)
+        {
+            throw new Exception("LoggingService is not set up.");
+        }
+        
         //Button response with modal
         _modularDiscordBot.DiscordClient.ComponentInteractionCreated += async (_, e) =>
         {

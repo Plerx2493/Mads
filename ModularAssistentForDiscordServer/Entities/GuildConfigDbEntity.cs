@@ -48,7 +48,7 @@ public class GuildConfigDbEntity
     public ulong Id { get; init; }
 
     /// <summary>
-    ///     Snowflake id of the guild the config is related to
+    /// Snowflake id of the guild the config is related to
     /// </summary>
     [Required, Column("discordId")]
     public ulong DiscordGuildId { get; set; }

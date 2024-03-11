@@ -25,7 +25,7 @@ public class MadsBaseApplicationCommand : ApplicationCommandModule
 {
     private InteractionContext? _ctx;
     private readonly Stopwatch _executionTimer = new();
-    public DiscordClientService CommandService => ModularDiscordBot.Services.GetRequiredService<DiscordClientService>();
+    protected DiscordClientService CommandService => ModularDiscordBot.Services.GetRequiredService<DiscordClientService>();
 
     public override Task<bool> BeforeSlashExecutionAsync(InteractionContext ctx)
     {

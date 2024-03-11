@@ -46,8 +46,7 @@ public class ReminderService : IHostedService
         _restClient = rest;
     }
 
-    private IScheduler ReminderScheduler =>
-        _schedulerFactory.GetScheduler("reminder-scheduler").GetAwaiter().GetResult();
+    private IScheduler? _reminderScheduler;
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -60,14 +59,14 @@ public class ReminderService : IHostedService
         {
             throw new UnreachableException();
         }
-
-        //_reminderScheduler = await _schedulerFactory.GetScheduler("reminder-scheduler");
-        if (ReminderScheduler == null)
+        
+        _reminderScheduler = await _schedulerFactory.GetScheduler("reminder-scheduler", cancellationToken);
+        if (_reminderScheduler == null)
         {
             throw new NullReferenceException();
         }
 
-        await ReminderScheduler.Start();
+        await _reminderScheduler.Start(cancellationToken);
         _isRunning = true;
         _logger.Information("Reminders active");
     }
@@ -86,7 +85,11 @@ public class ReminderService : IHostedService
 
         _isDisposed = true;
         _isRunning = false;
-        await ReminderScheduler.Shutdown();
+        if (_reminderScheduler is not null)
+        {
+            await _reminderScheduler.Shutdown(cancellationToken);
+        }
+
         _logger.Information("Reminders stopped");
     }
 
@@ -110,6 +113,16 @@ public class ReminderService : IHostedService
 
     public async Task<ReminderDbEntity> AddReminder(ReminderDbEntity reminder)
     {
+        if (_reminderScheduler is null)
+        {
+            throw new NullReferenceException();
+        }
+        
+        if (reminder.ExecutionTime < DateTimeOffset.Now)
+        {
+            throw new ArgumentException("Execution time cannot be in the past");
+        }
+        
         await using MadsContext db = await _dbContextFactory.CreateDbContextAsync();
 
         db.Reminders.Add(reminder);
@@ -134,7 +147,7 @@ public class ReminderService : IHostedService
             .StartAt(reminder.ExecutionTime)
             .Build();
 
-        await ReminderScheduler.ScheduleJob(job, trigger);
+        await _reminderScheduler.ScheduleJob(job, trigger);
         return dbEntity;
     }
 
@@ -146,11 +159,14 @@ public class ReminderService : IHostedService
 
     public async Task<bool> TryDeleteById(ulong reminderId)
     {
+        if (_reminderScheduler is null)
+        {
+            throw new NullReferenceException();
+        }
+        
         await using MadsContext db = await _dbContextFactory.CreateDbContextAsync();
 
-        ReminderDbEntity reminder;
-
-        reminder = db.Reminders.FirstOrDefault(x => x.Id == reminderId);
+        ReminderDbEntity? reminder = db.Reminders.FirstOrDefault(x => x.Id == reminderId);
 
         if (reminder is null)
         {
@@ -158,7 +174,7 @@ public class ReminderService : IHostedService
         }
 
         JobKey jobKey = new($"reminder-{reminder.Id}", "reminders");
-        await ReminderScheduler.DeleteJob(jobKey);
+        await _reminderScheduler.DeleteJob(jobKey);
 
         db.Reminders.Remove(reminder);
         await db.SaveChangesAsync();
@@ -169,8 +185,7 @@ public class ReminderService : IHostedService
     {
         await using MadsContext db = await _dbContextFactory.CreateDbContextAsync();
 
-        ReminderDbEntity reminder;
-        reminder = db.Reminders.FirstOrDefault(x => x.Id == id);
+        ReminderDbEntity? reminder = db.Reminders.FirstOrDefault(x => x.Id == id);
 
         return reminder;
     }

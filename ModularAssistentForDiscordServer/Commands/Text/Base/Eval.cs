@@ -116,7 +116,7 @@ public class TestVariables
     public DiscordChannel? Channel { get; private set; }
     public DiscordGuild? Guild { get; private set; }
     public DiscordUser? User { get; private set; }
-    public DiscordMember Member { get; private set; }
+    public DiscordMember? Member { get; private set; }
     public CommandContext Context { get; private set; }
     public DiscordClient Client { get; private set; }
     public DiscordClientService ClientService { get; private set; }
