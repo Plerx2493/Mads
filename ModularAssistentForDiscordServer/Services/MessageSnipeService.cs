@@ -71,7 +71,7 @@ public class MessageSnipeService : IHostedService
             return Task.CompletedTask;
         }
         
-        if (e.Message.WebhookMessage)
+        if (e.Message.WebhookMessage ?? false)
         {
             return Task.CompletedTask;
         }
@@ -93,7 +93,7 @@ public class MessageSnipeService : IHostedService
         MessageUpdateEventArgs e
     )
     {
-        if (e.Message.WebhookMessage)
+        if (e.Message.WebhookMessage ?? false)
         {
             return Task.CompletedTask;
         }
