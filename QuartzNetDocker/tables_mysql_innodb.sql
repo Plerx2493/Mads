@@ -1,9 +1,6 @@
 # By: Ron Cordell - roncordell
 #  I didn't see this anywhere, so I thought I'd post it here. This is the script from Quartz to create the tables in a MySQL database, modified to use INNODB instead of MYISAM.
 
-DROP DATABASE IF EXISTS quartz;
-CREATE DATABASE quarz;
-                                                                                                       
 USE quartz;
 
 DROP TABLE IF EXISTS QRTZ_FIRED_TRIGGERS;
