@@ -16,7 +16,6 @@ using System.Diagnostics;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using Humanizer;
-using Humanizer.Localisation;
 using MADS.Extensions;
 
 namespace MADS.Commands.Slash;

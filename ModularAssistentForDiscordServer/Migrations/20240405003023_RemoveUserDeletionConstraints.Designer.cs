@@ -3,6 +3,7 @@ using System;
 using MADS.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MADS.Migrations
 {
     [DbContext(typeof(MadsContext))]
-    partial class MadsContextModelSnapshot : ModelSnapshot
+    [Migration("20240405003023_RemoveUserDeletionConstraints")]
+    partial class RemoveUserDeletionConstraints
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -71,12 +74,7 @@ namespace MADS.Migrations
                         .HasColumnType("bigint unsigned")
                         .HasColumnName("discordId");
 
-                    b.Property<ulong>("SettingsId")
-                        .HasColumnType("bigint unsigned");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("SettingsId");
 
                     b.ToTable("Guilds");
                 });
@@ -141,9 +139,6 @@ namespace MADS.Migrations
                         .HasColumnType("bigint unsigned")
                         .HasColumnName("discordGuildId");
 
-                    b.Property<ulong>("GuildId")
-                        .HasColumnType("bigint unsigned");
-
                     b.Property<ulong>("QuotedUserId")
                         .HasColumnType("bigint unsigned")
                         .HasColumnName("quotedUserId");
@@ -154,7 +149,7 @@ namespace MADS.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("GuildId");
+                    b.HasIndex("DiscordGuildId");
 
                     b.ToTable("Quotes");
                 });
@@ -317,8 +312,9 @@ namespace MADS.Migrations
             modelBuilder.Entity("MADS.Entities.GuildDbEntity", b =>
                 {
                     b.HasOne("MADS.Entities.GuildConfigDbEntity", "Settings")
-                        .WithMany()
-                        .HasForeignKey("SettingsId")
+                        .WithOne("Guild")
+                        .HasForeignKey("MADS.Entities.GuildDbEntity", "DiscordId")
+                        .HasPrincipalKey("MADS.Entities.GuildConfigDbEntity", "DiscordGuildId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -330,6 +326,7 @@ namespace MADS.Migrations
                     b.HasOne("MADS.Entities.GuildDbEntity", "Guild")
                         .WithMany("Incidents")
                         .HasForeignKey("GuildId")
+                        .HasPrincipalKey("DiscordId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -348,7 +345,8 @@ namespace MADS.Migrations
                 {
                     b.HasOne("MADS.Entities.GuildDbEntity", "Guild")
                         .WithMany("Quotes")
-                        .HasForeignKey("GuildId")
+                        .HasForeignKey("DiscordGuildId")
+                        .HasPrincipalKey("DiscordId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -375,6 +373,11 @@ namespace MADS.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("MADS.Entities.GuildConfigDbEntity", b =>
+                {
+                    b.Navigation("Guild");
                 });
 
             modelBuilder.Entity("MADS.Entities.GuildDbEntity", b =>

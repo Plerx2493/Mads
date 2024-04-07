@@ -69,7 +69,7 @@ public class DiscordClientService : IHostedService
         };
 
         DiscordClient = new DiscordClient(discordConfig);
-        EventListener.GuildDownload(DiscordClient);
+        DiscordClient.GuildDownloadCompleted += EventListener.UpdateDb;
         DiscordClient.GuildCreated += EventListener.OnGuildCreated;
         DiscordClient.GuildDeleted += EventListener.OnGuildDeleted;
         DiscordClient.GuildAvailable += EventListener.OnGuildAvailable;

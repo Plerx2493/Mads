@@ -27,7 +27,7 @@ namespace MADS.Commands.Slash;
 [SlashCommandGroup("reminder", "mangage reminders")]
 public sealed class Reminder : MadsBaseApplicationCommand
 {
-    private ReminderService _reminderService;
+    private readonly ReminderService _reminderService;
     
     public Reminder(ReminderService reminderService)
     {
@@ -63,9 +63,9 @@ public sealed class Reminder : MadsBaseApplicationCommand
             IsPrivate = isPrivate
         };
 
-        await _reminderService.AddReminder(newReminder);
+        ReminderDbEntity reminder = await _reminderService.AddReminder(newReminder);
 
-        await EditResponse_Success($"Reminder created. I will remind you in {Formatter.Timestamp(timeSpan.Value)}");
+        await EditResponse_Success($"Reminder created with id {reminder.Id}. I will remind you in {Formatter.Timestamp(timeSpan.Value)}");
     }
 
     [SlashCommand("list", "list your Reminder")]

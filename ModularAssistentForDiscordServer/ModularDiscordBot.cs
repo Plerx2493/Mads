@@ -72,11 +72,12 @@ public class ModularDiscordBot
                             });
                             x.InterruptJobsOnShutdownWithWait = true;
                             x.UseSimpleTypeLoader();
-                            x.SchedulerName = "reminder-scheduler";
                         })
                         .AddQuartzHostedService(options =>
                         {
                             options.WaitForJobsToComplete = true;
+                            options.StartDelay = TimeSpan.FromSeconds(10);
+                            options.AwaitApplicationStarted = true;
                         })
                         .AddSingleton<MessageSnipeService>()
                         .AddHostedService(s => s.GetRequiredService<MessageSnipeService>())

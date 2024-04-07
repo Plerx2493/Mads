@@ -42,7 +42,7 @@ public class TranslateInformationService
     public async Task<string?> GetPreferredLanguage(ulong userId)
     {
         await using MadsContext db = await _dbContextFactory.CreateDbContextAsync();
-        UserDbEntity? user = db.Users.FirstOrDefault(x => x.Id == userId);
+        UserDbEntity? user = db.Users.AsNoTracking().FirstOrDefault(x => x.Id == userId);
         return user?.PreferedLanguage;
     }
     

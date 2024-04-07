@@ -158,7 +158,7 @@ public class StarboardService : IHostedService
         await using MadsContext db = await _dbFactory.CreateDbContextAsync();
 
         GuildConfigDbEntity? guildSettings =
-            db.Configs.FirstOrDefault(x => x.DiscordGuildId == e.Message.Channel!.GuildId);
+            db.Configs.AsNoTracking().FirstOrDefault(x => x.DiscordGuildId == e.Message.Channel!.GuildId);
 
         if (guildSettings is null)
         {

@@ -29,14 +29,14 @@ public class QuotesService
     public async Task<List<QuoteDbEntity>> GetQuotesGuildAsync(ulong guildId)
     {
         await using MadsContext db = await _dbContextFactory.CreateDbContextAsync();
-        return db.Quotes.Where(x => x.DiscordGuildId == guildId).ToList();
+        return db.Quotes.AsNoTracking().Where(x => x.DiscordGuildId == guildId).ToList();
     }
 
     public async Task<QuoteDbEntity> GetRndGuildAsync(ulong guildId)
     {
         await using MadsContext db = await _dbContextFactory.CreateDbContextAsync();
         Random rnd = new();
-        QuoteDbEntity[] quotes = db.Quotes.Where(x => x.DiscordGuildId == guildId).ToArray();
+        QuoteDbEntity[] quotes = db.Quotes.AsNoTracking().Where(x => x.DiscordGuildId == guildId).ToArray();
 
         return quotes[rnd.Next(0, quotes.Length)];
     }

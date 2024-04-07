@@ -41,7 +41,7 @@ public class LoggingService
     
     private static readonly Serilog.ILogger _logger = Log.ForContext<LoggingService>();
 
-    internal LoggingService()
+    public LoggingService()
     {
         Directory.CreateDirectory(_dirPath);
         

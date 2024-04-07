@@ -97,6 +97,7 @@ public class VoiceAlertService : IHostedService
 
         await using MadsContext context = await _contextFactory.CreateDbContextAsync();
         List<VoiceAlert> alerts = await context.VoiceAlerts
+            .AsNoTracking()
             .Where(x => x.ChannelId == e.After.Channel.Id && e.User.Id != x.UserId)
             .ToListAsync();
         
@@ -153,6 +154,7 @@ public class VoiceAlertService : IHostedService
     {
         await using MadsContext context = await _contextFactory.CreateDbContextAsync();
         UserDbEntity? user = await context.Users
+            .AsNoTracking()
             .Include(x => x.VoiceAlerts)
             .FirstOrDefaultAsync(x => x.Id == userId);
         if (user == null)
@@ -189,6 +191,7 @@ public class VoiceAlertService : IHostedService
     {
         await using MadsContext context = await _contextFactory.CreateDbContextAsync();
         UserDbEntity? user = await context.Users
+            .AsNoTracking()
             .Include(x => x.VoiceAlerts)
             .FirstOrDefaultAsync(x => x.Id == userId);
         if (user == null)
