@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace MADS.Entities;
 
@@ -25,9 +26,6 @@ public class UserDbEntity
 
     [Column("username")]
     public string Username { get; set; }
-
-    [Column("discriminator")]
-    public int Discriminator { get; set; }
     
     [Column("prefered_language")]
     public string PreferedLanguage { get; set; }
@@ -35,6 +33,29 @@ public class UserDbEntity
     public List<IncidentDbEntity> Incidents { get; set; }
 
     public List<ReminderDbEntity> Reminders { get; set; }
-    
     public List<VoiceAlert> VoiceAlerts { get; set; }
+}
+
+public class UserDbEntityConfig : IEntityTypeConfiguration<UserDbEntity>
+{
+    public void Configure(EntityTypeBuilder<UserDbEntity> builder)
+    {
+        builder.ToTable("users");
+
+        builder.HasKey(x => x.Id);
+        
+        builder.HasMany<IncidentDbEntity>(x => x.Incidents)
+            .WithOne(x => x.TargetUser)
+            .HasForeignKey(x => x.TargetId);
+        
+        builder.HasMany<ReminderDbEntity>(x => x.Reminders)
+            .WithOne(x => x.User)
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+        
+        builder.HasMany<VoiceAlert>(x => x.VoiceAlerts)
+            .WithOne(x => x.User)
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
 }

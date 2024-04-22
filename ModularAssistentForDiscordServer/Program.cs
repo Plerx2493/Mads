@@ -31,6 +31,8 @@ internal static class MainProgram
 
     public static async Task Main()
     {
+        await Task.Delay(20000); //Delay to give the databases time to start
+        
         Log.Logger = new LoggerConfiguration()
             .WriteTo.Console()
             .MinimumLevel.Verbose()
@@ -95,13 +97,14 @@ internal static class MainProgram
     public static IHostBuilder CreateHostBuilder(string[] args)
     {
         IHostBuilder builder = Host.CreateDefaultBuilder(args);
-        MadsConfig config = DataProvider.GetConfig();
+        //MadsConfig config = DataProvider.GetConfig();
+        string connectionString = "Server=192.168.178.61;Database=MadsDBDev;Uid=root;Pwd=owsip#63;";
 
         builder.ConfigureServices((_, services) => services.AddDbContextFactory<MadsContext>(
             options => options.UseMySql(
-                config.ConnectionString,
+                connectionString,
                 ServerVersion.AutoDetect(
-                    config.ConnectionString))
+                    connectionString))
         ));
         return builder;
     }

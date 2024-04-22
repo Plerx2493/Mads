@@ -91,6 +91,7 @@ public class ModularDiscordBot
                         .AddSingleton(new Translator(_config.DeeplApiKey ?? ""))
                         .AddSingleton<TranslateInformationService>()
                         .AddSingleton<LoggingService>()
+                        .AddSingleton<UserManagerService>()
                         .AddHttpClient();
 
                     Services = services.BuildServiceProvider();

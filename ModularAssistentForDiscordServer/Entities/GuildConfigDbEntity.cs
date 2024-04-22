@@ -19,31 +19,6 @@ namespace MADS.Entities;
 
 public class GuildConfigDbEntity
 {
-    public GuildDbEntity Guild;
-
-    public GuildConfigDbEntity()
-    {
-    }
-
-    public GuildConfigDbEntity(ulong guildId, string prefix)
-    {
-        DiscordGuildId = guildId;
-        Prefix = prefix;
-    }
-
-    public GuildConfigDbEntity(GuildConfigDbEntity old)
-    {
-        DiscordGuildId = old.DiscordGuildId;
-        Prefix = old.Prefix;
-    }
-
-    public GuildConfigDbEntity(ulong guildId)
-    {
-        DiscordGuildId = guildId;
-        Prefix = "!";
-        StarboardActive = false;
-    }
-
     [Key, Column("id"), DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public ulong Id { get; init; }
 
@@ -70,4 +45,6 @@ public class GuildConfigDbEntity
 
     [Column("starboardEmojiName")]
     public string? StarboardEmojiName { get; set; }
+    
+    public GuildDbEntity Guild;
 }

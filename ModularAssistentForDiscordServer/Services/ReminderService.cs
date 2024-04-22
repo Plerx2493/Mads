@@ -146,12 +146,12 @@ public class ReminderService : IHostedService
         return db.Reminders.Where(x => x.UserId == userId).ToList();
     }
 
-    public async Task<bool> TryDeleteById(ulong reminderId)
+    public async Task<bool> TryDeleteById(ulong reminderId, ulong userId)
     {
         IScheduler scheduler = await _schedulerFactory.GetScheduler();
         await using MadsContext db = await _dbContextFactory.CreateDbContextAsync();
 
-        ReminderDbEntity? reminder = db.Reminders.FirstOrDefault(x => x.Id == reminderId);
+        ReminderDbEntity? reminder = db.Reminders.FirstOrDefault(x => x.Id == reminderId && x.UserId == userId);
 
         if (reminder is null)
         {

@@ -28,10 +28,12 @@ namespace MADS.Commands.Slash;
 public sealed class Reminder : MadsBaseApplicationCommand
 {
     private readonly ReminderService _reminderService;
+    private readonly UserManagerService _userManagerService;
     
-    public Reminder(ReminderService reminderService)
+    public Reminder(ReminderService reminderService, UserManagerService userManagerService)
     {
         _reminderService = reminderService;
+        _userManagerService = userManagerService;
     }
 
     [SlashCommand("add", "add new reminder")]
@@ -52,6 +54,8 @@ public sealed class Reminder : MadsBaseApplicationCommand
             await EditResponse_Error("Invalid timespan (5s, 3m, 7h, 2d)");
             return;
         }
+        
+        await _userManagerService.GetOrCreateUserAsync(ctx.User);
 
         ReminderDbEntity newReminder = new()
         {
@@ -65,7 +69,7 @@ public sealed class Reminder : MadsBaseApplicationCommand
 
         ReminderDbEntity reminder = await _reminderService.AddReminder(newReminder);
 
-        await EditResponse_Success($"Reminder created with id {reminder.Id}. I will remind you in {Formatter.Timestamp(timeSpan.Value)}");
+        await EditResponse_Success($"Reminder created with id `{reminder.Id}`. I will remind you in {Formatter.Timestamp(timeSpan.Value)}");
     }
 
     [SlashCommand("list", "list your Reminder")]
@@ -108,11 +112,11 @@ public sealed class Reminder : MadsBaseApplicationCommand
             return;
         }
 
-        bool success = await _reminderService.TryDeleteById((ulong) id);
+        bool success = await _reminderService.TryDeleteById((ulong) id, ctx.User.Id);
 
         if (!success)
         {
-            await EditResponse_Error("Something went wrong. Please try again");
+            await EditResponse_Error("Something went wrong. Are you sure you own this reminder?");
             return;
         }
 
