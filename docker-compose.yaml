@@ -12,7 +12,8 @@ services:
             - MADS_DM_PROXY_CHANNEL_ID=0
             - MADS_DEEPL_API_KEY=<API-Key>
         networks:
-            - mads_internal
+            - mads_internal:
+              ipv4_address: 10.6.0.2
         depends_on:
             - mads-db-core
             - mads-db-quartz
@@ -28,7 +29,8 @@ services:
         volumes:
             - data_mads_core:/var/lib/mysql
         networks:
-            - mads_internal
+            - mads_internal:
+              ipv4_address: 10.6.0.3
         hostname: mads-db-core
         restart: unless-stopped
         
@@ -42,13 +44,18 @@ services:
             volumes:
                 - data_mads_quartz:/var/lib/mysql
             networks:
-                - mads_internal
+                - mads_internal:
+                  ipv4_address: 10.6.0.4
             hostname: mads-db-quartz
             restart: unless-stopped
               
 networks:
     mads_internal:
         driver: bridge
+        ipam:
+          config:
+            - subnet: 10.6.0.0/16
+              gateway: 10.6.0.1
         
 volumes:
   data_mads_quartz:
