@@ -100,7 +100,7 @@ public sealed class MessageSnipe : MadsBaseApplicationCommand
         DiscordWebhookBuilder response = new DiscordWebhookBuilder()
             .AddEmbeds(embeds.Prepend(embed).Select(x => x.Build()));
 
-        DiscordButtonComponent btn = new(ButtonStyle.Danger, "placeholder", "Delete (Author only)",
+        DiscordButtonComponent btn = new(DiscordButtonStyle.Danger, "placeholder", "Delete (Author only)",
             emoji: new DiscordComponentEmoji("🗑"));
         btn = btn.AsActionButton(ActionDiscordButtonEnum.DeleteOneUserOnly, message.Author!.Id);
 

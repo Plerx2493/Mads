@@ -14,7 +14,6 @@
 
 using DeepL;
 using DeepL.Model;
-using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using MADS.Commands.AutoCompletion;
@@ -45,7 +44,7 @@ public class Translation : MadsBaseApplicationCommand
     {
         if (string.IsNullOrWhiteSpace(language))
         {
-            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+            await ctx.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
                 new DiscordInteractionResponseBuilder()
                     .WithContent("⚠️ Language can't be empty!"));
             return;
@@ -55,7 +54,7 @@ public class Translation : MadsBaseApplicationCommand
         
         _translationUserInfo.SetPreferredLanguage(ctx.User.Id, code);
         
-        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+        await ctx.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
             new DiscordInteractionResponseBuilder()
                 .WithContent($"✅ Language set to {code}"));
     }

@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System.Text.RegularExpressions;
-using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.Attributes;
@@ -36,7 +35,7 @@ public sealed class StarboardConfig : MadsBaseApplicationCommand
     }
     
     [SlashCommand("Starboard", "Configure Starboard"),
-     SlashRequirePermissions(Permissions.ManageGuild),
+     SlashRequirePermissions(DiscordPermissions.ManageGuild),
      SlashRequireGuild]
     public async Task StarboardConfigCommand
     (

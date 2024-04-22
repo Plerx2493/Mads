@@ -31,22 +31,14 @@ public class ReminderAutoCompletion : IAutocompleteProvider
     
     public async Task<IEnumerable<DiscordAutoCompleteChoice>> Provider(AutocompleteContext ctx)
     {
-        //TODO Userinput is not working (The input string '' was not in a correct format.)
-        /*long currentInput = (long?) ctx.OptionValue ?? 0;
-        string currentInputString = currentInput.ToString();
-        if (currentInputString == "0")
-        {
-            currentInputString = "";
-        }
-        */
-        
         await using MadsContext db = await _factory.CreateDbContextAsync();
         IEnumerable<DiscordAutoCompleteChoice> choices = db.Reminders
             .Where(x => x.UserId == ctx.User.Id)
             .Select(x => x.Id.ToString())
-            .ToList()
-            //.Where(x => x.StartsWith(currentInputString))
-            .Select(x => new DiscordAutoCompleteChoice(x, x));
+            .Take(25)
+            .Select(x => new DiscordAutoCompleteChoice(x, x))
+            .ToList();
+        
         return choices;
     }
 }

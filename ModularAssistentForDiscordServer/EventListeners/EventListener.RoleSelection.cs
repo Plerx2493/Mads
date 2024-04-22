@@ -33,7 +33,7 @@ internal static partial class EventListener
         }
 
         //TODO Test if "await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);" is possible
-        await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+        await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
             new DiscordInteractionResponseBuilder().WithContent("Roles granted/revoked").AsEphemeral());
 
         DiscordMember member = await e.Guild.GetMemberAsync(e.User.Id);

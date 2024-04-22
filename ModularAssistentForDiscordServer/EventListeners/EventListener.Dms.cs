@@ -71,7 +71,7 @@ internal static partial class EventListener
             .WithDescription(e.Message.Content);
 
         DiscordButtonComponent button =
-            new DiscordButtonComponent(ButtonStyle.Success, "Placeholder", "Respond to User").AsActionButton(
+            new DiscordButtonComponent(DiscordButtonStyle.Success, "Placeholder", "Respond to User").AsActionButton(
                 ActionDiscordButtonEnum.AnswerDmChannel, e.Channel.Id);
 
         DiscordChannel channel = await client.GetChannelAsync(WebhookClient.Webhooks[0].ChannelId);

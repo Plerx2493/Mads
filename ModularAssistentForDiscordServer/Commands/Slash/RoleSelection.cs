@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity;
@@ -26,7 +25,7 @@ namespace MADS.Commands.Slash;
 public sealed class RoleSelection : MadsBaseApplicationCommand
 {
     [SlashCommand("RoleSelection", "Use this command in the channel the message should be posted"),
-     SlashRequirePermissions(Permissions.ManageRoles),
+     SlashRequirePermissions(DiscordPermissions.ManageRoles),
      SlashRequireGuild]
     public async Task RoleSelectionCreation
     (
@@ -36,7 +35,7 @@ public sealed class RoleSelection : MadsBaseApplicationCommand
     )
     {
         //show we are processing
-        await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource,
+        await ctx.CreateResponseAsync(DiscordInteractionResponseType.DeferredChannelMessageWithSource,
             new DiscordInteractionResponseBuilder().AsEphemeral());
 
         //check if the command was not triggered in a guild and if so abort
@@ -47,7 +46,7 @@ public sealed class RoleSelection : MadsBaseApplicationCommand
         }
 
         //check if the user has the required permissons
-        if (!ctx.Member.Permissions.HasPermission(Permissions.ManageRoles))
+        if (!ctx.Member.Permissions.HasPermission(DiscordPermissions.ManageRoles))
         {
             await ctx.EditResponseAsync(
                 new DiscordWebhookBuilder().WithContent(
@@ -89,7 +88,7 @@ public sealed class RoleSelection : MadsBaseApplicationCommand
         }
 
         //acknowledge interaction and edit first response to delete the select menu
-        await selectResponse.Result.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+        await selectResponse.Result.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
         await ctx.EditResponseAsync(new DiscordWebhookBuilder
         {
             Content = "Submitted"

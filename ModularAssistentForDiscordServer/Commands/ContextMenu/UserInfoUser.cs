@@ -23,7 +23,7 @@ namespace MADS.Commands.ContextMenu;
 
 public class UserInfoUser : MadsBaseApplicationCommand
 {
-    [ContextMenu(ApplicationCommandType.UserContextMenu, "Info")]
+    [ContextMenu(DiscordApplicationCommandType.UserContextMenu, "Info")]
     public async Task GetUserInfo(ContextMenuContext ctx)
     {
         DiscordUser user = ctx.TargetUser;

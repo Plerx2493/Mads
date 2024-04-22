@@ -139,10 +139,10 @@ public class LoggingService
             modal
                 .WithTitle("Feedback")
                 .WithCustomId("feedback-modal")
-                .AddComponents(new TextInputComponent("Please enter your feedback:", "feedback-text", required: true,
-                    style: TextInputStyle.Paragraph));
+                .AddComponents(new DiscordTextInputComponent("Please enter your feedback:", "feedback-text", required: true,
+                    style: DiscordTextInputStyle.Paragraph));
 
-            await e.Interaction.CreateResponseAsync(InteractionResponseType.Modal, modal);
+            await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.Modal, modal);
         };
 
         //Modal processing
@@ -164,7 +164,7 @@ public class LoggingService
                 .AddEmbed(embedBuilder)
                 .AsEphemeral();
 
-            await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, responseBuilder);
+            await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource, responseBuilder);
             
             // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
             string guildName =

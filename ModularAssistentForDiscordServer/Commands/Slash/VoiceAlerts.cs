@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System.Text;
-using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using MADS.Commands.AutoCompletion;
@@ -37,7 +36,7 @@ public sealed class VoiceAlerts : MadsBaseApplicationCommand
     public async Task AddAlert
     (
         InteractionContext ctx,
-        [Option("channel", "channel which will be monitored")]
+        [Option("channel", "channel which will be monitored"), ChannelTypes(DiscordChannelType.Voice, DiscordChannelType.Stage)]
         DiscordChannel channel,
         [Option("minTimeBetween", "time which has to pass between alerts")] 
         TimeSpan? minTimeBetween,
@@ -45,7 +44,7 @@ public sealed class VoiceAlerts : MadsBaseApplicationCommand
         bool repeat = false
     )
     {
-        if (channel.Type is not (ChannelType.Voice or ChannelType.Stage))
+        if (channel.Type is not (DiscordChannelType.Voice or DiscordChannelType.Stage))
         {
             await CreateResponse_Error($"<#{channel.Id}> is not a voice channel", true);
             return;

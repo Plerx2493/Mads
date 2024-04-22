@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using Humanizer;
@@ -27,7 +26,7 @@ public sealed class About : MadsBaseApplicationCommand
     {
         DiscordEmbedBuilder discordEmbedBuilder = new();
         DiscordInteractionResponseBuilder discordMessageBuilder = new();
-        string inviteUri = ctx.Client.CurrentApplication.GenerateOAuthUri(null, Permissions.Administrator, DiscordOAuthScope.Bot,
+        string inviteUri = ctx.Client.CurrentApplication.GenerateOAuthUri(null, DiscordPermissions.Administrator, DiscordOAuthScope.Bot,
             DiscordOAuthScope.ApplicationsCommands);
         string addMe = $"[Click here!]({inviteUri.Replace(" ", "%20")})";
 
@@ -49,10 +48,10 @@ public sealed class About : MadsBaseApplicationCommand
             .AddField("Add me", addMe);
 
         discordMessageBuilder.AddEmbed(discordEmbedBuilder.Build());
-        discordMessageBuilder.AddComponents(new DiscordButtonComponent(ButtonStyle.Success, "feedback-button",
+        discordMessageBuilder.AddComponents(new DiscordButtonComponent(DiscordButtonStyle.Success, "feedback-button",
             "Feedback"));
         discordMessageBuilder.AsEphemeral();
 
-        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, discordMessageBuilder);
+        await ctx.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource, discordMessageBuilder);
     }
 }

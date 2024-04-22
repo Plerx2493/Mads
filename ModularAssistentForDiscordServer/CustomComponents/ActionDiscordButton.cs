@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using DSharpPlus;
 using DSharpPlus.Entities;
 
 namespace MADS.CustomComponents;
@@ -161,7 +160,7 @@ public static class ActionDiscordButton
         }
 
         string label = button.Label;
-        ButtonStyle style = button.Style;
+        DiscordButtonStyle style = button.Style;
         DiscordButtonComponent commandButton = new(style, customId, label);
 
         return commandButton;

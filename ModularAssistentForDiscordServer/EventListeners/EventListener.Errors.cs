@@ -50,7 +50,7 @@ internal static partial class EventListener
 
         try
         {
-            await e.Context.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+            await e.Context.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
                 new DiscordInteractionResponseBuilder().AddEmbed(discordEmbed).AsEphemeral());
             return;
         }

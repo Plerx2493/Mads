@@ -140,10 +140,10 @@ public class DiscordClientService : IHostedService
             _logger.Warning("Applied pending migrations in {Time} ms", sw.ElapsedMilliseconds);
         }
         
-        DiscordActivity act = new("Messing with code", ActivityType.Custom);
+        DiscordActivity act = new("Messing with code", DiscordActivityType.Custom);
         
         //connect client
-        await DiscordClient.ConnectAsync(act, UserStatus.Online);
+        await DiscordClient.ConnectAsync(act, DiscordUserStatus.Online);
     }
 
     public Task StopAsync(CancellationToken cancellationToken)

@@ -107,10 +107,10 @@ internal static partial class EventListener
             DiscordInteractionResponseBuilder modal = new DiscordInteractionResponseBuilder()
                 .WithTitle("Set your preferred language:")
                 .WithCustomId($"setLanguage-{args.User.Id}")
-                .AddComponents(new TextInputComponent("Please enter your preferred language:", "answer-text",
+                .AddComponents(new DiscordTextInputComponent("Please enter your preferred language:", "answer-text",
                     required: true,
-                    style: TextInputStyle.Paragraph));
-            await args.Interaction.CreateResponseAsync(InteractionResponseType.Modal, modal);
+                    style: DiscordTextInputStyle.Paragraph));
+            await args.Interaction.CreateResponseAsync(DiscordInteractionResponseType.Modal, modal);
 
             InteractivityExtension interactive = sender.GetInteractivity();
             InteractivityResult<ModalSubmitEventArgs> result = await interactive.WaitForModalAsync($"setLanguage-{args.User.Id}");
@@ -128,14 +128,14 @@ internal static partial class EventListener
 
         if (substring.Length != 2)
         {
-            await args.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+            await args.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
                 new DiscordInteractionResponseBuilder().WithContent("400 - Bad Request").AsEphemeral());
             return;
         }
 
         translationService.SetPreferredLanguage(args.User.Id, substring[2]);
 
-        await args.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+        await args.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
             new DiscordInteractionResponseBuilder().AddEmbed(langSetEmbed).AsEphemeral());
     }
 
@@ -144,7 +144,7 @@ internal static partial class EventListener
     {
         if (!(client.CurrentApplication.Owners?.Contains(e.User) ?? false))
         {
-            await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+            await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
                 new DiscordInteractionResponseBuilder().WithContent("401 - Unauthorized").AsEphemeral());
             return;
         }
@@ -152,9 +152,9 @@ internal static partial class EventListener
         DiscordInteractionResponseBuilder modal = new DiscordInteractionResponseBuilder()
             .WithTitle("Answer to user:")
             .WithCustomId($"AnswerDM-{substring[1]}")
-            .AddComponents(new TextInputComponent("Please enter your answer:", "answer-text", required: true,
-                style: TextInputStyle.Paragraph));
-        await e.Interaction.CreateResponseAsync(InteractionResponseType.Modal, modal);
+            .AddComponents(new DiscordTextInputComponent("Please enter your answer:", "answer-text", required: true,
+                style: DiscordTextInputStyle.Paragraph));
+        await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.Modal, modal);
 
 
         InteractivityExtension interactive = client.GetInteractivity();
@@ -162,7 +162,7 @@ internal static partial class EventListener
 
         if (result.TimedOut)
         {
-            await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+            await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
                 new DiscordInteractionResponseBuilder().WithContent("408 - Request Timeout").AsEphemeral());
             return;
         }
@@ -195,7 +195,7 @@ internal static partial class EventListener
         DiscordMessageBuilder editedMessage = new(e.Message);
         editedMessage.ClearComponents();
         editedMessage.AddComponents(
-            new DiscordButtonComponent(ButtonStyle.Success, "invalid", "Already answered", true));
+            new DiscordButtonComponent(DiscordButtonStyle.Success, "invalid", "Already answered", true));
 
 
         await e.Message.ModifyAsync(editedMessage);
@@ -208,7 +208,7 @@ internal static partial class EventListener
             return;
         }
 
-        await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+        await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
         await e.Message.DeleteAsync();
     }
 
@@ -218,10 +218,10 @@ internal static partial class EventListener
     IReadOnlyList<string> substring
     )
     {
-        await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+        await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
 
         DiscordMember member = await e.Guild.GetMemberAsync(e.User.Id);
-        if (!member.Permissions.HasPermission(Permissions.MoveMembers))
+        if (!member.Permissions.HasPermission(DiscordPermissions.MoveMembers))
         {
             return;
         }
@@ -237,9 +237,9 @@ internal static partial class EventListener
 
     private static async Task BanUser(ComponentInteractionCreateEventArgs e, IReadOnlyList<string> substring)
     {
-        await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+        await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
         DiscordMember member = await e.Guild.GetMemberAsync(e.User.Id);
-        if (!member.Permissions.HasPermission(Permissions.BanMembers))
+        if (!member.Permissions.HasPermission(DiscordPermissions.BanMembers))
         {
             return;
         }
@@ -251,14 +251,14 @@ internal static partial class EventListener
     private static async Task KickUser(ComponentInteractionCreateEventArgs e, IReadOnlyList<string> substring)
     {
         DiscordMember member = await e.Guild.GetMemberAsync(e.User.Id);
-        if (!member.Permissions.HasPermission(Permissions.KickMembers))
+        if (!member.Permissions.HasPermission(DiscordPermissions.KickMembers))
         {
             return;
         }
 
         ulong userId = ulong.Parse(substring[1]);
         await e.Guild.BanMemberAsync(userId);
-        await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+        await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
     }
 
     private static async Task GetUserId(InteractionCreateEventArgs e, IReadOnlyList<string> substring)
@@ -268,7 +268,7 @@ internal static partial class EventListener
         response.WithContent("User id: " + ulong.Parse(substring[1]))
             .AsEphemeral();
 
-        await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, response);
+        await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource, response);
     }
 
     private static async Task GetGuildId(InteractionCreateEventArgs e, IReadOnlyList<string> substring)
@@ -278,7 +278,7 @@ internal static partial class EventListener
         response.WithContent("Guild id: " + ulong.Parse(substring[1]))
             .AsEphemeral();
 
-        await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, response);
+        await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource, response);
     }
 
     private static async Task GetChannelId(InteractionCreateEventArgs e, IReadOnlyList<string> substring)
@@ -288,7 +288,7 @@ internal static partial class EventListener
         response.WithContent("Channel id: " + ulong.Parse(substring[1]))
             .AsEphemeral();
 
-        await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, response);
+        await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource, response);
     }
 
     [GeneratedRegex("^CMD:\\d{1,4}(?::\\d{1,20}){0,3}$", RegexOptions.Compiled)]

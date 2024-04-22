@@ -14,7 +14,6 @@
 
 using DeepL;
 using DeepL.Model;
-using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using MADS.CustomComponents;
@@ -35,7 +34,7 @@ public class TranslateMessage : MadsBaseApplicationCommand
         _translator = translator;
     }
     
-    [ContextMenu(ApplicationCommandType.MessageContextMenu, "Translate message")]
+    [ContextMenu(DiscordApplicationCommandType.MessageContextMenu, "Translate message")]
     public async Task TranslateAsync(ContextMenuContext ctx)
     {
         await ctx.DeferAsync(true);
@@ -84,8 +83,8 @@ public class TranslateMessage : MadsBaseApplicationCommand
 
         DiscordFollowupMessageBuilder followUpMessage = new DiscordFollowupMessageBuilder()
             .WithContent("⚠️ You haven't set a preferred language yet. Default is english.")
-            .AddComponents(new DiscordButtonComponent(ButtonStyle.Primary, "setLanguage", "Set language").AsActionButton(ActionDiscordButtonEnum.SetTranslationLanguage))
-            .AddComponents(new DiscordButtonComponent(ButtonStyle.Primary, "setLanguage", "Set your language to en-US").AsActionButton(ActionDiscordButtonEnum.SetTranslationLanguage, "en-US"))
+            .AddComponents(new DiscordButtonComponent(DiscordButtonStyle.Primary, "setLanguage", "Set language").AsActionButton(ActionDiscordButtonEnum.SetTranslationLanguage))
+            .AddComponents(new DiscordButtonComponent(DiscordButtonStyle.Primary, "setLanguage", "Set your language to en-US").AsActionButton(ActionDiscordButtonEnum.SetTranslationLanguage, "en-US"))
             .AsEphemeral();
         
         

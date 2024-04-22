@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.Attributes;
@@ -23,7 +22,7 @@ namespace MADS.Commands.Slash;
 public sealed class Purge : MadsBaseApplicationCommand
 {
     [SlashCommand("purge", "Purges messages"),
-     SlashRequirePermissions(Permissions.ManageMessages),
+     SlashRequirePermissions(DiscordPermissions.ManageMessages),
      SlashRequireGuild]
     public async Task PurgeMessages
     (
@@ -36,7 +35,7 @@ public sealed class Purge : MadsBaseApplicationCommand
             return;
         }
 
-        await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource,
+        await ctx.CreateResponseAsync(DiscordInteractionResponseType.DeferredChannelMessageWithSource,
             new DiscordInteractionResponseBuilder());
         DiscordMessage response = await ctx.GetOriginalResponseAsync();
         

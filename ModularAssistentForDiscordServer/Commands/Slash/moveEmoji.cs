@@ -27,11 +27,11 @@ namespace MADS.Commands.Slash;
 
 public sealed partial class MoveEmoji : MadsBaseApplicationCommand
 {
-    [SlashCommand("MoveEmoji", "Move emoji to your guild"), SlashRequirePermissions(Permissions.ManageEmojis)]
+    [SlashCommand("MoveEmoji", "Move emoji to your guild"), SlashRequirePermissions(DiscordPermissions.ManageEmojis)]
     public async Task MoveEmojiAsync
         (InteractionContext ctx, [Option("Emoji", "Emoji which should be moved")] string pEmoji)
     {
-        await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource,
+        await ctx.CreateResponseAsync(DiscordInteractionResponseType.DeferredChannelMessageWithSource,
             new DiscordInteractionResponseBuilder().AsEphemeral());
 
         MatchCollection matches = EmojiRegex().Matches(pEmoji);
@@ -59,7 +59,7 @@ public sealed partial class MoveEmoji : MadsBaseApplicationCommand
             try
             {
                 DiscordMember member = await guild.GetMemberAsync(ctx.User.Id);
-                if (member.Permissions.HasFlag(Permissions.ManageEmojis))
+                if (member.Permissions.HasFlag(DiscordPermissions.ManageEmojis))
                 {
                     guilds.Add(guild);
                 }
@@ -98,7 +98,7 @@ public sealed partial class MoveEmoji : MadsBaseApplicationCommand
         }
 
         //acknowledge interaction and edit first response to delete the select menu
-        await selectResponse.Result.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+        await selectResponse.Result.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
             new DiscordInteractionResponseBuilder().WithContent("Submitted").AsEphemeral());
         await ctx.EditResponseAsync(new DiscordWebhookBuilder
         {

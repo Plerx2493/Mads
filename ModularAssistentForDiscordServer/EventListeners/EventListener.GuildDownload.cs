@@ -69,7 +69,6 @@ internal static partial class EventListener
             {
                 Id = user.Id,
                 Username = user.Username,
-                Discriminator = Convert.ToInt32(user.Discriminator),
                 PreferedLanguage = "en-US"
             };
             

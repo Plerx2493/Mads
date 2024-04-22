@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System.Text.RegularExpressions;
-using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.Attributes;
@@ -30,8 +29,8 @@ public partial class StealEmojiMessage : MadsBaseApplicationCommand
         _httpClient = httpClient;
     }
     
-    [ContextMenu(ApplicationCommandType.MessageContextMenu, "Steal emoji(s)"),
-     SlashRequirePermissions(Permissions.ManageEmojis)]
+    [ContextMenu(DiscordApplicationCommandType.MessageContextMenu, "Steal emoji(s)"),
+     SlashRequirePermissions(DiscordPermissions.ManageEmojis)]
     public async Task YoinkAsync(ContextMenuContext ctx)
     {
         await ctx.DeferAsync(true);
