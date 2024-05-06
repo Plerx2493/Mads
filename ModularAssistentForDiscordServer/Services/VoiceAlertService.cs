@@ -97,7 +97,6 @@ public class VoiceAlertService : IHostedService
 
         await using MadsContext context = await _contextFactory.CreateDbContextAsync();
         List<VoiceAlert> alerts = await context.VoiceAlerts
-            .AsNoTracking()
             .Where(x => x.ChannelId == e.After.Channel.Id && e.User.Id != x.UserId)
             .ToListAsync();
         
