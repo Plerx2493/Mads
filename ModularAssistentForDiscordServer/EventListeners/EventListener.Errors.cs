@@ -93,6 +93,19 @@ internal static partial class EventListener
             .WithTimestamp(DateTime.UtcNow)
             .WithTitle($"Eventhandler exception: {e.EventName} - {e.Exception.GetType()}")
             .WithDescription(e.Exception.Message);
+        
+        if (!string.IsNullOrWhiteSpace(e.Exception.StackTrace))
+        {
+            if (e.Exception.StackTrace.Length > 1013)
+            {
+                string stacktrace = e.Exception.StackTrace[..1013] + "...";
+                exceptionEmbed.AddField("Stacktrace", Formatter.BlockCode(stacktrace));
+            }
+            else
+            {
+                exceptionEmbed.AddField("Stacktrace", Formatter.BlockCode(e.Exception.StackTrace));
+            }
+        }
 
         DiscordWebhookBuilder webhookBuilder = new DiscordWebhookBuilder()
             .WithUsername("Mads-Debug")
@@ -115,5 +128,34 @@ internal static partial class EventListener
             await e.Context.Channel.SendPaginatedMessageAsync(e.Context.Member, pages, PaginationBehaviour.Ignore,
                 ButtonPaginationBehavior.DeleteButtons);
         }
+    }
+    
+    internal static async Task OnSocketErrored(DiscordClient client, SocketErrorEventArgs e)
+    {
+        DiscordEmbedBuilder exceptionEmbed = new DiscordEmbedBuilder()
+            .WithAuthor("Mads-Debug")
+            .WithColor(new DiscordColor(0, 255, 194))
+            .WithTimestamp(DateTime.UtcNow)
+            .WithTitle($"Gateway socket exception: {e.Exception.GetType()} - ")
+            .WithDescription(e.Exception.Message);
+        
+        if (!string.IsNullOrWhiteSpace(e.Exception.StackTrace))
+        {
+            if (e.Exception.StackTrace.Length > 1013)
+            {
+                string stacktrace = e.Exception.StackTrace[..1013] + "...";
+                exceptionEmbed.AddField("Stacktrace", Formatter.BlockCode(stacktrace));
+            }
+            else
+            {
+                exceptionEmbed.AddField("Stacktrace", Formatter.BlockCode(e.Exception.StackTrace));
+            }
+        }
+        
+        DiscordWebhookBuilder webhookBuilder = new DiscordWebhookBuilder()
+            .WithUsername("Mads-Debug")
+            .AddEmbed(exceptionEmbed);
+        
+        await MainProgram.WebhookClient.BroadcastMessageAsync(webhookBuilder);
     }
 }
