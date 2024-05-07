@@ -37,7 +37,7 @@ public class VoiceAlertAutoCompletion : IAutocompleteProvider
         
         foreach (VoiceAlert choice in choices)
         {
-            DiscordChannel chn = ctx.Guild.GetChannel(choice.ChannelId);
+            DiscordChannel chn = await ctx.Guild.GetChannelAsync(choice.ChannelId);
             result.Add(new DiscordAutoCompleteChoice(chn.Name, choice.ChannelId.ToString()));
         }
         

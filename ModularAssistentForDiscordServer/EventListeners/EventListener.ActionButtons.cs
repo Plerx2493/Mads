@@ -214,8 +214,8 @@ internal static partial class EventListener
 
     private static async Task MoveVoiceChannelUser
     (
-    ComponentInteractionCreateEventArgs e,
-    IReadOnlyList<string> substring
+        ComponentInteractionCreateEventArgs e,
+        IReadOnlyList<string> substring
     )
     {
         await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
@@ -226,8 +226,8 @@ internal static partial class EventListener
             return;
         }
 
-        DiscordChannel originChannel = e.Guild.GetChannel(ulong.Parse(substring[1]));
-        DiscordChannel targetChannel = e.Guild.GetChannel(ulong.Parse(substring[2]));
+        DiscordChannel originChannel = await e.Guild.GetChannelAsync(ulong.Parse(substring[1]));
+        DiscordChannel targetChannel = await e.Guild.GetChannelAsync(ulong.Parse(substring[2]));
 
         foreach (DiscordMember voiceMember in originChannel.Users)
         {
