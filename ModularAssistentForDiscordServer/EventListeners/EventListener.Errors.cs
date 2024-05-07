@@ -119,11 +119,10 @@ internal static partial class EventListener
         await e.Context.Channel.SendMessageAsync($"OOPS your command just errored... \n {e.Exception.Message}");
         await e.Context.Channel.SendMessageAsync(e.Exception.InnerException?.Message ?? "no inner exception");
         string? reallyLongString = e.Exception.StackTrace;
-
-        InteractivityExtension interactivity = e.Context.Client.GetInteractivity();
+        
         if (reallyLongString != null)
         {
-            IEnumerable<Page> pages = interactivity.GeneratePagesInEmbed(reallyLongString);
+            IEnumerable<Page> pages = InteractivityExtension.GeneratePagesInEmbed(reallyLongString);
 
             await e.Context.Channel.SendPaginatedMessageAsync(e.Context.Member, pages, PaginationBehaviour.Ignore,
                 ButtonPaginationBehavior.DeleteButtons);
