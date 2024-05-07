@@ -12,10 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.ComponentModel;
 using System.Text;
 using DSharpPlus;
+using DSharpPlus.Commands;
+using DSharpPlus.Commands.Processors.SlashCommands.ArgumentModifiers;
 using DSharpPlus.Entities;
-using DSharpPlus.SlashCommands;
 using Humanizer;
 using MADS.Commands.AutoCompletion;
 using MADS.Entities;
@@ -24,8 +26,8 @@ using MADS.Services;
 
 namespace MADS.Commands.Slash;
 
-[SlashCommandGroup("reminder", "mangage reminders")]
-public sealed class Reminder : MadsBaseApplicationCommand
+[Command("reminder"), Description("mangage reminders")]
+public sealed class Reminder
 {
     private readonly ReminderService _reminderService;
     private readonly UserManagerService _userManagerService;
@@ -36,14 +38,14 @@ public sealed class Reminder : MadsBaseApplicationCommand
         _userManagerService = userManagerService;
     }
 
-    [SlashCommand("add", "add new reminder")]
+    [Command("add"), Description("add new reminder")]
     public async Task AddReminder
     (
-        InteractionContext ctx,
-        [Option("timespan", "when the reminder should trigger")]
+        CommandContext ctx,
+        [Description("when the reminder should trigger")]
         TimeSpan? timeSpan,
-        [Option("text", "text")] string text,
-        [Option("private", "Sets if the reminder should be executed in your DMs")]
+        [Description("text")] string text,
+        [Description("Sets if the reminder should be executed in your DMs")]
         bool isPrivate = false
     )
     {
@@ -51,7 +53,7 @@ public sealed class Reminder : MadsBaseApplicationCommand
 
         if (timeSpan is null)
         {
-            await EditResponse_Error("Invalid timespan (5s, 3m, 7h, 2d)");
+            await ctx.EditResponse_Error("Invalid timespan (5s, 3m, 7h, 2d)");
             return;
         }
         
@@ -69,13 +71,13 @@ public sealed class Reminder : MadsBaseApplicationCommand
 
         ReminderDbEntity reminder = await _reminderService.AddReminder(newReminder);
 
-        await EditResponse_Success($"Reminder created with id `{reminder.Id}`. I will remind you in {Formatter.Timestamp(timeSpan.Value)}");
+        await ctx.EditResponse_Success($"Reminder created with id `{reminder.Id}`. I will remind you in {Formatter.Timestamp(timeSpan.Value)}");
     }
 
-    [SlashCommand("list", "list your Reminder")]
+    [Command("list"), Description("list your Reminder")]
     public async Task ListReminder
     (
-        InteractionContext ctx
+        CommandContext ctx
     )
     {
         await ctx.DeferAsync(true);
@@ -94,12 +96,12 @@ public sealed class Reminder : MadsBaseApplicationCommand
         await ctx.EditResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
     }
 
-    [SlashCommand("delete", "delete a reminder based on its id")]
+    [Command("delete"), Description("delete a reminder based on its id")]
     public async Task DeleteById
     (
-        InteractionContext ctx,
-        [Autocomplete(typeof(ReminderAutoCompletion)),
-         Option("id", "id of the given reminder which should be deleted", true)]
+        CommandContext ctx,
+        [SlashAutoCompleteProvider(typeof(ReminderAutoCompletion)),
+         Description("id of the given reminder which should be deleted")]
         long id
     )
     {
@@ -108,7 +110,7 @@ public sealed class Reminder : MadsBaseApplicationCommand
 
         if (reminder is null)
         {
-            await EditResponse_Error("Reminder does not exists");
+            await ctx.EditResponse_Error("Reminder does not exists");
             return;
         }
 
@@ -116,7 +118,7 @@ public sealed class Reminder : MadsBaseApplicationCommand
 
         if (!success)
         {
-            await EditResponse_Error("Something went wrong. Are you sure you own this reminder?");
+            await ctx.EditResponse_Error("Something went wrong. Are you sure you own this reminder?");
             return;
         }
 

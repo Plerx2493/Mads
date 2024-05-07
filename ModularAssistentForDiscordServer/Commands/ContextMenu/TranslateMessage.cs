@@ -15,9 +15,7 @@
 using DeepL;
 using DeepL.Model;
 using DSharpPlus.Entities;
-using DSharpPlus.SlashCommands;
 using MADS.CustomComponents;
-using MADS.Extensions;
 using MADS.Services;
 using Quartz.Util;
 

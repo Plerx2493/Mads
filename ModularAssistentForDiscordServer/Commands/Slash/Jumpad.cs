@@ -12,26 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.ComponentModel;
+using DSharpPlus.Commands;
+using DSharpPlus.Commands.ContextChecks;
+using DSharpPlus.Commands.Processors.SlashCommands.ArgumentModifiers;
 using DSharpPlus.Entities;
-using DSharpPlus.SlashCommands;
 using MADS.CustomComponents;
-using MADS.Extensions;
 using Quartz.Util;
 
 namespace MADS.Commands.Slash;
 
-[GuildOnly]
-public sealed class Jumppad : MadsBaseApplicationCommand
+public sealed class Jumppad
 {
-    [SlashCommand("jumppad", "Create a jumppad button"), SlashCommandPermissions(DiscordPermissions.MoveMembers)]
+    [Command("jumppad"), Description("Create a jumppad button"), RequireGuild, RequirePermissions(DiscordPermissions.MoveMembers)]
     public async Task Test
     (
-        InteractionContext ctx,
-        [Option("originChannel", "Channel where the users will be moved out"), ChannelTypes(DiscordChannelType.Voice)]
+        CommandContext ctx,
+        [Description("Channel where the users will be moved out"), SlashChannelTypes(DiscordChannelType.Voice, DiscordChannelType.Stage)]
         DiscordChannel originChannel,
-        [Option("targetChannel", "Channel where the users will be put in"), ChannelTypes(DiscordChannelType.Voice)]
+        [Description("Channel where the users will be put in"), SlashChannelTypes(DiscordChannelType.Voice, DiscordChannelType.Stage)]
         DiscordChannel targetChannel,
-        [Option("message", "Message to be sent")]
+        [Description("Message to be sent")]
         string? content = null
     )
     {
@@ -43,6 +44,6 @@ public sealed class Jumppad : MadsBaseApplicationCommand
 
         message.AddComponents(newButton);
         message.WithContent(!content.IsNullOrWhiteSpace() ? content! : "Jumppad");
-        await ctx.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource, message);
+        await ctx.RespondAsync(message);
     }
 }

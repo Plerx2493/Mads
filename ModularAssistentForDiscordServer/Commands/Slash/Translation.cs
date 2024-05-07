@@ -12,18 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.ComponentModel;
 using DeepL;
 using DeepL.Model;
+using DSharpPlus.Commands;
+using DSharpPlus.Commands.Processors.SlashCommands.ArgumentModifiers;
 using DSharpPlus.Entities;
-using DSharpPlus.SlashCommands;
 using MADS.Commands.AutoCompletion;
 using MADS.Extensions;
 using MADS.Services;
 
 namespace MADS.Commands.Slash;
 
-[SlashCommandGroup("translation", "Commands for translation")]
-public class Translation : MadsBaseApplicationCommand
+[Command("translation"), Description("Commands for translation")]
+public class Translation
 {
     private readonly TranslateInformationService _translationUserInfo;
     private readonly Translator _translator;
@@ -34,19 +36,17 @@ public class Translation : MadsBaseApplicationCommand
         _translator = translator;
     }
     
-    [SlashCommand("setLanguage", "Set your preferred language")]
+    [Command("setLanguage"), Description("Set your preferred language")]
     public async Task SetLanguageAsync
     (
-        InteractionContext ctx,
-        [Option("language", "The language you want to get (default: en)", true), Autocomplete(typeof(TargetLanguageAutoCompletion))]
+        CommandContext ctx,
+        [Description("The language you want to get (default: en)"), SlashAutoCompleteProvider(typeof(TargetLanguageAutoCompletion))]
         string language = "en"
     )
     {
         if (string.IsNullOrWhiteSpace(language))
         {
-            await ctx.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
-                new DiscordInteractionResponseBuilder()
-                    .WithContent("⚠️ Language can't be empty!"));
+            await ctx.CreateResponse_Error("⚠️ Language can't be empty!");
             return;
         }
 
@@ -54,20 +54,18 @@ public class Translation : MadsBaseApplicationCommand
         
         _translationUserInfo.SetPreferredLanguage(ctx.User.Id, code);
         
-        await ctx.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
-            new DiscordInteractionResponseBuilder()
-                .WithContent($"✅ Language set to {code}"));
+        await ctx.CreateResponse_Success($"✅ Language set to {code}");
     }
 
-    [SlashCommand("translate", "Translate a text")]
+    [Command("translate"), Description("Translate a text")]
     public async Task TranslateText
     (
-        InteractionContext ctx,
-        [Option("text", "The text you want to translate")]
+        CommandContext ctx,
+        [Description("The text you want to translate")]
         string text,
-        [Option("language", "The language you want to get (default: en)", true), Autocomplete(typeof(TargetLanguageAutoCompletion))]
+        [Description("The language you want to get (default: en)"), SlashAutoCompleteProvider(typeof(TargetLanguageAutoCompletion))]
         string language = "en",
-        [Option("publicResult", "Weather the result should be public or not (default: false)")]
+        [Description("Weather the result should be public or not (default: false)")]
         bool publicResult = false
     )
     {
@@ -87,7 +85,10 @@ public class Translation : MadsBaseApplicationCommand
             .WithColor(new DiscordColor(0, 255, 194))
             .WithFooter($"Translated from {translatedText.DetectedSourceLanguageCode} to {language}")
             .WithTimestamp(DateTime.Now);
+        
+        DiscordInteractionResponseBuilder responseBuilder = new();
+        responseBuilder.AddEmbed(embed).AsEphemeral(!publicResult);
 
-        await ctx.CreateResponseAsync(embed, publicResult);
+        await ctx.RespondAsync(responseBuilder);
     }
 }

@@ -12,17 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.ComponentModel;
 using System.Text.RegularExpressions;
+using DSharpPlus.Commands;
+using DSharpPlus.Commands.ContextChecks;
 using DSharpPlus.Entities;
-using DSharpPlus.SlashCommands;
-using DSharpPlus.SlashCommands.Attributes;
 using MADS.Entities;
 using MADS.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace MADS.Commands.Slash;
 
-public sealed class StarboardConfig : MadsBaseApplicationCommand
+public sealed class StarboardConfig
 {
     private static readonly Regex EmoteRegex = new(@"^<(?<animated>a)?:(?<name>[a-zA-Z0-9_]+?):(?<id>\d+?)>$",
         RegexOptions.ECMAScript | RegexOptions.Compiled);
@@ -34,17 +35,17 @@ public sealed class StarboardConfig : MadsBaseApplicationCommand
         _contextFactory = contextFactory;
     }
     
-    [SlashCommand("Starboard", "Configure Starboard"),
-     SlashRequirePermissions(DiscordPermissions.ManageGuild),
-     SlashRequireGuild]
+    [Command("Starboard"), Description("Configure Starboard"),
+     RequirePermissions(DiscordPermissions.ManageGuild),
+     RequireGuild]
     public async Task StarboardConfigCommand
     (
-        InteractionContext ctx,
-        [Option("Channel", "Channel for starboard messages")]
+        CommandContext ctx,
+        [Description("Channel for starboard messages")]
         DiscordChannel channel,
-        [Option("Emoji", "Emoji which is used as star (default: :star:)")]
+        [Description("Emoji which is used as star (default: :star:)")]
         string emojiString = "⭐",
-        [Option("Threshold", "Number of stars required for message (default: 3)")]
+        [Description("Number of stars required for message (default: 3)")]
         long threshhold = 3
     )
     {

@@ -13,16 +13,14 @@
 // limitations under the License.
 
 using DSharpPlus;
-using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Exceptions;
+using DSharpPlus.Commands;
+using DSharpPlus.Commands.EventArgs;
+using DSharpPlus.Commands.Exceptions;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Enums;
-using DSharpPlus.Interactivity.Extensions;
-using DSharpPlus.SlashCommands;
-using DSharpPlus.SlashCommands.EventArgs;
 
 namespace MADS.EventListeners;
 
@@ -72,7 +70,7 @@ internal static partial class EventListener
         await e.Context.Channel.SendMessageAsync(discordEmbed);
     }
 
-    internal static async Task OnCNextErrored(CommandsNextExtension sender, CommandErrorEventArgs e)
+    internal static async Task OnCommandsErrored(CommandsExtension sender, CommandErroredEventArgs e)
     {
         Type typeOfException = e.Exception.GetType();
         if (typeOfException == typeof(ChecksFailedException) || typeOfException == typeof(ArgumentException)
@@ -81,8 +79,8 @@ internal static partial class EventListener
             return;
         }
 
-        await e.Context.Message.RespondAsync($"OOPS your command just errored... \n {e.Exception.Message}");
-        await e.Context.Message.RespondAsync(e.Exception.InnerException?.Message ?? "no inner exception");
+        await e.Context.RespondAsync($"OOPS your command just errored... \n {e.Exception.Message}");
+        await e.Context.RespondAsync(e.Exception.InnerException?.Message ?? "no inner exception");
     }
 
     internal static async Task OnClientErrored(DiscordClient sender, ClientErrorEventArgs e)

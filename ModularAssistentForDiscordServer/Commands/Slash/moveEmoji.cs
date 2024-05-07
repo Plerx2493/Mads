@@ -12,33 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.ComponentModel;
 using System.Text.RegularExpressions;
 using DSharpPlus;
+using DSharpPlus.Commands;
+using DSharpPlus.Commands.ContextChecks;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
-using DSharpPlus.SlashCommands;
-using DSharpPlus.SlashCommands.Attributes;
 using MADS.Extensions;
 
 namespace MADS.Commands.Slash;
 
-public sealed partial class MoveEmoji : MadsBaseApplicationCommand
+public sealed partial class MoveEmoji
 {
-    [SlashCommand("MoveEmoji", "Move emoji to your guild"), SlashRequirePermissions(DiscordPermissions.ManageEmojis)]
+    [Command("MoveEmoji"), Description("Move emoji to your guild"), RequirePermissions(DiscordPermissions.ManageEmojis)]
     public async Task MoveEmojiAsync
-        (InteractionContext ctx, [Option("Emoji", "Emoji which should be moved")] string pEmoji)
+        (CommandContext ctx, [Description("Emoji which should be moved")] string emoji)
     {
-        await ctx.CreateResponseAsync(DiscordInteractionResponseType.DeferredChannelMessageWithSource,
-            new DiscordInteractionResponseBuilder().AsEphemeral());
+        await ctx.DeferAsync(true);
 
-        MatchCollection matches = EmojiRegex().Matches(pEmoji);
+        MatchCollection matches = EmojiRegex().Matches(emoji);
 
         if (!matches.Any())
         {
-            await EditResponse_Error("There are no emojis in your input");
+            await ctx.EditResponse_Error("There are no emojis in your input");
             return;
         }
 
@@ -48,7 +48,7 @@ public sealed partial class MoveEmoji : MadsBaseApplicationCommand
 
         if (!ulong.TryParse(split, out ulong emojiId))
         {
-            await EditResponse_Error("⚠️ Failed to fetch your new emoji.");
+            await ctx.EditResponse_Error("⚠️ Failed to fetch your new emoji.");
             return;
         }
 
@@ -71,7 +71,7 @@ public sealed partial class MoveEmoji : MadsBaseApplicationCommand
 
         if (!guilds.Any())
         {
-            await EditResponse_Error("There are no guilds where you are able to add emojis");
+            await ctx.EditResponse_Error("There are no guilds where you are able to add emojis");
             return;
         }
 
@@ -83,8 +83,8 @@ public sealed partial class MoveEmoji : MadsBaseApplicationCommand
         await ctx.EditResponseAsync(new DiscordWebhookBuilder().AddComponents(select));
 
         //Get the initial response an wait for a component interaction
-        DiscordMessage response = await ctx.GetOriginalResponseAsync();
-        InteractivityResult<ComponentInteractionCreateEventArgs> selectResponse = await response.WaitForSelectAsync(ctx.Member, "moveEmojiChooseGuild-" + ctx.User.Id,
+        DiscordMessage? response = await ctx.GetResponseAsync();
+        InteractivityResult<ComponentInteractionCreateEventArgs> selectResponse = await response!.WaitForSelectAsync(ctx.Member, "moveEmojiChooseGuild-" + ctx.User.Id,
             TimeSpan.FromSeconds(60));
 
         //Notify the user when the interaction times out and abort
@@ -111,7 +111,7 @@ public sealed partial class MoveEmoji : MadsBaseApplicationCommand
             await CopyEmoji(ctx.Client, emojiName, emojiId, animated, guildId);
         }
 
-        await EditResponse_Success("Emoji moved");
+        await ctx.EditResponse_Success("Emoji moved");
     }
 
     private static async Task CopyEmoji(DiscordClient client, string name, ulong id, bool animated, ulong targetGuild)
