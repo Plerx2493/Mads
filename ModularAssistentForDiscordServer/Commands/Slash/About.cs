@@ -12,17 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.ComponentModel;
+using DSharpPlus.Commands;
 using DSharpPlus.Entities;
-using DSharpPlus.SlashCommands;
 using Humanizer;
-using MADS.Extensions;
+using MADS.Services;
 
 namespace MADS.Commands.Slash;
 
-public sealed class About : MadsBaseApplicationCommand
+public sealed class About
 {
-    [SlashCommand("about", "Infos about the bot")]
-    public async Task AboutCommand(InteractionContext ctx)
+    private readonly DiscordClientService DiscordService;
+    
+    public About(DiscordClientService service)
+    {
+        DiscordService = service;
+    }
+    
+    [Command("about"), Description("Infos about the bot")]
+    public async Task AboutCommand(CommandContext ctx)
     {
         DiscordEmbedBuilder discordEmbedBuilder = new();
         DiscordInteractionResponseBuilder discordMessageBuilder = new();
@@ -30,7 +38,7 @@ public sealed class About : MadsBaseApplicationCommand
             DiscordOAuthScope.ApplicationsCommands);
         string addMe = $"[Click here!]({inviteUri.Replace(" ", "%20")})";
 
-        TimeSpan diff = DateTime.Now - CommandService.StartTime;
+        TimeSpan diff = DateTime.Now - DiscordService.StartTime;
         string date = $"{diff.Days} days {diff.Hours} hours {diff.Minutes} minutes";
 
         discordEmbedBuilder
@@ -52,6 +60,6 @@ public sealed class About : MadsBaseApplicationCommand
             "Feedback"));
         discordMessageBuilder.AsEphemeral();
 
-        await ctx.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource, discordMessageBuilder);
+        await ctx.RespondAsync(discordMessageBuilder);
     }
 }

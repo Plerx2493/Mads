@@ -14,9 +14,6 @@
 
 using System.Text.RegularExpressions;
 using DSharpPlus.Entities;
-using DSharpPlus.SlashCommands;
-using DSharpPlus.SlashCommands.Attributes;
-using MADS.Extensions;
 
 namespace MADS.Commands.ContextMenu;
 

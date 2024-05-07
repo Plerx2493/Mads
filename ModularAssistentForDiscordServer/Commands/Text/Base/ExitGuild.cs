@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Attributes;
+using System.ComponentModel;
+using DSharpPlus.Commands;
+using DSharpPlus.Commands.ContextChecks;
 using DSharpPlus.Entities;
-using MADS.Extensions;
 
 namespace MADS.Commands.Text.Base;
 
-public class ExitGuild : MadsBaseCommand
+public class ExitGuild
 {
     [Command("exit"), Description("Exit the bot"), RequirePermissions(DiscordPermissions.ManageGuild), RequireGuild]
     public async Task ExitGuildCommand(CommandContext ctx)

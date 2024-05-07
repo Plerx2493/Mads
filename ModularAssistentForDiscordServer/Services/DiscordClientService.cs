@@ -12,17 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 using System.Diagnostics;
 using System.Reflection;
 using DSharpPlus;
-using DSharpPlus.CommandsNext;
+using DSharpPlus.Commands;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
-using DSharpPlus.SlashCommands;
 using MADS.Entities;
 using MADS.EventListeners;
 using Microsoft.EntityFrameworkCore;
@@ -36,10 +34,9 @@ namespace MADS.Services;
 public class DiscordClientService : IHostedService
 {
     private readonly IDbContextFactory<MadsContext> _dbContextFactory;
-    public readonly CommandsNextExtension CommandsNext;
+    public readonly CommandsExtension Commands;
     public readonly DiscordClient DiscordClient;
     public readonly LoggingService Logging;
-    public readonly SlashCommandsExtension SlashCommands;
     public DateTime StartTime;
     
     private static ILogger _logger = Log.ForContext<DiscordClientService>();
@@ -75,33 +72,21 @@ public class DiscordClientService : IHostedService
         DiscordClient.GuildAvailable += EventListener.OnGuildAvailable;
         DiscordClient.ComponentInteractionCreated += EventListener.ActionButtons;
         DiscordClient.ComponentInteractionCreated += EventListener.OnRoleSelection;
+        DiscordClient.SocketErrored += EventListener.OnSocketErrored;
 
         Assembly asm = Assembly.GetExecutingAssembly();
-
-        //CNext
-        CommandsNextConfiguration cnextConfig = new()
+        
+        CommandsConfiguration cnextConfig = new()
         {
-            CaseSensitive = false,
-            DmHelp = false,
-            EnableDms = true,
-            EnableMentionPrefix = true
-        };
-        CommandsNext = DiscordClient.UseCommandsNext(cnextConfig);
-        CommandsNext.RegisterCommands(asm);
-        CommandsNext.CommandErrored += EventListener.OnCNextErrored;
-
-        //Slashcommands
-        SlashCommandsConfiguration slashConfig = new()
-        {
-            Services = ModularDiscordBot.Services
-        };
-        SlashCommands = DiscordClient.UseSlashCommands(slashConfig);
-#if RELEASE
-        SlashCommands.RegisterCommands(asm);
-#else
-        _logger.Warning("SlashCommands are registered in debug mode");
-        SlashCommands.RegisterCommands(asm, 938120155974750288);
+            ServiceProvider = ModularDiscordBot.Services,
+#if !RELEASE
+            DebugGuildId = 938120155974750288
 #endif
+        };
+        Commands = DiscordClient.UseCommands(cnextConfig);
+        Commands.AddCommands(asm);
+        Commands.CommandErrored += EventListener.OnCommandsErrored;
+
         SlashCommands.SlashCommandErrored += EventListener.OnSlashCommandErrored;
         SlashCommands.AutocompleteErrored += EventListener.OnAutocompleteError;
 

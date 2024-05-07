@@ -12,18 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.ComponentModel;
 using System.Diagnostics;
 using DSharpPlus;
+using DSharpPlus.Commands;
 using DSharpPlus.Entities;
-using DSharpPlus.SlashCommands;
 using Humanizer;
 using MADS.Entities;
-using MADS.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace MADS.Commands.Slash;
 
-public sealed class BotStats : MadsBaseApplicationCommand
+public sealed class BotStats
 {
     private readonly IDbContextFactory<MadsContext> _contextFactory;
     private readonly DiscordRestClient _discordRestClient;
@@ -34,8 +34,8 @@ public sealed class BotStats : MadsBaseApplicationCommand
         _discordRestClient = discordRestClient;
     }
     
-    [SlashCommand("botstats", "Get statistics about the bot")]
-    public async Task GetBotStatsAsync(InteractionContext ctx)
+    [Command("botstats"), Description("Get statistics about the bot")]
+    public async Task GetBotStatsAsync(CommandContext ctx)
     {
         await using MadsContext db = await _contextFactory.CreateDbContextAsync();
         Stopwatch swDb = new();
@@ -73,7 +73,10 @@ public sealed class BotStats : MadsBaseApplicationCommand
             .AddField("Uptime:",
                 $"{DateTimeOffset.UtcNow.Subtract(process.StartTime).Humanize(3, minUnit: TimeUnit.Millisecond, maxUnit: TimeUnit.Day)}",
                 true);
+        
+        DiscordInteractionResponseBuilder responseBuilder = new();
+        responseBuilder.AddEmbed(embed).AsEphemeral();
 
-        await ctx.CreateResponseAsync(embed, true);
+        await ctx.RespondAsync(responseBuilder);
     }
 }

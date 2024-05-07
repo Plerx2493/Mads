@@ -14,12 +14,12 @@
 
 using DeepL;
 using DeepL.Model;
-using DSharpPlus.Entities;
-using DSharpPlus.SlashCommands;
+using DSharpPlus.Commands.Processors.SlashCommands;
+using DSharpPlus.Commands.Processors.SlashCommands.ArgumentModifiers;
 
 namespace MADS.Commands.AutoCompletion;
 
-public class TargetLanguageAutoCompletion : IAutocompleteProvider
+public class TargetLanguageAutoCompletion : IAutoCompleteProvider
 {
     private readonly Translator _translator;
     
@@ -28,12 +28,15 @@ public class TargetLanguageAutoCompletion : IAutocompleteProvider
         _translator = translator;
     }
     
-    public async Task<IEnumerable<DiscordAutoCompleteChoice>> Provider(AutocompleteContext ctx)
+    public async ValueTask<IReadOnlyDictionary<string, object>> AutoCompleteAsync(AutoCompleteContext context)
     {
         TargetLanguage[] sourceLangs = await _translator.GetTargetLanguagesAsync();
-        IEnumerable<DiscordAutoCompleteChoice> choices = sourceLangs
-            .Select(x => new DiscordAutoCompleteChoice(x.Name, x.Code))
-            .Take(25);
+        Dictionary<string, object> choices = sourceLangs
+            .Where(x => x.ToString().StartsWith(context.UserInput))
+            .Take(25)
+            .Select(x => x.ToString())
+            .ToDictionary(x => x, x => (object) x);
+        
         return choices;
     }
 }
