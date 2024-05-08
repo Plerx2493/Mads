@@ -21,6 +21,7 @@ using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
+using MADS.CommandsChecks;
 using MADS.Entities;
 using MADS.EventListeners;
 using Microsoft.EntityFrameworkCore;
@@ -76,19 +77,21 @@ public class DiscordClientService : IHostedService
 
         Assembly asm = Assembly.GetExecutingAssembly();
         
-        CommandsConfiguration cnextConfig = new()
+        CommandsConfiguration commandsConfiguration = new()
         {
             ServiceProvider = ModularDiscordBot.Services,
 #if !RELEASE
             DebugGuildId = 938120155974750288
 #endif
         };
-        Commands = DiscordClient.UseCommands(cnextConfig);
+        Commands = DiscordClient.UseCommands(commandsConfiguration);
         Commands.AddCommands(asm);
+        Commands.AddCheck<EnsureDBEntitiesCheck>();
+        Commands.AddCheck<RequireOwnerCheck>();
         Commands.CommandErrored += EventListener.OnCommandsErrored;
 
-        SlashCommands.SlashCommandErrored += EventListener.OnSlashCommandErrored;
-        SlashCommands.AutocompleteErrored += EventListener.OnAutocompleteError;
+        //C.SlashCommandErrored += EventListener.OnCommandErrored;
+        //SlashCommands.AutocompleteErrored += EventListener.OnAutocompleteError;
 
         //Interactivity
         InteractivityConfiguration interactivityConfig = new()

@@ -13,18 +13,20 @@
 // limitations under the License.
 
 using DSharpPlus;
+using DSharpPlus.Commands;
+using DSharpPlus.Commands.Processors.SlashCommands;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 using Humanizer;
 
 namespace MADS.Commands.ContextMenu;
 
-public class UserInfoUser : MadsBaseApplicationCommand
+public class UserInfoUser
 {
-    [ContextMenu(DiscordApplicationCommandType.UserContextMenu, "Info")]
-    public async Task GetUserInfo(ContextMenuContext ctx)
+    [SlashCommandTypes(DiscordApplicationCommandType.UserContextMenu), Command("Info")]
+    public async Task GetUserInfo(SlashCommandContext ctx, DiscordUser targetUser)
     {
-        DiscordUser user = ctx.TargetUser;
+        DiscordUser user = targetUser;
 
         DiscordMember? member = null;
         
@@ -77,6 +79,6 @@ public class UserInfoUser : MadsBaseApplicationCommand
             }
         }
 
-        await ctx.CreateResponseAsync(embed.Build(), true);
+        await ctx.RespondAsync(embed.Build(), true);
     }
 }

@@ -18,6 +18,7 @@ using DSharpPlus.Commands;
 using DSharpPlus.Commands.ArgumentModifiers;
 using DSharpPlus.Commands.Processors.TextCommands;
 using DSharpPlus.Entities;
+using MADS.CommandsChecks;
 using MADS.Services;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
@@ -35,18 +36,9 @@ public class Eval
     }
     
     [Command("eval"), Description("Evaluate the result of c# code")]
-    public async Task EvalCommand(CommandContext ctx, [RemainingText] string code)
+    public async Task EvalCommand(TextCommandContext ctx, [FromCode] string code)
     {
-        int codeStart = code.IndexOf("```", StringComparison.Ordinal) + 3;
-        codeStart = code.IndexOf('\n', codeStart) + 1;
-        int codeEnd = code.LastIndexOf("```", StringComparison.Ordinal);
-
-        if (codeStart == -1 || codeEnd == -1)
-        {
-            throw new ArgumentException("⚠️ You need to wrap the code into a code block.");
-        }
-
-        string csCode = code[codeStart..codeEnd];
+        string csCode = code;
 
         await ctx.RespondAsync(new DiscordEmbedBuilder()
             .WithColor(new DiscordColor("#FF007F"))
