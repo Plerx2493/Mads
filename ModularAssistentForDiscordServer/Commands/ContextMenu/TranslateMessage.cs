@@ -14,14 +14,17 @@
 
 using DeepL;
 using DeepL.Model;
+using DSharpPlus.Commands;
+using DSharpPlus.Commands.Processors.SlashCommands;
 using DSharpPlus.Entities;
 using MADS.CustomComponents;
+using MADS.Extensions;
 using MADS.Services;
 using Quartz.Util;
 
 namespace MADS.Commands.ContextMenu;
 
-public class TranslateMessage : MadsBaseApplicationCommand
+public class TranslateMessage
 {
     private readonly TranslateInformationService _translateInformationService;
     private readonly Translator _translator;
@@ -32,8 +35,8 @@ public class TranslateMessage : MadsBaseApplicationCommand
         _translator = translator;
     }
     
-    [ContextMenu(DiscordApplicationCommandType.MessageContextMenu, "Translate message")]
-    public async Task TranslateAsync(ContextMenuContext ctx)
+    [SlashCommandTypes(DiscordApplicationCommandType.MessageContextMenu), Command("Translate message")]
+    public async Task TranslateAsync(SlashCommandContext ctx,  DiscordMessage targetMessage)
     {
         await ctx.DeferAsync(true);
 
@@ -45,19 +48,19 @@ public class TranslateMessage : MadsBaseApplicationCommand
             preferredLanguage = "en-US";
         }
 
-        ulong messageId = ctx.TargetMessage.Id;
+        ulong messageId = targetMessage.Id;
         DiscordMessage message = await ctx.Channel.GetMessageAsync(messageId);
         string? messageContent = message.Content;
 
         if (messageContent.IsNullOrWhiteSpace() || messageContent is null)
         {
-            await ctx.CreateResponseAsync("⚠️ Message is empty!");
+            await ctx.CreateResponse_Error("⚠️ Message is empty!");
             return;
         }
         
         if (preferredLanguage is null)
         {
-            await ctx.CreateResponseAsync("⚠️ No language set!");
+            await ctx.CreateResponse_Error("⚠️ No language set!");
             return;
         }
         
@@ -72,7 +75,7 @@ public class TranslateMessage : MadsBaseApplicationCommand
             .WithFooter($"Translated from {translatedMessage.DetectedSourceLanguageCode} to {preferredLanguage}")
             .WithTimestamp(DateTime.Now);
 
-        await ctx.CreateResponseAsync(embed);
+        await ctx.RespondAsync(embed);
 
         if (isPreferredLanguageSet)
         {
@@ -86,6 +89,6 @@ public class TranslateMessage : MadsBaseApplicationCommand
             .AsEphemeral();
         
         
-        await ctx.FollowUpAsync(followUpMessage);
+        await ctx.FollowupAsync(followUpMessage);
     }
 }

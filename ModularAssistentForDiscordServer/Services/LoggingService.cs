@@ -192,31 +192,13 @@ public class LoggingService
         Uri webhookUrl = new(config.DiscordWebhook);
         _discordWebhookClient.AddWebhookAsync(webhookUrl).GetAwaiter().GetResult();
     }
-
+    
     public async Task LogEvent(string message, string sender, LogLevel lvl)
     {
         string log = $"[{DateTime.Now:yyyy'-'MM'-'dd'T'HH':'mm':'ss}] [{lvl}] [{sender}] {message}";
         await File.AppendAllTextAsync(_logPath, log + "\n", Encoding.UTF8);
     }
-
-    public async Task LogCommandExecutionAsync(CommandContext ctx, TimeSpan timespan)
-    {
-        await LogInfo(
-            $"[{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [{ctx.Command?.Name}] {timespan.TotalMilliseconds} milliseconds to execute");
-    }
-
-    public async Task LogCommandExecutionAsync(InteractionContext ctx, TimeSpan timespan)
-    {
-        await LogInfo(
-            $"[{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [/{ctx.CommandName}] {timespan.TotalMilliseconds} milliseconds to execute");
-    }
-
-    public async Task LogCommandExecutionAsync(ContextMenuContext ctx, TimeSpan timespan)
-    {
-        await LogInfo(
-            $"[{ctx.User.Username}#{ctx.User.Discriminator} : {ctx.User.Id}] [CM-{ctx.CommandName}] {timespan.TotalMilliseconds} milliseconds to execute");
-    }
-
+    
     private async Task LogInfo(string input)
     {
         string logEntry =

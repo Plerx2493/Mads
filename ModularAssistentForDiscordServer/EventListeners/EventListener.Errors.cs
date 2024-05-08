@@ -26,11 +26,11 @@ namespace MADS.EventListeners;
 
 internal static partial class EventListener
 {
-    internal static async Task OnSlashCommandErrored(SlashCommandsExtension sender, SlashCommandErrorEventArgs e)
+    internal static async Task OnCommandErrored(CommandsExtension sender, CommandErroredEventArgs e)
     {
         Type typeOfException = e.Exception.GetType();
         if (typeOfException == typeof(ArgumentException)
-            || typeOfException == typeof(SlashExecutionChecksFailedException))
+            || typeOfException == typeof(ChecksFailedException))
         {
             return;
         }
@@ -48,8 +48,7 @@ internal static partial class EventListener
 
         try
         {
-            await e.Context.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
-                new DiscordInteractionResponseBuilder().AddEmbed(discordEmbed).AsEphemeral());
+            await e.Context.RespondAsync(new DiscordInteractionResponseBuilder().AddEmbed(discordEmbed).AsEphemeral());
             return;
         }
         catch (BadRequestException)
@@ -58,7 +57,7 @@ internal static partial class EventListener
 
         try
         {
-            await e.Context.Interaction.EditOriginalResponseAsync(
+            await e.Context.EditResponseAsync(
                 new DiscordWebhookBuilder(new DiscordInteractionResponseBuilder().AddEmbed(discordEmbed)
                     .AsEphemeral()));
             return;
@@ -110,21 +109,6 @@ internal static partial class EventListener
             .AddEmbed(exceptionEmbed);
 
         await MainProgram.WebhookClient.BroadcastMessageAsync(webhookBuilder);
-    }
-
-    internal static async Task OnAutocompleteError(SlashCommandsExtension sender, AutocompleteErrorEventArgs e)
-    {
-        await e.Context.Channel.SendMessageAsync($"OOPS your command just errored... \n {e.Exception.Message}");
-        await e.Context.Channel.SendMessageAsync(e.Exception.InnerException?.Message ?? "no inner exception");
-        string? reallyLongString = e.Exception.StackTrace;
-        
-        if (reallyLongString != null)
-        {
-            IEnumerable<Page> pages = InteractivityExtension.GeneratePagesInEmbed(reallyLongString);
-
-            await e.Context.Channel.SendPaginatedMessageAsync(e.Context.Member, pages, PaginationBehaviour.Ignore,
-                ButtonPaginationBehavior.DeleteButtons);
-        }
     }
     
     internal static async Task OnSocketErrored(DiscordClient client, SocketErrorEventArgs e)
