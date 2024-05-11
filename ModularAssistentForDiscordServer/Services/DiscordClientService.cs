@@ -122,6 +122,7 @@ public class DiscordClientService : IHostedService
         DiscordClient.GuildDownloadCompleted += OnGuildDownloadCompleted;
         DiscordClient.MessageCreated += EventListener.DmHandler;
         DiscordClient.ClientErrored += EventListener.OnClientErrored;
+        DiscordClient.SocketErrored += EventListener.OnSocketErrored;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
