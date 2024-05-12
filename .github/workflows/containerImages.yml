@@ -30,7 +30,7 @@ jobs:
           file: ./ModularAssistentForDiscordServer/Dockerfile
           push: true
           tags: |
-            ghcr.io/plerx2493/mads:latest
+            ghcr.io/plerx2493/mads:${{ github.head_ref || github.ref_name }}:latest
             ghcr.io/plerx2493/mads:${{ github.sha }}
           build-args: |
             "BUILD_VER=${{ github.sha }}"
@@ -42,7 +42,7 @@ jobs:
           file: ./QuartzNetDocker/Dockerfile
           push: true
           tags: |
-            ghcr.io/plerx2493/quartz-db-mysql:latest
+            ghcr.io/plerx2493/quartz-db-mysql:${{ github.head_ref || github.ref_name }}:latest
             ghcr.io/plerx2493/quartz-db-mysql:${{ github.sha }}
           build-args: |
             "BUILD_VER=${{ github.sha }}"
