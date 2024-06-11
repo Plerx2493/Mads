@@ -25,9 +25,9 @@ internal static partial class EventListener
         await sender.ReconnectAsync(true);
     }
     
-    internal static Task OnGuildAvailable(DiscordClient sender, GuildCreateEventArgs e)
+    internal static Task OnGuildAvailable(DiscordClient sender, GuildCreatedEventArgs e)
     {
-       Log.Warning("Guild available: {GuildName}", e.Guild.Name);
-       return Task.CompletedTask;
+        Log.Warning("Guild available: {GuildName}", e.Guild.Name);
+        return Task.CompletedTask;
     }
 }

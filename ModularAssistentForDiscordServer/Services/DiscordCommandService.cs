@@ -13,86 +13,64 @@
 // limitations under the License.
 
 using System.Diagnostics;
-using System.Reflection;
 using DSharpPlus;
 using DSharpPlus.Commands;
 using DSharpPlus.Entities;
-using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
+using MADS.Commands.ContextMenu;
+using MADS.Commands.Slash;
+using MADS.Commands.Text.Base;
 using MADS.CommandsChecks;
 using MADS.Entities;
 using MADS.EventListeners;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Serilog;
-using ILogger = Serilog.ILogger;
 
 namespace MADS.Services;
 
-public class DiscordClientService : IHostedService
+public class DiscordCommandService : IHostedService
 {
-    private readonly IDbContextFactory<MadsContext> _dbContextFactory;
+    public readonly IDbContextFactory<MadsContext> DbContextFactory;
     public readonly CommandsExtension Commands;
     public readonly DiscordClient DiscordClient;
-    public readonly LoggingService Logging;
     public DateTime StartTime;
     
-    private static ILogger _logger = Log.ForContext<DiscordClientService>();
-
-    public DiscordClientService
+    private static ILogger _logger = Log.ForContext<DiscordCommandService>();
+    
+    public DiscordCommandService
     (
-        MadsConfig pConfig,
-        IDbContextFactory<MadsContext> dbDbContextFactory,
-        LoggingService loggingService
+        DiscordClient discordClient,
+        IDbContextFactory<MadsContext> dbContextFactory
     )
     {
-        _logger.Warning("DiscordClientService");
-
+        DiscordClient = discordClient;
         StartTime = DateTime.Now;
-        MadsConfig config = pConfig;
-        _dbContextFactory = dbDbContextFactory;
-        Logging = loggingService;
-
-        DiscordConfiguration discordConfig = new()
-        {
-            Token = config.Token,
-            TokenType = TokenType.Bot,
-            AutoReconnect = true,
-            MinimumLogLevel = config.LogLevel,
-            LoggerFactory = new LoggerFactory().AddSerilog(),
-            Intents = DiscordIntents.All ^ DiscordIntents.GuildPresences
-        };
-
-        DiscordClient = new DiscordClient(discordConfig);
-        DiscordClient.GuildDownloadCompleted += EventListener.UpdateDb;
-        DiscordClient.GuildCreated += EventListener.OnGuildCreated;
-        DiscordClient.GuildDeleted += EventListener.OnGuildDeleted;
-        DiscordClient.GuildAvailable += EventListener.OnGuildAvailable;
-        DiscordClient.ComponentInteractionCreated += EventListener.ActionButtons;
-        DiscordClient.ComponentInteractionCreated += EventListener.OnRoleSelection;
-        DiscordClient.SocketErrored += EventListener.OnSocketErrored;
-
-        Assembly asm = Assembly.GetExecutingAssembly();
+        DbContextFactory = dbContextFactory;
+        
+        List<Type> commandTypes =
+        [
+            typeof(StealEmojiMessage), typeof(TranslateMessage), typeof(UserInfoUser), typeof(About), typeof(BotStats),
+            typeof(Jumppad), typeof(MessageSnipe), typeof(MoveEmoji), typeof(Ping), typeof(Purge), typeof(Quotes),
+            typeof(Reminder), typeof(RoleSelection), typeof(StarboardConfig), typeof(Translation), typeof(VoiceAlerts),
+            typeof(Eval), typeof(ExitGuild)
+        ];
+        
         
         CommandsConfiguration commandsConfiguration = new()
         {
-            ServiceProvider = ModularDiscordBot.Services,
 #if !RELEASE
             DebugGuildId = 938120155974750288
 #endif
         };
         Commands = DiscordClient.UseCommands(commandsConfiguration);
-        Commands.AddCommands(asm);
+        Commands.AddCommands(commandTypes);
         Commands.AddCheck<EnsureDBEntitiesCheck>();
         Commands.AddCheck<RequireOwnerCheck>();
         Commands.CommandErrored += EventListener.OnCommandsErrored;
-
-        //C.SlashCommandErrored += EventListener.OnCommandErrored;
-        //SlashCommands.AutocompleteErrored += EventListener.OnAutocompleteError;
-
+        
         //Interactivity
         InteractivityConfiguration interactivityConfig = new()
         {
@@ -105,20 +83,14 @@ public class DiscordClientService : IHostedService
             PaginationDeletion = PaginationDeletion.DeleteEmojis
         };
         DiscordClient.UseInteractivity(interactivityConfig);
-
-        DiscordClient.Zombied += EventListener.OnZombied;
-        DiscordClient.GuildDownloadCompleted += OnGuildDownloadCompleted;
-        DiscordClient.MessageCreated += EventListener.DmHandler;
-        DiscordClient.ClientErrored += EventListener.OnClientErrored;
-        DiscordClient.SocketErrored += EventListener.OnSocketErrored;
     }
-
+    
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         _logger.Warning("DiscordClientService started");
         
         //Update database to latest migration
-        await using MadsContext context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using MadsContext context = await DbContextFactory.CreateDbContextAsync(cancellationToken);
         IEnumerable<string> pendingMigrations = await context.Database.GetPendingMigrationsAsync(cancellationToken);
         if (pendingMigrations.Any())
         {
@@ -134,15 +106,9 @@ public class DiscordClientService : IHostedService
         //connect client
         await DiscordClient.ConnectAsync(act, DiscordUserStatus.Online);
     }
-
+    
     public Task StopAsync(CancellationToken cancellationToken)
     {
         return DiscordClient.DisconnectAsync();
-    }
-
-    private Task OnGuildDownloadCompleted(DiscordClient sender, GuildDownloadCompletedEventArgs e)
-    {
-        Logging.Setup(this);
-        return Task.CompletedTask;
     }
 }

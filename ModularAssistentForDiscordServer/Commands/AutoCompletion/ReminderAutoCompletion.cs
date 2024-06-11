@@ -35,9 +35,9 @@ public class ReminderAutoCompletion : IAutoCompleteProvider
         Dictionary<string, object> choices = db.Reminders
             .Where(x => x.UserId == context.User.Id)
             .Select(x => x.Id)
-            .Where(x => x.ToString().StartsWith(context.UserInput))
+            .Where(x => x.ToString().StartsWith(context.UserInput.ToString() ?? ""))
             .Take(25)
-            .ToDictionary(x => x.ToString(), x => (object) x);
+            .ToDictionary(x => x.ToString(), x => (object)x);
         
         return choices;
     }

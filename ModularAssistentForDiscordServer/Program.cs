@@ -28,39 +28,31 @@ namespace MADS;
 internal static class MainProgram
 {
     public static DiscordWebhookClient WebhookClient = null!;
-
+    
     public static async Task Main()
     {
-        await Task.Delay(20000); //Delay to give the databases time to start
+        await Task.Delay(10000); //Delay to give the databases time to start
         
         Log.Logger = new LoggerConfiguration()
             .WriteTo.Console()
             .MinimumLevel.Verbose()
             .MinimumLevel.Override("Quartz", LogEventLevel.Warning)
             .CreateLogger();
-
-        //Create cancellationToken and hook the cancelKey
-        CancellationTokenSource cancellationSource = new CancellationTokenSource();
-        Console.CancelKeyPress += async (_, args) =>
-        {
-            args.Cancel = true;
-            await cancellationSource.CancelAsync();
-        };
-
+        
         //retrieves the config.json
         MadsConfig config = DataProvider.GetConfig();
-
+        
         //Create a discordWebhookClient and add the debug webhook from the config.json
         WebhookClient = new DiscordWebhookClient();
         Uri webhookUrl = new Uri(config.DiscordWebhook);
         await WebhookClient.AddWebhookAsync(webhookUrl);
-
+        
         //Create a new instance of the bot
         ModularDiscordBot modularDiscordBot = new();
         //execute the bot and catch uncaught exceptions
         try
         {
-            await modularDiscordBot.RunAsync(cancellationSource.Token);
+            await modularDiscordBot.RunAsync();
         }
         catch (Exception e)
         {
@@ -68,15 +60,13 @@ internal static class MainProgram
             {
                 return;
             }
-
+            
             Log.Error(e, "An uncaught exception occurred");
             Task _ = LogToWebhookAsync(e);
             Environment.Exit(69);
         }
-
-        cancellationSource.Token.WaitHandle.WaitOne();
     }
-
+    
     public static async Task LogToWebhookAsync(Exception e)
     {
         DiscordEmbedBuilder exceptionEmbed = new DiscordEmbedBuilder()
@@ -85,21 +75,21 @@ internal static class MainProgram
             .WithTimestamp(DateTime.UtcNow)
             .WithTitle($"Ooopsie...  {e.GetType()}")
             .WithDescription(e.Message);
-
+        
         DiscordWebhookBuilder webhookBuilder = new DiscordWebhookBuilder()
             .WithUsername("Mads-Debug")
             .AddEmbed(exceptionEmbed);
-
+        
         await WebhookClient.BroadcastMessageAsync(webhookBuilder);
     }
-
+    
     [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "EFCore CLI tools rely on reflection.")]
     public static IHostBuilder CreateHostBuilder(string[] args)
     {
         IHostBuilder builder = Host.CreateDefaultBuilder(args);
         //MadsConfig config = DataProvider.GetConfig();
         string connectionString = "Server=192.168.178.61;Database=MadsDBDev;Uid=root;Pwd=owsip#63;";
-
+        
         builder.ConfigureServices((_, services) => services.AddDbContextFactory<MadsContext>(
             options => options.UseMySql(
                 connectionString,

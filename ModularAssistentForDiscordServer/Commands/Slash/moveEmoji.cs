@@ -33,27 +33,27 @@ public sealed partial class MoveEmoji
         (CommandContext ctx, [Description("Emoji which should be moved")] string emoji)
     {
         await ctx.DeferAsync(true);
-
+        
         MatchCollection matches = EmojiRegex().Matches(emoji);
-
+        
         if (!matches.Any())
         {
             await ctx.EditResponse_Error("There are no emojis in your input");
             return;
         }
-
+        
         string split = matches[0].Groups[2].Value;
         string emojiName = matches[0].Groups[1].Value;
         bool animated = matches[0].Value.StartsWith("<a");
-
+        
         if (!ulong.TryParse(split, out ulong emojiId))
         {
             await ctx.EditResponse_Error("⚠️ Failed to fetch your new emoji.");
             return;
         }
-
+        
         List<DiscordGuild> guilds = [];
-
+        
         foreach (DiscordGuild guild in ctx.Client.Guilds.Values)
         {
             try
@@ -68,25 +68,27 @@ public sealed partial class MoveEmoji
             {
             }
         }
-
+        
         if (!guilds.Any())
         {
             await ctx.EditResponse_Error("There are no guilds where you are able to add emojis");
             return;
         }
-
-        List<DiscordSelectComponentOption> options = guilds.Select(x => new DiscordSelectComponentOption(x.Name, x.Id.ToString())).ToList();
-
+        
+        List<DiscordSelectComponentOption> options =
+            guilds.Select(x => new DiscordSelectComponentOption(x.Name, x.Id.ToString())).ToList();
+        
         //Create the select component and update our first response
         DiscordSelectComponent select = new("moveEmojiChooseGuild-" + ctx.User.Id,
             "Select guild", options, false, 0, options.Count());
         await ctx.EditResponseAsync(new DiscordWebhookBuilder().AddComponents(select));
-
+        
         //Get the initial response an wait for a component interaction
         DiscordMessage? response = await ctx.GetResponseAsync();
-        InteractivityResult<ComponentInteractionCreateEventArgs> selectResponse = await response!.WaitForSelectAsync(ctx.Member, "moveEmojiChooseGuild-" + ctx.User.Id,
+        InteractivityResult<ComponentInteractionCreatedEventArgs> selectResponse = await response!.WaitForSelectAsync(
+            ctx.Member, "moveEmojiChooseGuild-" + ctx.User.Id,
             TimeSpan.FromSeconds(60));
-
+        
         //Notify the user when the interaction times out and abort
         if (selectResponse.TimedOut)
         {
@@ -96,24 +98,25 @@ public sealed partial class MoveEmoji
             });
             return;
         }
-
+        
         //acknowledge interaction and edit first response to delete the select menu
-        await selectResponse.Result.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
+        await selectResponse.Result.Interaction.CreateResponseAsync(
+            DiscordInteractionResponseType.ChannelMessageWithSource,
             new DiscordInteractionResponseBuilder().WithContent("Submitted").AsEphemeral());
         await ctx.EditResponseAsync(new DiscordWebhookBuilder
         {
             Content = "Submitted"
         });
-
+        
         foreach (string value in selectResponse.Result.Values)
         {
             ulong guildId = ulong.Parse(value);
             await CopyEmoji(ctx.Client, emojiName, emojiId, animated, guildId);
         }
-
+        
         await ctx.EditResponse_Success("Emoji moved");
     }
-
+    
     private static async Task CopyEmoji(DiscordClient client, string name, ulong id, bool animated, ulong targetGuild)
     {
         using HttpClient httpClient = new();
@@ -125,7 +128,7 @@ public sealed partial class MoveEmoji
         DiscordGuild targetGuildEntity = await client.GetGuildAsync(targetGuild);
         _ = await targetGuildEntity.CreateEmojiAsync(name, memory);
     }
-
+    
     [GeneratedRegex("<a?:(.+?):(\\d+)>", RegexOptions.Compiled)]
     private static partial Regex EmojiRegex();
 }

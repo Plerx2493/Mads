@@ -22,9 +22,9 @@ namespace MADS.Commands.Slash;
 
 public sealed class About
 {
-    private readonly DiscordClientService DiscordService;
+    private readonly DiscordCommandService DiscordService;
     
-    public About(DiscordClientService service)
+    public About(DiscordCommandService service)
     {
         DiscordService = service;
     }
@@ -34,13 +34,14 @@ public sealed class About
     {
         DiscordEmbedBuilder discordEmbedBuilder = new();
         DiscordInteractionResponseBuilder discordMessageBuilder = new();
-        string inviteUri = ctx.Client.CurrentApplication.GenerateOAuthUri(null, DiscordPermissions.Administrator, DiscordOAuthScope.Bot,
+        string inviteUri = ctx.Client.CurrentApplication.GenerateOAuthUri(null, DiscordPermissions.Administrator,
+            DiscordOAuthScope.Bot,
             DiscordOAuthScope.ApplicationsCommands);
         string addMe = $"[Click here!]({inviteUri.Replace(" ", "%20")})";
-
+        
         TimeSpan diff = DateTime.Now - DiscordService.StartTime;
         string date = $"{diff.Days} days {diff.Hours} hours {diff.Minutes} minutes";
-
+        
         discordEmbedBuilder
             .WithTitle("About me")
             .WithDescription("A modular designed discord bot for moderation and stuff")
@@ -54,12 +55,12 @@ public sealed class About
             .AddField("Uptime", date.Humanize(), true)
             .AddField("Ping", $"{ctx.Client.Ping} ms", true)
             .AddField("Add me", addMe);
-
+        
         discordMessageBuilder.AddEmbed(discordEmbedBuilder.Build());
         discordMessageBuilder.AddComponents(new DiscordButtonComponent(DiscordButtonStyle.Success, "feedback-button",
             "Feedback"));
         discordMessageBuilder.AsEphemeral();
-
+        
         await ctx.RespondAsync(discordMessageBuilder);
     }
 }

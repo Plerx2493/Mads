@@ -13,7 +13,10 @@
 // limitations under the License.
 
 using DeepL;
+using DSharpPlus;
+using DSharpPlus.Extensions;
 using MADS.Entities;
+using MADS.EventListeners;
 using MADS.Extensions;
 using MADS.Services;
 using Microsoft.EntityFrameworkCore;
@@ -23,37 +26,46 @@ using Microsoft.Extensions.Logging;
 using Quartz;
 using Serilog;
 
-
 namespace MADS;
 
 public class ModularDiscordBot
 {
     public static IServiceProvider Services;
-    public static DateTimeOffset StartTime = DateTimeOffset.Now;
-    public static ILogger<ModularDiscordBot> Logger;
     private readonly MadsConfig _config = DataProvider.GetConfig();
-
-    public async Task RunAsync(CancellationToken token)
+    
+    public async Task RunAsync()
     {
         await Host.CreateDefaultBuilder()
             .UseSerilog()
-            .UseConsoleLifetime()
             .ConfigureServices((_, services) =>
                 {
+                    MadsConfig config = DataProvider.GetConfig();
                     services
                         .AddLogging(logging => logging.ClearProviders().AddSerilog())
-                        .AddSingleton(DataProvider.GetConfig())
-                        .AddSingleton<DiscordClientService>()
-                        .AddHostedService(s => s.GetRequiredService<DiscordClientService>())
-                        .AddSingleton(s => s.GetRequiredService<DiscordClientService>().DiscordClient)
+                        .AddSingleton(config)
+                        .AddDiscordClient(config.Token, DiscordIntents.All ^ DiscordIntents.GuildPresences)
+                        .AddDiscordRestClient(config)
+                        .ConfigureEventHandlers(x =>
+                        {
+                            x.HandleGuildDownloadCompleted(EventListener.UpdateDb);
+                            x.HandleGuildCreated(EventListener.OnGuildCreated);
+                            x.HandleGuildDeleted(EventListener.OnGuildDeleted);
+                            x.HandleGuildAvailable(EventListener.OnGuildAvailable);
+                            x.HandleComponentInteractionCreated(EventListener.ActionButtons);
+                            x.HandleComponentInteractionCreated(EventListener.OnRoleSelection);
+                            x.HandleZombied(EventListener.OnZombied);
+                            x.HandleMessageCreated(EventListener.DmHandler);
+                        })
+                        .AddSingleton<DiscordCommandService>()
+                        .AddHostedService(s => s.GetRequiredService<DiscordCommandService>())
                         .AddDbContextFactory<MadsContext>(
                             options =>
                             {
-                                options.UseMySql(_config.ConnectionString, ServerVersion.AutoDetect(_config.ConnectionString));
+                                options.UseMySql(_config.ConnectionString,
+                                    ServerVersion.AutoDetect(_config.ConnectionString));
                                 options.EnableDetailedErrors();
                             }
                         )
-                        .AddDiscordRestClient(_config)
                         .AddMemoryCache(options =>
                         {
                             options.ExpirationScanFrequency = TimeSpan.FromMinutes(1);
@@ -93,11 +105,10 @@ public class ModularDiscordBot
                         .AddSingleton<LoggingService>()
                         .AddSingleton<UserManagerService>()
                         .AddHttpClient();
-
+                    
                     Services = services.BuildServiceProvider();
-                    Logger = Services.GetRequiredService<ILogger<ModularDiscordBot>>();
                 }
             )
-            .RunConsoleAsync(cancellationToken: token);
+            .RunConsoleAsync();
     }
 }

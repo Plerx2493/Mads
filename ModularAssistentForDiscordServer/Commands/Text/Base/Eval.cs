@@ -28,9 +28,9 @@ namespace MADS.Commands.Text.Base;
 [RequireOwner]
 public class Eval
 {
-    private DiscordClientService _service;
+    private DiscordCommandService _service;
     
-    public Eval(DiscordClientService service)
+    public Eval(DiscordCommandService service)
     {
         _service = service;
     }
@@ -39,18 +39,18 @@ public class Eval
     public async Task EvalCommand(TextCommandContext ctx, [FromCode] string code)
     {
         string csCode = code;
-
+        
         await ctx.RespondAsync(new DiscordEmbedBuilder()
             .WithColor(new DiscordColor("#FF007F"))
             .WithDescription("💭 Evaluating...")
             .Build());
         
         DiscordMessage? message = await ctx.GetResponseAsync();
-
+        
         try
         {
             TestVariables globalVariables = new(ctx.Client, ctx, _service);
-
+            
             ScriptOptions? scriptOptions = ScriptOptions.Default;
             scriptOptions = scriptOptions.WithImports("System", "System.Collections.Generic", "System.Linq",
                 "System.Text", "System.Threading.Tasks", "DSharpPlus", "DSharpPlus.Entities", "DSharpPlus.CommandsNext",
@@ -61,7 +61,7 @@ public class Eval
                     !assembly.IsDynamic
                     && !string.IsNullOrWhiteSpace(
                         assembly.Location)));
-
+            
             Script<object>? script = CSharpScript.Create(csCode, scriptOptions, typeof(TestVariables));
             script.Compile();
             ScriptState<object>? result = await script.RunAsync(globalVariables);
@@ -98,10 +98,10 @@ public class Eval
 
 public class TestVariables
 {
-    public TestVariables(DiscordClient client, CommandContext ctx, DiscordClientService mdb)
+    public TestVariables(DiscordClient client, CommandContext ctx, DiscordCommandService mdb)
     {
         Client = client;
-        ClientService = mdb;
+        CommandService = mdb;
         Message = ctx is TextCommandContext txtCtx ? txtCtx.Message : null;
         Channel = ctx.Channel;
         Guild = Channel?.Guild;
@@ -110,10 +110,10 @@ public class TestVariables
         {
             Member = Guild.GetMemberAsync(User.Id).GetAwaiter().GetResult();
         }
-
+        
         Context = ctx;
     }
-
+    
     public DiscordMessage? Message { get; private set; }
     public DiscordChannel? Channel { get; private set; }
     public DiscordGuild? Guild { get; private set; }
@@ -121,6 +121,6 @@ public class TestVariables
     public DiscordMember? Member { get; private set; }
     public CommandContext Context { get; private set; }
     public DiscordClient Client { get; private set; }
-    public DiscordClientService ClientService { get; private set; }
+    public DiscordCommandService CommandService { get; private set; }
     public IServiceProvider Services => ModularDiscordBot.Services;
 }

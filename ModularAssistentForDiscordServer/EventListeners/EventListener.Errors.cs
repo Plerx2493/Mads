@@ -19,8 +19,6 @@ using DSharpPlus.Commands.Exceptions;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Exceptions;
-using DSharpPlus.Interactivity;
-using DSharpPlus.Interactivity.Enums;
 
 namespace MADS.EventListeners;
 
@@ -34,10 +32,10 @@ internal static partial class EventListener
         {
             return;
         }
-
+        
         string embedDescription = new((e.Exception.Message + ":\n" + e.Exception.StackTrace).Take(4093).ToArray());
         embedDescription += "...";
-
+        
         DiscordEmbedBuilder discordEmbed = new()
         {
             Title = $"{Formatter.Bold(e.Exception.GetType().ToString())} - The command execution failed",
@@ -45,7 +43,7 @@ internal static partial class EventListener
             Color = DiscordColor.Red,
             Timestamp = DateTime.Now
         };
-
+        
         try
         {
             await e.Context.RespondAsync(new DiscordInteractionResponseBuilder().AddEmbed(discordEmbed).AsEphemeral());
@@ -54,7 +52,7 @@ internal static partial class EventListener
         catch (BadRequestException)
         {
         }
-
+        
         try
         {
             await e.Context.EditResponseAsync(
@@ -65,10 +63,10 @@ internal static partial class EventListener
         catch (BadRequestException)
         {
         }
-
+        
         await e.Context.Channel.SendMessageAsync(discordEmbed);
     }
-
+    
     internal static async Task OnCommandsErrored(CommandsExtension sender, CommandErroredEventArgs e)
     {
         Type typeOfException = e.Exception.GetType();
@@ -77,11 +75,11 @@ internal static partial class EventListener
         {
             return;
         }
-
+        
         await e.Context.RespondAsync($"OOPS your command just errored... \n {e.Exception.Message}");
         await e.Context.RespondAsync(e.Exception.InnerException?.Message ?? "no inner exception");
     }
-
+    
     internal static async Task OnClientErrored(DiscordClient sender, ClientErrorEventArgs e)
     {
         DiscordEmbedBuilder exceptionEmbed = new DiscordEmbedBuilder()
@@ -103,11 +101,11 @@ internal static partial class EventListener
                 exceptionEmbed.AddField("Stacktrace", Formatter.BlockCode(e.Exception.StackTrace));
             }
         }
-
+        
         DiscordWebhookBuilder webhookBuilder = new DiscordWebhookBuilder()
             .WithUsername("Mads-Debug")
             .AddEmbed(exceptionEmbed);
-
+        
         await MainProgram.WebhookClient.BroadcastMessageAsync(webhookBuilder);
     }
     

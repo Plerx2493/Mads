@@ -28,29 +28,30 @@ public class VoiceAlertService : IHostedService
 {
     private readonly IDbContextFactory<MadsContext> _contextFactory;
     private readonly DiscordClient _discordClient;
-    private readonly Channel<VoiceStateUpdateEventArgs> _eventChannel;
+    private readonly Channel<VoiceStateUpdatedEventArgs> _eventChannel;
     
     private static readonly ILogger _logger = Log.ForContext<VoiceAlertService>();
     private bool _stopped;
     private CancellationTokenSource _cts = new();
     private Task? _handleQueueTask;
     
-    public VoiceAlertService(IDbContextFactory<MadsContext> contextFactory, DiscordClientService discordClientService)
+    public VoiceAlertService(IDbContextFactory<MadsContext> contextFactory, DiscordCommandService discordCommandService)
     {
-        _discordClient = discordClientService.DiscordClient;
+        _discordClient = discordCommandService.DiscordClient;
         _contextFactory = contextFactory;
-        _eventChannel = Channel.CreateUnbounded<VoiceStateUpdateEventArgs>();
+        _eventChannel = Channel.CreateUnbounded<VoiceStateUpdatedEventArgs>();
     }
     
     public Task StartAsync(CancellationToken cancellationToken)
     {
         _discordClient.VoiceStateUpdated += AddEvent;
         _stopped = false;
-        _handleQueueTask = Task.Factory.StartNew(HandleQueueAsync, _cts.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+        _handleQueueTask = Task.Factory.StartNew(HandleQueueAsync, _cts.Token, TaskCreationOptions.LongRunning,
+            TaskScheduler.Default);
         _cts = new CancellationTokenSource();
         return Task.CompletedTask;
     }
-
+    
     public Task StopAsync(CancellationToken cancellationToken)
     {
         _discordClient.VoiceStateUpdated -= AddEvent;
@@ -62,7 +63,7 @@ public class VoiceAlertService : IHostedService
         return Task.CompletedTask;
     }
     
-    private async Task AddEvent(DiscordClient client, VoiceStateUpdateEventArgs e)
+    private async Task AddEvent(DiscordClient client, VoiceStateUpdatedEventArgs e)
     {
         await _eventChannel.Writer.WriteAsync(e);
     }
@@ -73,7 +74,7 @@ public class VoiceAlertService : IHostedService
         {
             try
             {
-                VoiceStateUpdateEventArgs e = await _eventChannel.Reader.ReadAsync(_cts.Token);
+                VoiceStateUpdatedEventArgs e = await _eventChannel.Reader.ReadAsync(_cts.Token);
                 await HandleEvent(e);
             }
             catch (Exception e)
@@ -82,19 +83,19 @@ public class VoiceAlertService : IHostedService
             }
         }
     }
-
-    private async Task HandleEvent(VoiceStateUpdateEventArgs e)
+    
+    private async Task HandleEvent(VoiceStateUpdatedEventArgs e)
     {
         if (e.After.Channel is null)
         {
             return;
         }
-
+        
         if (e.Before?.Channel?.Id == e.After.Channel.Id)
         {
             return;
         }
-
+        
         await using MadsContext context = await _contextFactory.CreateDbContextAsync();
         List<VoiceAlert> alerts = await context.VoiceAlerts
             .Where(x => x.ChannelId == e.After.Channel.Id && e.User.Id != x.UserId)
@@ -104,7 +105,7 @@ public class VoiceAlertService : IHostedService
         {
             return;
         }
-
+        
         DiscordEmbedBuilder embed = new()
         {
             Title = "Voice Alert",
@@ -118,7 +119,7 @@ public class VoiceAlertService : IHostedService
             {
                 continue;
             }
-
+            
             if (alert.MinTimeBetweenAlerts is not null)
             {
                 if (alert.LastAlert is not null && alert.LastAlert + alert.MinTimeBetweenAlerts > DateTimeOffset.UtcNow)
@@ -130,7 +131,7 @@ public class VoiceAlertService : IHostedService
             try
             {
                 DiscordMember member = await e.Guild.GetMemberAsync(alert.UserId);
-
+                
                 await member.SendMessageAsync(embed);
                 
                 alert.LastAlert = DateTimeOffset.UtcNow;
@@ -149,7 +150,8 @@ public class VoiceAlertService : IHostedService
         await context.SaveChangesAsync();
     }
     
-    public async Task AddVoiceAlertAsync(ulong userId, ulong channelId, ulong guildId, bool isRepeatable = false, TimeSpan minTimeBetweenAlerts = new())
+    public async Task AddVoiceAlertAsync(ulong userId, ulong channelId, ulong guildId, bool isRepeatable = false,
+        TimeSpan minTimeBetweenAlerts = new())
     {
         await using MadsContext context = await _contextFactory.CreateDbContextAsync();
         UserDbEntity? user = await context.Users
@@ -166,7 +168,7 @@ public class VoiceAlertService : IHostedService
             };
             await context.Users.AddAsync(user);
         }
-
+        
         VoiceAlert alert = new()
         {
             ChannelId = channelId,
@@ -197,13 +199,13 @@ public class VoiceAlertService : IHostedService
         {
             return;
         }
-
+        
         VoiceAlert? alert = user.VoiceAlerts.FirstOrDefault(x => x.ChannelId == channelId && x.GuildId == guildId);
         if (alert == null)
         {
             return;
         }
-
+        
         context.VoiceAlerts.Remove(alert);
         await context.SaveChangesAsync();
     }
@@ -216,7 +218,7 @@ public class VoiceAlertService : IHostedService
         {
             return;
         }
-
+        
         context.VoiceAlerts.Remove(alert);
         await context.SaveChangesAsync();
     }
@@ -227,11 +229,6 @@ public class VoiceAlertService : IHostedService
         UserDbEntity? user = await context.Users
             .Include(x => x.VoiceAlerts)
             .FirstOrDefaultAsync(x => x.Id == userId);
-        if (user == null)
-        {
-            return Enumerable.Empty<VoiceAlert>();
-        }
-
-        return user.VoiceAlerts;
+        return user?.VoiceAlerts ?? Enumerable.Empty<VoiceAlert>();
     }
 }

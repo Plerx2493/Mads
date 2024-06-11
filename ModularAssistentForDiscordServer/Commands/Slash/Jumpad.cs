@@ -14,8 +14,8 @@
 
 using System.ComponentModel;
 using DSharpPlus.Commands;
+using DSharpPlus.Commands.ArgumentModifiers;
 using DSharpPlus.Commands.ContextChecks;
-using DSharpPlus.Commands.Processors.SlashCommands.ArgumentModifiers;
 using DSharpPlus.Entities;
 using MADS.CustomComponents;
 using Quartz.Util;
@@ -24,16 +24,18 @@ namespace MADS.Commands.Slash;
 
 public sealed class Jumppad
 {
-    [Command("jumppad"), Description("Create a jumppad button"), RequireGuild, RequirePermissions(DiscordPermissions.MoveMembers)]
+    [Command("jumppad"), Description("Create a jumppad button"), RequireGuild,
+     RequirePermissions(DiscordPermissions.MoveMembers)]
     public async Task Test
     (
         CommandContext ctx,
-        [Description("Channel where the users will be moved out"), SlashChannelTypes(DiscordChannelType.Voice, DiscordChannelType.Stage)]
+        [Description("Channel where the users will be moved out"),
+         ChannelTypes(DiscordChannelType.Voice, DiscordChannelType.Stage)]
         DiscordChannel originChannel,
-        [Description("Channel where the users will be put in"), SlashChannelTypes(DiscordChannelType.Voice, DiscordChannelType.Stage)]
+        [Description("Channel where the users will be put in"),
+         ChannelTypes(DiscordChannelType.Voice, DiscordChannelType.Stage)]
         DiscordChannel targetChannel,
-        [Description("Message to be sent")]
-        string? content = null
+        [Description("Message to be sent")] string? content = null
     )
     {
         DiscordInteractionResponseBuilder message = new();
@@ -41,7 +43,7 @@ public sealed class Jumppad
         newButton = newButton.AsActionButton(
             ActionDiscordButtonEnum.MoveVoiceChannel,
             originChannel.Id, targetChannel.Id);
-
+        
         message.AddComponents(newButton);
         message.WithContent(!content.IsNullOrWhiteSpace() ? content! : "Jumppad");
         await ctx.RespondAsync(message);
