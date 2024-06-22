@@ -4,6 +4,7 @@ using MADS.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MADS.Migrations
 {
     [DbContext(typeof(MadsContext))]
-    partial class MadsContextModelSnapshot : ModelSnapshot
+    [Migration("20240622052300_Remove double guild ids")]
+    partial class Removedoubleguildids
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -73,8 +76,11 @@ namespace MADS.Migrations
             modelBuilder.Entity("MADS.Entities.GuildDbEntity", b =>
                 {
                     b.Property<ulong>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("bigint unsigned")
                         .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<ulong>("Id"));
 
                     b.HasKey("Id");
 
@@ -255,8 +261,11 @@ namespace MADS.Migrations
             modelBuilder.Entity("MADS.Entities.UserDbEntity", b =>
                 {
                     b.Property<ulong>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("bigint unsigned")
                         .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<ulong>("Id"));
 
                     b.Property<string>("PreferedLanguage")
                         .HasColumnType("longtext")

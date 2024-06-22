@@ -15,6 +15,7 @@
 using DeepL;
 using DSharpPlus;
 using DSharpPlus.Extensions;
+using DSharpPlus.Net;
 using MADS.Entities;
 using MADS.EventListeners;
 using MADS.Extensions;
@@ -66,11 +67,7 @@ public class ModularDiscordBot
                                 options.EnableDetailedErrors();
                             }
                         )
-                        .AddMemoryCache(options =>
-                        {
-                            options.ExpirationScanFrequency = TimeSpan.FromMinutes(1);
-                            options.SizeLimit = 4096L;
-                        })
+                        .AddMemoryCache()
                         .AddQuartz(x =>
                         {
                             x.UsePersistentStore(options =>

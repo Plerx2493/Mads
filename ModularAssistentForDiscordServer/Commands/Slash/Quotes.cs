@@ -42,12 +42,11 @@ public sealed class Quotes
     {
         await ctx.DeferAsync(true);
 
-
         QuoteDbEntity newQuote = new()
         {
             Content = content,
             CreatedAt = DateTime.Now,
-            DiscordGuildId = ctx.Guild!.Id,
+            GuildId = ctx.Guild!.Id,
             QuotedUserId = user.Id,
             UserId = ctx.User.Id
         };

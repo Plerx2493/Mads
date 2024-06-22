@@ -36,6 +36,14 @@ public class Translation
         _translator = translator;
     }
     
+    [Command("info"), Description("Get your preferred language")]
+    public async Task InfoAsync(CommandContext ctx)
+    {
+        string? lang = await _translationUserInfo.GetPreferredLanguageAsync(ctx.User.Id);
+        
+        await ctx.CreateResponse_Success($"Language set to `{lang ?? "null"}`");
+    }
+    
     [Command("setLanguage"), Description("Set your preferred language")]
     public async Task SetLanguageAsync
     (

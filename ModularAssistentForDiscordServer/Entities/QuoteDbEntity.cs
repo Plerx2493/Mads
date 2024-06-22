@@ -23,7 +23,7 @@ public class QuoteDbEntity
     public ulong Id { get; set; }
 
     [Column("discordGuildId")]
-    public ulong DiscordGuildId { get; set; }
+    public ulong GuildId { get; set; }
 
     /// <summary>
     ///     User which was quoted

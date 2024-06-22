@@ -32,10 +32,9 @@ public class TargetLanguageAutoCompletion : IAutoCompleteProvider
     {
         TargetLanguage[] sourceLangs = await _service.GetTargetLanguagesAsync();
         Dictionary<string, object> choices = sourceLangs
-            .Where(x => x.ToString().StartsWith(context.UserInput.ToString() ?? ""))
+            .Where(x => x.ToString().ToLowerInvariant().StartsWith(context.UserInput.ToLowerInvariant()))
             .Take(25)
-            .Select(x => x.ToString())
-            .ToDictionary(x => x, x => (object)x);
+            .ToDictionary(x => x.ToString(), x => (object)x.Code);
         
         return choices;
     }

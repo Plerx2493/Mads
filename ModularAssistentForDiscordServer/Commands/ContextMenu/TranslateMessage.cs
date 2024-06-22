@@ -40,7 +40,7 @@ public class TranslateMessage
     {
         await ctx.DeferAsync(true);
 
-        string? preferredLanguage = await _translateInformationService.GetPreferredLanguage(ctx.User.Id);
+        string? preferredLanguage = await _translateInformationService.GetPreferredLanguageAsync(ctx.User.Id);
         bool isPreferredLanguageSet = !preferredLanguage.IsNullOrWhiteSpace();
        
         if(!isPreferredLanguageSet)
@@ -78,8 +78,10 @@ public class TranslateMessage
 
         DiscordFollowupMessageBuilder followUpMessage = new DiscordFollowupMessageBuilder()
             .WithContent("⚠️ You haven't set a preferred language yet. Default is english.")
-            .AddComponents(new DiscordButtonComponent(DiscordButtonStyle.Primary, "setLanguage", "Set language").AsActionButton(ActionDiscordButtonEnum.SetTranslationLanguage))
-            .AddComponents(new DiscordButtonComponent(DiscordButtonStyle.Primary, "setLanguage", "Set your language to en-US").AsActionButton(ActionDiscordButtonEnum.SetTranslationLanguage, "en-US"))
+            .AddComponents(new DiscordButtonComponent(DiscordButtonStyle.Primary, "setLanguage", "Set language")
+                .AsActionButton(ActionDiscordButtonEnum.SetTranslationLanguage))
+            .AddComponents(new DiscordButtonComponent(DiscordButtonStyle.Primary, "setLanguage", "Set your language to en-US")
+                .AsActionButton(ActionDiscordButtonEnum.SetTranslationLanguage, "en-US"))
             .AsEphemeral();
         
         

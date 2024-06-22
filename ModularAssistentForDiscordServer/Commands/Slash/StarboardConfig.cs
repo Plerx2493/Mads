@@ -53,7 +53,7 @@ public sealed class StarboardConfig
 
         MadsContext db = await _contextFactory.CreateDbContextAsync();
 
-        GuildConfigDbEntity guildConfig = db.Configs.First(x => x.DiscordGuildId == ctx.Guild.Id);
+        GuildConfigDbEntity guildConfig = db.Configs.First(x => x.GuildId == ctx.Guild.Id);
 
         if (!DiscordEmoji.TryFromUnicode(emojiString, out DiscordEmoji emoji))
         {

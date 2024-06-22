@@ -26,7 +26,7 @@ public sealed class Jumppad
 {
     [Command("jumppad"), Description("Create a jumppad button"), RequireGuild,
      RequirePermissions(DiscordPermissions.MoveMembers)]
-    public async Task Test
+    public async Task CreateJumppad
     (
         CommandContext ctx,
         [Description("Channel where the users will be moved out"),
@@ -38,6 +38,11 @@ public sealed class Jumppad
         [Description("Message to be sent")] string? content = null
     )
     {
+        if (originChannel == targetChannel)
+        {
+            await ctx.RespondAsync(new DiscordInteractionResponseBuilder().WithContent("Can't create a jumppad from a channel to itself").AsEphemeral());
+        }
+        
         DiscordInteractionResponseBuilder message = new();
         DiscordButtonComponent newButton = new(DiscordButtonStyle.Success, "Placeholder", "Jump");
         newButton = newButton.AsActionButton(

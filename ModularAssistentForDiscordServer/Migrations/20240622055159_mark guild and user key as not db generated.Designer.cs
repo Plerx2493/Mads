@@ -4,6 +4,7 @@ using MADS.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MADS.Migrations
 {
     [DbContext(typeof(MadsContext))]
-    partial class MadsContextModelSnapshot : ModelSnapshot
+    [Migration("20240622055159_mark guild and user key as not db generated")]
+    partial class markguildanduserkeyasnotdbgenerated
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

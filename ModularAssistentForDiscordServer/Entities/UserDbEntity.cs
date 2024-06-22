@@ -21,7 +21,7 @@ namespace MADS.Entities;
 
 public class UserDbEntity
 {
-    [Key, Column("id")]
+    [Key, Column("id"), DatabaseGenerated(DatabaseGeneratedOption.None)]
     public ulong Id { get; set; }
 
     [Column("username")]

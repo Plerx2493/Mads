@@ -195,19 +195,6 @@ public class LoggingService
         _discordWebhookClient.AddWebhookAsync(webhookUrl).GetAwaiter().GetResult();
     }
     
-    public async Task LogEvent(string message, string sender, LogLevel lvl)
-    {
-        string log = $"[{DateTime.Now:yyyy'-'MM'-'dd'T'HH':'mm':'ss}] [{lvl}] [{sender}] {message}";
-        await File.AppendAllTextAsync(_logPath, log + "\n", Encoding.UTF8);
-    }
-    
-    private async Task LogInfo(string input)
-    {
-        string logEntry =
-            $"[{DateTime.Now:dd'.'MM'.'yyyy'-'HH':'mm':'ss}] [INFO]" + input;
-        await File.AppendAllTextAsync(_logPath, logEntry + "\n", Encoding.UTF8);
-    }
-    
     public async Task<List<DiscordMessage>> LogToOwner(string message, string sender, LogLevel logLevel)
     {
         DiscordEmbedBuilder discordEmbed = new()
@@ -222,7 +209,7 @@ public class LoggingService
             }
         };
         
-        List<DiscordMessage> messageList = new();
+        List<DiscordMessage> messageList = [];
         
         foreach (DiscordDmChannel channel in _ownerChannel)
         {

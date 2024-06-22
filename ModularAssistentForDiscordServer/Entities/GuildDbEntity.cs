@@ -22,27 +22,16 @@ namespace MADS.Entities;
 
 public class GuildDbEntity
 {
-    public GuildDbEntity()
+    public GuildDbEntity(ulong id)
     {
-        Id = 0;
+        Id = id;
         Incidents = new List<IncidentDbEntity>();
         Settings = new GuildConfigDbEntity();
         Quotes = new List<QuoteDbEntity>();
     }
 
-    public GuildDbEntity(GuildDbEntity old)
-    {
-        Id = old.Id;
-        Incidents = old.Incidents;
-        Settings = old.Settings;
-        Quotes = old.Quotes;
-    }
-
-    [Key, Column("id"), DefaultValue(0), DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    [Key, Column("id"), DatabaseGenerated(DatabaseGeneratedOption.None)]
     public ulong Id { get; init; }
-
-    [Required, Column("discordId")]
-    public ulong DiscordId { get; set; }
 
     public GuildConfigDbEntity Settings { get; set; }
 
@@ -61,7 +50,7 @@ public class GuildDbEntityConfig : IEntityTypeConfiguration<GuildDbEntity>
         
         builder.HasOne<GuildConfigDbEntity>(x => x.Settings)
             .WithOne(x => x.Guild)
-            .HasForeignKey<GuildConfigDbEntity>(x => x.DiscordGuildId)
+            .HasForeignKey<GuildConfigDbEntity>(x => x.GuildId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany<IncidentDbEntity>(x => x.Incidents)
@@ -71,7 +60,7 @@ public class GuildDbEntityConfig : IEntityTypeConfiguration<GuildDbEntity>
 
         builder.HasMany<QuoteDbEntity>(x => x.Quotes)
             .WithOne(x => x.Guild)
-            .HasForeignKey(x => x.DiscordGuildId)
+            .HasForeignKey(x => x.GuildId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -115,7 +115,7 @@ internal static partial class EventListener
             
             InteractivityExtension interactive = sender.GetInteractivity();
             InteractivityResult<ModalSubmittedEventArgs> result =
-                await interactive.WaitForModalAsync($"setLanguage-{args.User.Id}");
+                await interactive.WaitForModalAsync($"setLanguage-{args.User.Id}", TimeSpan.FromMinutes(5));
             
             if (result.TimedOut)
             {

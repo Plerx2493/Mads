@@ -32,7 +32,7 @@ public class TranslateInformationService
         _translator = translator;
     }
     
-    public async void SetPreferredLanguage(ulong userId, string language)
+    public async void SetPreferredLanguage(ulong userId, string? language)
     {
         await using MadsContext db = await _dbContextFactory.CreateDbContextAsync();
         UserDbEntity? user = db.Users.FirstOrDefault(x => x.Id == userId);
@@ -45,7 +45,7 @@ public class TranslateInformationService
         await db.SaveChangesAsync();
     }
     
-    public async Task<string?> GetPreferredLanguage(ulong userId)
+    public async Task<string?> GetPreferredLanguageAsync(ulong userId)
     {
         await using MadsContext db = await _dbContextFactory.CreateDbContextAsync();
         UserDbEntity? user = db.Users.AsNoTracking().FirstOrDefault(x => x.Id == userId);

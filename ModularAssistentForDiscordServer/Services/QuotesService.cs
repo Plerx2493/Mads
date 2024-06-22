@@ -29,14 +29,14 @@ public class QuotesService
     public async Task<List<QuoteDbEntity>> GetQuotesGuildAsync(ulong guildId)
     {
         await using MadsContext db = await _dbContextFactory.CreateDbContextAsync();
-        return db.Quotes.AsNoTracking().Where(x => x.DiscordGuildId == guildId).ToList();
+        return db.Quotes.AsNoTracking().Where(x => x.GuildId == guildId).ToList();
     }
 
     public async Task<QuoteDbEntity> GetRndGuildAsync(ulong guildId)
     {
         await using MadsContext db = await _dbContextFactory.CreateDbContextAsync();
         Random rnd = new();
-        QuoteDbEntity[] quotes = db.Quotes.AsNoTracking().Where(x => x.DiscordGuildId == guildId).ToArray();
+        QuoteDbEntity[] quotes = db.Quotes.AsNoTracking().Where(x => x.GuildId == guildId).ToArray();
 
         return quotes[rnd.Next(0, quotes.Length)];
     }
@@ -75,7 +75,7 @@ public class QuotesService
     public async void DeleteQuotesByGuild(ulong id)
     {
         await using MadsContext db = await _dbContextFactory.CreateDbContextAsync();
-        List<QuoteDbEntity> entities = db.Quotes.Where(x => x.DiscordGuildId == id).ToList();
+        List<QuoteDbEntity> entities = db.Quotes.Where(x => x.GuildId == id).ToList();
         db.Quotes.RemoveRange(entities);
         await db.SaveChangesAsync();
     }

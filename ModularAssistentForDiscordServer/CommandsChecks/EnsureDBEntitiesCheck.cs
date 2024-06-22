@@ -52,16 +52,14 @@ public class EnsureDBEntitiesCheck : IContextCheck<UnconditionalCheckAttribute>
             return null;
         }
         
-        GuildDbEntity guildDbEntity = new()
-        {
-            DiscordId = context.Guild.Id
-        };
+        GuildDbEntity guildDbEntity = new(context.Guild.Id);
         
         await dbContext.Guilds.Upsert(guildDbEntity)
-            .On(x => x.DiscordId)
+            .On(x => x.Id)
             .NoUpdate()
             .RunAsync();
         
+        await dbContext.SaveChangesAsync();
         return null;
     }
 }
