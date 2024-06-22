@@ -12,27 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.ComponentModel;
+using DSharpPlus.Commands;
 using DSharpPlus.Entities;
-using DSharpPlus.SlashCommands;
 using Humanizer;
-using MADS.Extensions;
+using MADS.Services;
 
 namespace MADS.Commands.Slash;
 
-public sealed class About : MadsBaseApplicationCommand
+public sealed class About
 {
-    [SlashCommand("about", "Infos about the bot")]
-    public async Task AboutCommand(InteractionContext ctx)
+    private readonly DiscordCommandService DiscordService;
+    
+    public About(DiscordCommandService service)
+    {
+        DiscordService = service;
+    }
+    
+    [Command("about"), Description("Infos about the bot")]
+    public async Task AboutCommand(CommandContext ctx)
     {
         DiscordEmbedBuilder discordEmbedBuilder = new();
         DiscordInteractionResponseBuilder discordMessageBuilder = new();
-        string inviteUri = ctx.Client.CurrentApplication.GenerateOAuthUri(null, DiscordPermissions.Administrator, DiscordOAuthScope.Bot,
+        string inviteUri = ctx.Client.CurrentApplication.GenerateOAuthUri(null, DiscordPermissions.Administrator,
+            DiscordOAuthScope.Bot,
             DiscordOAuthScope.ApplicationsCommands);
         string addMe = $"[Click here!]({inviteUri.Replace(" ", "%20")})";
-
-        TimeSpan diff = DateTime.Now - CommandService.StartTime;
+        
+        TimeSpan diff = DateTime.Now - DiscordService.StartTime;
         string date = $"{diff.Days} days {diff.Hours} hours {diff.Minutes} minutes";
-
+        
         discordEmbedBuilder
             .WithTitle("About me")
             .WithDescription("A modular designed discord bot for moderation and stuff")
@@ -46,12 +55,12 @@ public sealed class About : MadsBaseApplicationCommand
             .AddField("Uptime", date.Humanize(), true)
             .AddField("Ping", $"{ctx.Client.Ping} ms", true)
             .AddField("Add me", addMe);
-
+        
         discordMessageBuilder.AddEmbed(discordEmbedBuilder.Build());
         discordMessageBuilder.AddComponents(new DiscordButtonComponent(DiscordButtonStyle.Success, "feedback-button",
             "Feedback"));
         discordMessageBuilder.AsEphemeral();
-
-        await ctx.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource, discordMessageBuilder);
+        
+        await ctx.RespondAsync(discordMessageBuilder);
     }
 }

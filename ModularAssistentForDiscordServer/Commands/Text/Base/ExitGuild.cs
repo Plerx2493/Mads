@@ -12,24 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Attributes;
+using System.ComponentModel;
+using DSharpPlus.Commands;
+using DSharpPlus.Commands.ContextChecks;
+using DSharpPlus.Commands.Processors.TextCommands;
 using DSharpPlus.Entities;
-using MADS.Extensions;
+using MADS.CommandsChecks;
 
 namespace MADS.Commands.Text.Base;
 
-public class ExitGuild : MadsBaseCommand
+public class ExitGuild
 {
     [Command("exit"), Description("Exit the bot"), RequirePermissions(DiscordPermissions.ManageGuild), RequireGuild]
-    public async Task ExitGuildCommand(CommandContext ctx)
+    public async Task ExitGuildCommand(TextCommandContext ctx)
     {
         await ctx.RespondAsync("Leaving server...");
         await ctx.Guild.LeaveAsync();
     }
 
-    [Command("leave"), Description("Leave given server"), RequireGuild, Hidden, RequireOwner]
-    public async Task LeaveGuildOwner(CommandContext ctx)
+    [Command("leave"), Description("Leave given server"), RequireGuild, RequireOwner]
+    public async Task LeaveGuildOwner(TextCommandContext ctx)
     {
         await ctx.Message.DeleteAsync();
         await ctx.Guild.LeaveAsync();

@@ -12,35 +12,39 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using DSharpPlus.Commands.Processors.SlashCommands;
+using DSharpPlus.Commands.Processors.SlashCommands.ArgumentModifiers;
 using DSharpPlus.Entities;
-using DSharpPlus.SlashCommands;
 using MADS.Entities;
 using MADS.Services;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.Commands.AutoCompletion;
 
-public class VoiceAlertAutoCompletion : IAutocompleteProvider
+public class VoiceAlertAutoCompletion : IAutoCompleteProvider
 {
     private readonly VoiceAlertService _voiceAlertService;
     
-    public VoiceAlertAutoCompletion(IServiceProvider services)
+    public VoiceAlertAutoCompletion(VoiceAlertService service)
     {
-        _voiceAlertService = services.GetRequiredService<VoiceAlertService>();
+        _voiceAlertService = service;
     }
     
-    public async Task<IEnumerable<DiscordAutoCompleteChoice>> Provider(AutocompleteContext ctx)
+    public async ValueTask<IReadOnlyDictionary<string, object>> AutoCompleteAsync(AutoCompleteContext context)
     {
-        IEnumerable<VoiceAlert> choices = await _voiceAlertService.GetVoiceAlerts(ctx.User.Id);
-
-        List<DiscordAutoCompleteChoice> result = new();
+        IEnumerable<VoiceAlert> choices = await _voiceAlertService.GetVoiceAlertsAsync(context.User.Id);
         
+        List<DiscordChannel> result = new();
         foreach (VoiceAlert choice in choices)
         {
-            DiscordChannel chn = await ctx.Guild.GetChannelAsync(choice.ChannelId);
-            result.Add(new DiscordAutoCompleteChoice(chn.Name, choice.ChannelId.ToString()));
+            DiscordChannel channel = await context.Client.GetChannelAsync(choice.ChannelId);
+            result.Add(channel);
         }
         
-        return result;
+        Dictionary<string, object> dict = result
+            .Where(x => x.Name.StartsWith(context.UserInput))
+            .Take(25)
+            .ToDictionary(x => x.Name, x => (object) x.Id);
+        
+        return dict;
     }
 }

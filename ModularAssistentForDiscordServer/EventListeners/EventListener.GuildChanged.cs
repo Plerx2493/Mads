@@ -22,7 +22,7 @@ namespace MADS.EventListeners;
 
 internal static partial class EventListener
 {
-    public static async Task OnGuildCreated(DiscordClient sender, GuildCreateEventArgs args)
+    public static async Task OnGuildCreated(DiscordClient sender, GuildCreatedEventArgs args)
     {
         DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
             .WithTitle($"New guild added: {args.Guild.Name}")
@@ -32,13 +32,13 @@ internal static partial class EventListener
             .AddField("Added:", Formatter.Timestamp(DateTimeOffset.Now))
             .AddField("Created:", Formatter.Timestamp(args.Guild.CreationTimestamp))
             .WithColor(DiscordColor.Green);
-            
+        
         await ModularDiscordBot.Services
             .GetRequiredService<LoggingService>()
             .LogToWebhook(new DiscordMessageBuilder().AddEmbed(embed));
     }
-
-    public static async Task OnGuildDeleted(DiscordClient sender, GuildDeleteEventArgs args)
+    
+    public static async Task OnGuildDeleted(DiscordClient sender, GuildDeletedEventArgs args)
     {
         DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
             .WithTitle($"Guild removed: {args.Guild.Name}")
@@ -48,10 +48,9 @@ internal static partial class EventListener
             .AddField("Removed:", Formatter.Timestamp(DateTimeOffset.Now))
             .AddField("Created:", Formatter.Timestamp(args.Guild.CreationTimestamp))
             .WithColor(DiscordColor.Red);
-            
+        
         await ModularDiscordBot.Services
             .GetRequiredService<LoggingService>()
             .LogToWebhook(new DiscordMessageBuilder().AddEmbed(embed));
     }
-    
 }

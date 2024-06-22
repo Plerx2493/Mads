@@ -12,32 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.ComponentModel;
+using DSharpPlus.Commands;
+using DSharpPlus.Commands.ContextChecks;
 using DSharpPlus.Entities;
-using DSharpPlus.SlashCommands;
-using DSharpPlus.SlashCommands.Attributes;
 using MADS.Extensions;
 
 namespace MADS.Commands.Slash;
 
-public sealed class Purge : MadsBaseApplicationCommand
+public sealed class Purge
 {
-    [SlashCommand("purge", "Purges messages"),
-     SlashRequirePermissions(DiscordPermissions.ManageMessages),
-     SlashRequireGuild]
+    [Command("purge"), Description("Purges messages"),
+     RequirePermissions(DiscordPermissions.ManageMessages),
+     RequireGuild]
     public async Task PurgeMessages
     (
-        InteractionContext ctx, [Option("amount", "Delete a bunch of messages")] long amount = 100
+        CommandContext ctx, [Description("Amount of messages to delete")] long amount = 100
     )
     {
         if (amount > 100)
         {
-            await CreateResponse_Error("You cannot purge more than 100 messages at once", true);
+            await ctx.CreateResponse_Error("You cannot purge more than 100 messages at once", true);
             return;
         }
 
-        await ctx.CreateResponseAsync(DiscordInteractionResponseType.DeferredChannelMessageWithSource,
-            new DiscordInteractionResponseBuilder());
-        DiscordMessage response = await ctx.GetOriginalResponseAsync();
+        await ctx.DeferAsync();
+        DiscordMessage? response = await ctx.GetResponseAsync()!;
         
         List<DiscordMessage> messages = [];
         await foreach (DiscordMessage msg in ctx.Channel.GetMessagesAsync((int) amount))
@@ -46,12 +46,12 @@ public sealed class Purge : MadsBaseApplicationCommand
         }
 
         messages.RemoveAll(x => (DateTime.UtcNow - x.Timestamp).TotalDays >= 14);
-        messages.Remove(response);
+        messages.Remove(response!);
 
         await ctx.Channel.DeleteMessagesAsync(messages);
         await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent($"{messages.Count} messages deleted"));
 
-        await IntendedWait(10_000);
+        await Task.Delay(10_000);
 
         await ctx.DeleteResponseAsync();
     }

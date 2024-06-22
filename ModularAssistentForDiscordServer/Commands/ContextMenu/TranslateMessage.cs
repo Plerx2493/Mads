@@ -14,8 +14,9 @@
 
 using DeepL;
 using DeepL.Model;
+using DSharpPlus.Commands;
+using DSharpPlus.Commands.Processors.SlashCommands;
 using DSharpPlus.Entities;
-using DSharpPlus.SlashCommands;
 using MADS.CustomComponents;
 using MADS.Extensions;
 using MADS.Services;
@@ -23,7 +24,7 @@ using Quartz.Util;
 
 namespace MADS.Commands.ContextMenu;
 
-public class TranslateMessage : MadsBaseApplicationCommand
+public class TranslateMessage
 {
     private readonly TranslateInformationService _translateInformationService;
     private readonly Translator _translator;
@@ -34,12 +35,12 @@ public class TranslateMessage : MadsBaseApplicationCommand
         _translator = translator;
     }
     
-    [ContextMenu(DiscordApplicationCommandType.MessageContextMenu, "Translate message")]
-    public async Task TranslateAsync(ContextMenuContext ctx)
+    [SlashCommandTypes(DiscordApplicationCommandType.MessageContextMenu), Command("Translate message")]
+    public async Task TranslateAsync(SlashCommandContext ctx,  DiscordMessage targetMessage)
     {
         await ctx.DeferAsync(true);
 
-        string? preferredLanguage = await _translateInformationService.GetPreferredLanguage(ctx.User.Id);
+        string? preferredLanguage = await _translateInformationService.GetPreferredLanguageAsync(ctx.User.Id);
         bool isPreferredLanguageSet = !preferredLanguage.IsNullOrWhiteSpace();
        
         if(!isPreferredLanguageSet)
@@ -47,24 +48,18 @@ public class TranslateMessage : MadsBaseApplicationCommand
             preferredLanguage = "en-US";
         }
 
-        ulong messageId = ctx.TargetMessage.Id;
+        ulong messageId = targetMessage.Id;
         DiscordMessage message = await ctx.Channel.GetMessageAsync(messageId);
         string? messageContent = message.Content;
 
-        if (messageContent.IsNullOrWhiteSpace() || messageContent is null)
+        if (messageContent.IsNullOrWhiteSpace())
         {
-            await ctx.CreateResponseAsync("⚠️ Message is empty!");
-            return;
-        }
-        
-        if (preferredLanguage is null)
-        {
-            await ctx.CreateResponseAsync("⚠️ No language set!");
+            await ctx.CreateResponse_Error("⚠️ Message is empty!");
             return;
         }
         
         TextResult translatedMessage = 
-            await _translator.TranslateTextAsync(messageContent, null, preferredLanguage);
+            await _translator.TranslateTextAsync(messageContent, null, preferredLanguage!);
         
         DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
             .WithAuthor(message.Author?.Username, 
@@ -74,7 +69,7 @@ public class TranslateMessage : MadsBaseApplicationCommand
             .WithFooter($"Translated from {translatedMessage.DetectedSourceLanguageCode} to {preferredLanguage}")
             .WithTimestamp(DateTime.Now);
 
-        await ctx.CreateResponseAsync(embed);
+        await ctx.RespondAsync(embed);
 
         if (isPreferredLanguageSet)
         {
@@ -83,11 +78,13 @@ public class TranslateMessage : MadsBaseApplicationCommand
 
         DiscordFollowupMessageBuilder followUpMessage = new DiscordFollowupMessageBuilder()
             .WithContent("⚠️ You haven't set a preferred language yet. Default is english.")
-            .AddComponents(new DiscordButtonComponent(DiscordButtonStyle.Primary, "setLanguage", "Set language").AsActionButton(ActionDiscordButtonEnum.SetTranslationLanguage))
-            .AddComponents(new DiscordButtonComponent(DiscordButtonStyle.Primary, "setLanguage", "Set your language to en-US").AsActionButton(ActionDiscordButtonEnum.SetTranslationLanguage, "en-US"))
+            .AddComponents(new DiscordButtonComponent(DiscordButtonStyle.Primary, "setLanguage", "Set language")
+                .AsActionButton(ActionDiscordButtonEnum.SetTranslationLanguage))
+            .AddComponents(new DiscordButtonComponent(DiscordButtonStyle.Primary, "setLanguage", "Set your language to en-US")
+                .AsActionButton(ActionDiscordButtonEnum.SetTranslationLanguage, "en-US"))
             .AsEphemeral();
         
         
-        await ctx.FollowUpAsync(followUpMessage);
+        await ctx.FollowupAsync(followUpMessage);
     }
 }

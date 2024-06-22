@@ -12,9 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.ComponentModel;
 using System.Text;
+using DSharpPlus.Commands;
+using DSharpPlus.Commands.ArgumentModifiers;
+using DSharpPlus.Commands.ContextChecks;
+using DSharpPlus.Commands.Processors.SlashCommands.ArgumentModifiers;
 using DSharpPlus.Entities;
-using DSharpPlus.SlashCommands;
 using MADS.Commands.AutoCompletion;
 using MADS.Entities;
 using MADS.Extensions;
@@ -22,95 +26,105 @@ using MADS.Services;
 
 namespace MADS.Commands.Slash;
 
-[SlashCommandGroup("voicealerts", "mangage voicealerts")]
-public sealed class VoiceAlerts : MadsBaseApplicationCommand
+[Command("voicealerts"), Description("mangage voicealerts")]
+public sealed class VoiceAlerts
 {
     private readonly VoiceAlertService _voiceAlertService;
-
+    
     public VoiceAlerts(VoiceAlertService voiceAlertService)
     {
         _voiceAlertService = voiceAlertService;
     }
     
-    [SlashCommand("add", "add a voicealert")]
+    [Command("add"), Description("add a voicealert"), RequireGuild]
     public async Task AddAlert
     (
-        InteractionContext ctx,
-        [Option("channel", "channel which will be monitored"), ChannelTypes(DiscordChannelType.Voice, DiscordChannelType.Stage)]
+        CommandContext ctx,
+        
+        [Description("channel which will be monitored"),
+         ChannelTypes(DiscordChannelType.Voice, DiscordChannelType.Stage)]
         DiscordChannel channel,
-        [Option("minTimeBetween", "time which has to pass between alerts")] 
+        
+        [Description("time which has to pass between alerts")]
         TimeSpan? minTimeBetween,
-        [Option("repeat", "repeat the alert")] 
+        
+        [Description("If the alert should be repeated or one shot. (Defaults to false (one shot))")]
         bool repeat = false
     )
     {
         if (channel.Type is not (DiscordChannelType.Voice or DiscordChannelType.Stage))
         {
-            await CreateResponse_Error($"<#{channel.Id}> is not a voice channel", true);
+            await ctx.CreateResponse_Error($"<#{channel.Id}> is not a voice channel", true);
             return;
         }
         
         if (minTimeBetween is null)
         {
-            await CreateResponse_Error("Invalid timespan (5s, 3m, 7h, 2d) - Use 0s if you want to get a alert everytime (Warning: This could lead to Spam)", true);
+            await ctx.CreateResponse_Error(
+                "Invalid timespan (5s, 3m, 7h, 2d) - Use 0s if you want to get a alert everytime (Warning: This could lead to Spam)",
+                true);
             return;
         }
 
-        IEnumerable<VoiceAlert> currentAlerts = await _voiceAlertService.GetVoiceAlerts(ctx.User.Id);
+        IEnumerable<VoiceAlert> currentAlerts = await _voiceAlertService.GetVoiceAlertsAsync(ctx.User.Id);
         if (currentAlerts.Any(x => x.ChannelId == channel.Id))
         {
-            await CreateResponse_Error($"<#{channel.Id}> is already in your VoiceAlerts", true);
+            await ctx.CreateResponse_Error($"<#{channel.Id}> is already in your VoiceAlerts", true);
             return;
         }
-
-        await _voiceAlertService.AddVoiceAlertAsync(ctx.User.Id, channel.Id, ctx.Guild.Id, repeat, minTimeBetween.Value);
-
-        await CreateResponse_Success($"Added <#{channel.Id}> to your VoiceAlerts", true);
+        
+        await _voiceAlertService.AddVoiceAlertAsync(ctx.User.Id, channel.Id, ctx.Guild!.Id, repeat,
+            minTimeBetween.Value);
+        
+        await ctx.CreateResponse_Success($"Added <#{channel.Id}> to your VoiceAlerts", true);
     }
-
-    [SlashCommand("delete", "delete a voicealerts")]
+    
+    [Command("delete"), Description("delete a voicealerts")]
     public async Task RemoveAlert
     (
-        InteractionContext ctx,
-        [Option("channel", "channel which will not be monitored anymore", true),
-         Autocomplete(typeof(VoiceAlertAutoCompletion))]
+        CommandContext ctx,
+        [Description("channel which will not be monitored anymore"),
+         SlashAutoCompleteProvider(typeof(VoiceAlertAutoCompletion))]
         string channel
     )
     {
         bool isId = ulong.TryParse(channel, out ulong id);
         if (!isId)
         {
-            await CreateResponse_Error($"**{channel}** is not a valid id", true);
+            await ctx.CreateResponse_Error($"**{channel}** is not a valid id", true);
             return;
         }
 
-        IEnumerable<VoiceAlert> currentAlerts = await _voiceAlertService.GetVoiceAlerts(ctx.User.Id);
+        IEnumerable<VoiceAlert> currentAlerts = await _voiceAlertService.GetVoiceAlertsAsync(ctx.User.Id);
         if (!currentAlerts.Any(x => x.ChannelId == id))
         {
-            await CreateResponse_Error($"<#{id}> is not in your VoiceAlerts", true);
+            await ctx.CreateResponse_Error($"<#{id}> is not in your VoiceAlerts", true);
             return;
         }
 
-        await _voiceAlertService.RemoveVoiceAlert(ctx.User.Id, id, ctx.Guild.Id);
+        await _voiceAlertService.RemoveVoiceAlertAsync(ctx.User.Id, id, ctx.Guild.Id);
 
-        await CreateResponse_Success($"Removed <#{channel}> from your VoiceAlerts", true);
+        await ctx.CreateResponse_Success($"Removed <#{channel}> from your VoiceAlerts", true);
     }
-
-    [SlashCommand("list", "list all voicealerts")]
-    public async Task ListAlerts(InteractionContext ctx)
+    
+    [Command("list"), Description("list all voicealerts")]
+    public async Task ListAlerts(CommandContext ctx)
     {
-        IEnumerable<VoiceAlert> alerts = await _voiceAlertService.GetVoiceAlerts(ctx.User.Id);
+        IEnumerable<VoiceAlert> alerts = await _voiceAlertService.GetVoiceAlertsAsync(ctx.User.Id);
         StringBuilder builder = new();
         foreach (VoiceAlert alert in alerts)
         {
             builder.AppendLine($"<#{alert.ChannelId}> {(alert.IsRepeatable ? "repeated" : "")}");
         }
-
+        
         if (builder.Length == 0)
         {
             builder.AppendLine("You have no VoiceAlerts");
         }
-
-        await ctx.CreateResponseAsync(builder.ToString(), true);
+        
+        DiscordInteractionResponseBuilder responseBuilder = new();
+        responseBuilder.WithContent(builder.ToString()).AsEphemeral();
+        
+        await ctx.RespondAsync(responseBuilder);
     }
 }

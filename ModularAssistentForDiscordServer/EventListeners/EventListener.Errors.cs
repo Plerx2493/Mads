@@ -13,33 +13,29 @@
 // limitations under the License.
 
 using DSharpPlus;
-using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Exceptions;
+using DSharpPlus.Commands;
+using DSharpPlus.Commands.EventArgs;
+using DSharpPlus.Commands.Exceptions;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Exceptions;
-using DSharpPlus.Interactivity;
-using DSharpPlus.Interactivity.Enums;
-using DSharpPlus.Interactivity.Extensions;
-using DSharpPlus.SlashCommands;
-using DSharpPlus.SlashCommands.EventArgs;
 
 namespace MADS.EventListeners;
 
 internal static partial class EventListener
 {
-    internal static async Task OnSlashCommandErrored(SlashCommandsExtension sender, SlashCommandErrorEventArgs e)
+    internal static async Task OnCommandErrored(CommandsExtension sender, CommandErroredEventArgs e)
     {
         Type typeOfException = e.Exception.GetType();
         if (typeOfException == typeof(ArgumentException)
-            || typeOfException == typeof(SlashExecutionChecksFailedException))
+            || typeOfException == typeof(ChecksFailedException))
         {
             return;
         }
-
+        
         string embedDescription = new((e.Exception.Message + ":\n" + e.Exception.StackTrace).Take(4093).ToArray());
         embedDescription += "...";
-
+        
         DiscordEmbedBuilder discordEmbed = new()
         {
             Title = $"{Formatter.Bold(e.Exception.GetType().ToString())} - The command execution failed",
@@ -47,20 +43,19 @@ internal static partial class EventListener
             Color = DiscordColor.Red,
             Timestamp = DateTime.Now
         };
-
+        
         try
         {
-            await e.Context.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
-                new DiscordInteractionResponseBuilder().AddEmbed(discordEmbed).AsEphemeral());
+            await e.Context.RespondAsync(new DiscordInteractionResponseBuilder().AddEmbed(discordEmbed).AsEphemeral());
             return;
         }
         catch (BadRequestException)
         {
         }
-
+        
         try
         {
-            await e.Context.Interaction.EditOriginalResponseAsync(
+            await e.Context.EditResponseAsync(
                 new DiscordWebhookBuilder(new DiscordInteractionResponseBuilder().AddEmbed(discordEmbed)
                     .AsEphemeral()));
             return;
@@ -68,11 +63,11 @@ internal static partial class EventListener
         catch (BadRequestException)
         {
         }
-
+        
         await e.Context.Channel.SendMessageAsync(discordEmbed);
     }
-
-    internal static async Task OnCNextErrored(CommandsNextExtension sender, CommandErrorEventArgs e)
+    
+    internal static async Task OnCommandsErrored(CommandsExtension sender, CommandErroredEventArgs e)
     {
         Type typeOfException = e.Exception.GetType();
         if (typeOfException == typeof(ChecksFailedException) || typeOfException == typeof(ArgumentException)
@@ -80,11 +75,11 @@ internal static partial class EventListener
         {
             return;
         }
-
-        await e.Context.Message.RespondAsync($"OOPS your command just errored... \n {e.Exception.Message}");
-        await e.Context.Message.RespondAsync(e.Exception.InnerException?.Message ?? "no inner exception");
+        
+        await e.Context.RespondAsync($"OOPS your command just errored... \n {e.Exception.Message}");
+        await e.Context.RespondAsync(e.Exception.InnerException?.Message ?? "no inner exception");
     }
-
+    
     internal static async Task OnClientErrored(DiscordClient sender, ClientErrorEventArgs e)
     {
         DiscordEmbedBuilder exceptionEmbed = new DiscordEmbedBuilder()
@@ -106,27 +101,12 @@ internal static partial class EventListener
                 exceptionEmbed.AddField("Stacktrace", Formatter.BlockCode(e.Exception.StackTrace));
             }
         }
-
+        
         DiscordWebhookBuilder webhookBuilder = new DiscordWebhookBuilder()
             .WithUsername("Mads-Debug")
             .AddEmbed(exceptionEmbed);
-
-        await MainProgram.WebhookClient.BroadcastMessageAsync(webhookBuilder);
-    }
-
-    internal static async Task OnAutocompleteError(SlashCommandsExtension sender, AutocompleteErrorEventArgs e)
-    {
-        await e.Context.Channel.SendMessageAsync($"OOPS your command just errored... \n {e.Exception.Message}");
-        await e.Context.Channel.SendMessageAsync(e.Exception.InnerException?.Message ?? "no inner exception");
-        string? reallyLongString = e.Exception.StackTrace;
         
-        if (reallyLongString != null)
-        {
-            IEnumerable<Page> pages = InteractivityExtension.GeneratePagesInEmbed(reallyLongString);
-
-            await e.Context.Channel.SendPaginatedMessageAsync(e.Context.Member, pages, PaginationBehaviour.Ignore,
-                ButtonPaginationBehavior.DeleteButtons);
-        }
+        await MainProgram.WebhookClient.BroadcastMessageAsync(webhookBuilder);
     }
     
     internal static async Task OnSocketErrored(DiscordClient client, SocketErrorEventArgs e)

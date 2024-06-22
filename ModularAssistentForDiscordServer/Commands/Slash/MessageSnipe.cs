@@ -12,16 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.ComponentModel;
 using DSharpPlus;
+using DSharpPlus.Commands;
 using DSharpPlus.Entities;
-using DSharpPlus.SlashCommands;
 using MADS.CustomComponents;
 using MADS.Extensions;
 using MADS.Services;
 
 namespace MADS.Commands.Slash;
 
-public sealed class MessageSnipe : MadsBaseApplicationCommand
+public sealed class MessageSnipe
 {
     private readonly MessageSnipeService _messageSnipeService;
 
@@ -30,21 +31,21 @@ public sealed class MessageSnipe : MadsBaseApplicationCommand
         _messageSnipeService = messageSnipeService;
     }
     
-    [SlashCommand("snipe", "Snipes the last deleted message.")]
-    public async Task SnipeAsync(InteractionContext ctx)
+    [Command("snipe"), Description("Snipes the last deleted message.")]
+    public async Task SnipeAsync(CommandContext ctx)
     {
         await DoSnipeAsync(ctx, false);
     }
 
-    [SlashCommand("snipeedit", "Snipes the last edited message.")]
-    public async Task SnipeEditAsync(InteractionContext ctx)
+    [Command("snipeedit"), Description("Snipes the last edited message.")]
+    public async Task SnipeEditAsync(CommandContext ctx)
     {
         await DoSnipeAsync(ctx, true);
     }
 
-    private async Task DoSnipeAsync(InteractionContext ctx, bool edit)
+    private async Task DoSnipeAsync(CommandContext ctx, bool edit)
     {
-        await ctx.DeferAsync(true);
+        await ctx.DeferResponseAsync();
 
         bool result = !edit
             ? _messageSnipeService.TryGetMessage(ctx.Channel.Id, out DiscordMessage? message)
@@ -52,7 +53,8 @@ public sealed class MessageSnipe : MadsBaseApplicationCommand
 
         if (!result || message is null)
         {
-            await EditResponse_Error("⚠️ No message to snipe! Either nothing was deleted, or the message has expired (12 hours)!");
+            await ctx.EditResponse_Error(
+                "⚠️ No message to snipe! Either nothing was deleted, or the message has expired (12 hours)!");
             return;
         }
 
@@ -115,12 +117,13 @@ public sealed class MessageSnipe : MadsBaseApplicationCommand
         await ctx.EditResponseAsync(response);
     }
     
-    [SlashCommand("deletesnipe", "Deletes cached messages for this channel.")]
-    public async Task DeleteSnipeAsync(InteractionContext ctx)
+    [Command("deletesnipe"), Description("Deletes cached messages for this channel.")]
+    public async Task DeleteSnipeAsync(CommandContext ctx)
     {
         await ctx.DeferAsync(true);
         _messageSnipeService.DeleteMessage(ctx.Channel.Id);
         _messageSnipeService.DeleteEditedMessage(ctx.Channel.Id);
-        await EditResponse_Success("✅ Snipe cache cleared!");
+        
+        await ctx.EditResponse_Success("✅ Snipe cache cleared!");
     }
 }

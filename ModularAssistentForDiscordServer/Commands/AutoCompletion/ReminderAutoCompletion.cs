@@ -12,32 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using DSharpPlus.Entities;
-using DSharpPlus.SlashCommands;
+using DSharpPlus.Commands.Processors.SlashCommands;
+using DSharpPlus.Commands.Processors.SlashCommands.ArgumentModifiers;
 using MADS.Entities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.Commands.AutoCompletion;
 
-public class ReminderAutoCompletion : IAutocompleteProvider
+public class ReminderAutoCompletion : IAutoCompleteProvider
 {
     private readonly IDbContextFactory<MadsContext> _factory;
     
-    public ReminderAutoCompletion(IServiceProvider services)
+    public ReminderAutoCompletion(IDbContextFactory<MadsContext> dbContextFactory)
     {
-        _factory = services.GetRequiredService<IDbContextFactory<MadsContext>>();
+        _factory = dbContextFactory;
     }
     
-    public async Task<IEnumerable<DiscordAutoCompleteChoice>> Provider(AutocompleteContext ctx)
+    public async ValueTask<IReadOnlyDictionary<string, object>> AutoCompleteAsync(AutoCompleteContext context)
     {
         await using MadsContext db = await _factory.CreateDbContextAsync();
-        IEnumerable<DiscordAutoCompleteChoice> choices = db.Reminders
-            .Where(x => x.UserId == ctx.User.Id)
-            .Select(x => x.Id.ToString())
+        Dictionary<string, object> choices = db.Reminders
+            .Where(x => x.UserId == context.User.Id)
+            .Select(x => x.Id)
+            .Where(x => x.ToString().StartsWith(context.UserInput.ToString() ?? ""))
             .Take(25)
-            .Select(x => new DiscordAutoCompleteChoice(x, x))
-            .ToList();
+            .ToDictionary(x => x.ToString(), x => (object)x);
         
         return choices;
     }

@@ -21,14 +21,14 @@ namespace MADS.Entities;
 
 public class UserDbEntity
 {
-    [Key, Column("id")]
+    [Key, Column("id"), DatabaseGenerated(DatabaseGeneratedOption.None)]
     public ulong Id { get; set; }
 
     [Column("username")]
     public string Username { get; set; }
     
     [Column("prefered_language")]
-    public string PreferedLanguage { get; set; }
+    public string? PreferedLanguage { get; set; }
 
     public List<IncidentDbEntity> Incidents { get; set; }
 

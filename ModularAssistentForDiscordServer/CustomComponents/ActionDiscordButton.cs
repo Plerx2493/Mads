@@ -154,9 +154,26 @@ public static class ActionDiscordButton
                 actionCode = (int) ActionDiscordButtonEnum.AnswerDmChannel;
                 customId += actionCode + ":" + args[0];
                 break;
-
+            
+            case ActionDiscordButtonEnum.SetTranslationLanguage:
+                actionCode = (int) ActionDiscordButtonEnum.SetTranslationLanguage;
+                if (args.Length == 0)
+                {
+                    customId += actionCode;
+                    break;
+                }
+                
+                if (args is [string lang])
+                {
+                    customId += actionCode + ":" + lang ;
+                    break;
+                }
+                
+                throw new ArgumentException("Please provide 1 lang identifier (string)");
+                break;
+            
             default:
-                throw new NotImplementedException("Action code not implemented");
+                throw new ArgumentOutOfRangeException(nameof(action), action, null);
         }
 
         string label = button.Label;

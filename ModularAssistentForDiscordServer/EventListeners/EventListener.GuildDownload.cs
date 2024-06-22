@@ -27,10 +27,8 @@ internal static partial class EventListener
     public static async Task UpdateDb(DiscordClient client, GuildDownloadCompletedEventArgs args)
     {
         IDbContextFactory<MadsContext> dbFactory = ModularDiscordBot.Services.GetRequiredService<IDbContextFactory<MadsContext>>();
-        Task updateGuilds = UpdateGuilds(args, dbFactory);
-        Task updateUsers = UpdateUsersDb(args, dbFactory);
-        
-        await Task.WhenAll(updateGuilds, updateUsers);
+        await UpdateGuilds(args, dbFactory);
+        await UpdateUsersDb(args, dbFactory);
         client.Logger.LogInformation("Database updated!");
     }
 
@@ -88,16 +86,15 @@ internal static partial class EventListener
     {
         await using MadsContext db = await dbFactory.CreateDbContextAsync();
 
-        List<ulong> dbGuildIds = db.Guilds.Select(x => x.DiscordId).ToList();
+        List<ulong> dbGuildIds = db.Guilds.Select(x => x.Id).ToList();
 
         GuildDbEntity[] newGuildEntities = args.Guilds
             .Where(x => !dbGuildIds.Contains(x.Key))
-            .Select(x => new GuildDbEntity
+            .Select(x => new GuildDbEntity(x.Value.Id)
             {
-                DiscordId = x.Value.Id,
                 Settings = new GuildConfigDbEntity
                 {
-                    DiscordGuildId = x.Value.Id,
+                    GuildId = x.Value.Id,
                     Prefix = "",
                     StarboardActive = false
                 }

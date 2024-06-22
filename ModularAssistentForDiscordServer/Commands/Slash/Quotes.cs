@@ -12,17 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.ComponentModel;
+using DSharpPlus.Commands;
+using DSharpPlus.Commands.ContextChecks;
 using DSharpPlus.Entities;
-using DSharpPlus.SlashCommands;
-using DSharpPlus.SlashCommands.Attributes;
 using MADS.Entities;
 using MADS.Extensions;
 using MADS.Services;
 
 namespace MADS.Commands.Slash;
 
-[SlashCommandGroup("Quotes", "Commands related to adding and retrieving quotes"), SlashRequireGuild]
-public sealed class Quotes : MadsBaseApplicationCommand
+[Command("Quotes"), Description("Commands related to adding and retrieving quotes"), RequireGuild]
+public sealed class Quotes
 {
     private readonly QuotesService _quotesService;
 
@@ -31,22 +32,21 @@ public sealed class Quotes : MadsBaseApplicationCommand
         _quotesService = quotesService;
     }
     
-    [SlashCommand("add", "Add a quote form a user")]
+    [Command("add"), Description("Add a quote form a user")]
     public async Task AddQuoteUser
     (
-        InteractionContext ctx,
-        [Option("User", "User who is quoted")] DiscordUser user,
-        [Option("Content", "Quoted content")] string content
+        CommandContext ctx,
+        [Description("User who is quoted")] DiscordUser user,
+        [Description("Quoted content")] string content
     )
     {
         await ctx.DeferAsync(true);
-
 
         QuoteDbEntity newQuote = new()
         {
             Content = content,
             CreatedAt = DateTime.Now,
-            DiscordGuildId = ctx.Guild.Id,
+            GuildId = ctx.Guild!.Id,
             QuotedUserId = user.Id,
             UserId = ctx.User.Id
         };
@@ -59,15 +59,15 @@ public sealed class Quotes : MadsBaseApplicationCommand
         await ctx.EditResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
     }
 
-    [SlashCommand("getRandom", "Get a random quote from this server")]
+    [Command("getRandom"), Description("Get a random quote from this server")]
     public async Task GetRndQuote
     (
-        InteractionContext ctx
+        CommandContext ctx
     )
     {
         await ctx.DeferAsync(true);
 
-        QuoteDbEntity quote = await _quotesService.GetRndGuildAsync(ctx.Guild.Id);
+        QuoteDbEntity quote = await _quotesService.GetRndGuildAsync(ctx.Guild!.Id);
 
         DiscordEmbed embed = await quote.GetEmbedAsync(ctx.Client);
 

@@ -12,52 +12,45 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.ComponentModel;
+using DSharpPlus.Commands;
+using DSharpPlus.Commands.ContextChecks;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
-using DSharpPlus.SlashCommands;
-using DSharpPlus.SlashCommands.Attributes;
 using MADS.Extensions;
 
 namespace MADS.Commands.Slash;
 
-public sealed class RoleSelection : MadsBaseApplicationCommand
+public sealed class RoleSelection
 {
-    [SlashCommand("RoleSelection", "Use this command in the channel the message should be posted"),
-     SlashRequirePermissions(DiscordPermissions.ManageRoles),
-     SlashRequireGuild]
+    [Command("RoleSelection"), Description("Use this command in the channel the message should be posted"),
+     RequirePermissions(DiscordPermissions.ManageRoles),
+     RequireGuild]
     public async Task RoleSelectionCreation
     (
-        InteractionContext ctx,
-        [Option("MessageContent", "Message which should be above the menu")]
+        CommandContext ctx,
+        [Description("Message which should be above the menu")]
         string messageContent = ""
     )
     {
         //show we are processing
-        await ctx.CreateResponseAsync(DiscordInteractionResponseType.DeferredChannelMessageWithSource,
-            new DiscordInteractionResponseBuilder().AsEphemeral());
-
-        //check if the command was not triggered in a guild and if so abort
-        if (ctx.Guild is null)
-        {
-            await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Only possible in guilds"));
-            return;
-        }
-
+        await ctx.DeferAsync(true);
+        
         //check if the user has the required permissons
-        if (!ctx.Member.Permissions.HasPermission(DiscordPermissions.ManageRoles))
+        if (ctx.Member is null || !ctx.Member.Permissions.HasPermission(DiscordPermissions.ManageRoles))
         {
             await ctx.EditResponseAsync(
                 new DiscordWebhookBuilder().WithContent(
                     "You dont have the permission to use this command (ManageRoles)"));
             return;
         }
-
+        
         //get all roles and Create a list of select menu options
         IEnumerable<DiscordSelectComponentOption> options = [];
-        List<DiscordRole> roles = ctx.Guild.Roles.Values.ToList();
-
+        List<DiscordRole> roles = ctx.Guild!.Roles.Values.ToList();
+        
         //remove all roles from bots etc
         roles.RemoveAll(x => x.IsManaged);
         roles.RemoveAll(x => x.Position >= ctx.Guild.GetMemberAsync(ctx.Client.CurrentUser.Id).Result.Hierarchy);
@@ -66,17 +59,18 @@ public sealed class RoleSelection : MadsBaseApplicationCommand
             .Select(discordRole => new DiscordSelectComponentOption(discordRole.Name, discordRole.Id.ToString()))
             .Aggregate(options, (current, option) => current.Append(option))
             .ToList();
-
+        
         //Create the select component and update our first response
         DiscordSelectComponent select = new("roleSelectionStart-" + ctx.Channel.Id,
             "Select your roles", options, false, 0, options.Count());
         await ctx.EditResponseAsync(new DiscordWebhookBuilder().AddComponents(select));
-
+        
         //Get the initial response an wait for a component interaction
-        DiscordMessage response = await ctx.GetOriginalResponseAsync();
-        InteractivityResult<ComponentInteractionCreateEventArgs> selectResponse = await response.WaitForSelectAsync(ctx.Member, "roleSelectionStart-" + ctx.Channel.Id,
+        DiscordMessage? response = await ctx.GetResponseAsync();
+        InteractivityResult<ComponentInteractionCreatedEventArgs> selectResponse = await response!.WaitForSelectAsync(
+            ctx.Member, "roleSelectionStart-" + ctx.Channel.Id,
             TimeSpan.FromSeconds(60 * 3));
-
+        
         //Notify the user when the interaction times out and abort
         if (selectResponse.TimedOut)
         {
@@ -86,14 +80,15 @@ public sealed class RoleSelection : MadsBaseApplicationCommand
             });
             return;
         }
-
+        
         //acknowledge interaction and edit first response to delete the select menu
-        await selectResponse.Result.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
+        await selectResponse.Result.Interaction.CreateResponseAsync(
+            DiscordInteractionResponseType.DeferredMessageUpdate);
         await ctx.EditResponseAsync(new DiscordWebhookBuilder
         {
             Content = "Submitted"
         });
-
+        
         /*
          * 1. get role ids from interaction
          * 2. get roles from guild
@@ -103,9 +98,10 @@ public sealed class RoleSelection : MadsBaseApplicationCommand
         List<DiscordSelectComponentOption> selectedRoles = new();
         selectedRoles = selectResponse.Result.Values.Select(ulong.Parse)
             .Select(roleId => ctx.Guild.GetRole(roleId))
-            .Select(role => new DiscordSelectComponentOption(role.Name, role.Id.ToString()))
+            .Where(x => x is not null)
+            .Select(role => new DiscordSelectComponentOption(role!.Name, role.Id.ToString()))
             .Aggregate(selectedRoles, (current, option) => current.Append(option).ToList());
-
+        
         //Create the final select menu and send it in the channel
         DiscordSelectComponent finalSelect = new("RoleSelection:" + ctx.Guild.Id,
             "Select your roles", selectedRoles, false, 0, selectedRoles.Count);

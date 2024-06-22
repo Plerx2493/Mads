@@ -36,44 +36,44 @@ internal static partial class EventListener
     
     internal static DiscordWebhookClient WebhookClient;
     
-    internal static async Task DmHandler(DiscordClient client, MessageCreateEventArgs e)
+    internal static async Task DmHandler(DiscordClient client, MessageCreatedEventArgs e)
     {
         if (!e.Channel.IsPrivate)
         {
             return;
         }
-
+        
         if (e.Author.IsBot)
         {
             return;
         }
-
+        
         if (client.CurrentApplication.Owners?.Contains(e.Author) ?? false)
         {
             return;
         }
-
+        
         if (client.CurrentApplication.Team?.Members.Any(x => x.User.Id == e.Author.Id) ?? false)
         {
             return;
         }
-
+        
         if (e.Message.Content is null)
         {
             return;
         }
-
+        
         DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
             .WithAuthor("Mads-DMs")
             .WithColor(new DiscordColor(0, 255, 194))
             .WithTimestamp(DateTime.UtcNow)
             .WithTitle($"Dm from {e.Author.Username}")
             .WithDescription(e.Message.Content);
-
+        
         DiscordButtonComponent button =
             new DiscordButtonComponent(DiscordButtonStyle.Success, "Placeholder", "Respond to User").AsActionButton(
                 ActionDiscordButtonEnum.AnswerDmChannel, e.Channel.Id);
-
+        
         DiscordChannel channel = await client.GetChannelAsync(WebhookClient.Webhooks[0].ChannelId);
         await channel.SendMessageAsync(new DiscordMessageBuilder().AddEmbed(embed).AddComponents(button));
     }

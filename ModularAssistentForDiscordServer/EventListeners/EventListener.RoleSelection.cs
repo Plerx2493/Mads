@@ -20,38 +20,38 @@ namespace MADS.EventListeners;
 
 internal static partial class EventListener
 {
-    internal static async Task OnRoleSelection(DiscordClient client, ComponentInteractionCreateEventArgs e)
+    internal static async Task OnRoleSelection(DiscordClient client, ComponentInteractionCreatedEventArgs e)
     {
         if (e.Guild is null)
         {
             return;
         }
-
+        
         if (e.Id != "RoleSelection:" + e.Guild.Id)
         {
             return;
         }
-
+        
         //TODO Test if "await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);" is possible
         await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
             new DiscordInteractionResponseBuilder().WithContent("Roles granted/revoked").AsEphemeral());
-
+        
         DiscordMember member = await e.Guild.GetMemberAsync(e.User.Id);
         List<DiscordRole> roles = e.Values.Select(ulong.Parse).Select(x => e.Guild.GetRole(x)).ToList();
-
+        
         List<DiscordRole> newRoles = [];
         newRoles.AddRange(roles);
         newRoles.RemoveAll(x => member.Roles.Contains(x));
-
+        
         List<DiscordRole> oldRoles = [];
         oldRoles.AddRange(roles);
         oldRoles.RemoveAll(x => !member.Roles.Contains(x));
-
+        
         foreach (DiscordRole role in newRoles)
         {
             await member.GrantRoleAsync(role);
         }
-
+        
         foreach (DiscordRole role in oldRoles)
         {
             await member.RevokeRoleAsync(role);
