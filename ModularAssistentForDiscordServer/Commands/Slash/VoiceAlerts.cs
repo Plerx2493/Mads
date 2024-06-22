@@ -16,6 +16,7 @@ using System.ComponentModel;
 using System.Text;
 using DSharpPlus.Commands;
 using DSharpPlus.Commands.ArgumentModifiers;
+using DSharpPlus.Commands.ContextChecks;
 using DSharpPlus.Commands.Processors.SlashCommands.ArgumentModifiers;
 using DSharpPlus.Entities;
 using MADS.Commands.AutoCompletion;
@@ -35,15 +36,18 @@ public sealed class VoiceAlerts
         _voiceAlertService = voiceAlertService;
     }
     
-    [Command("add"), Description("add a voicealert")]
+    [Command("add"), Description("add a voicealert"), RequireGuild]
     public async Task AddAlert
     (
         CommandContext ctx,
+        
         [Description("channel which will be monitored"),
          ChannelTypes(DiscordChannelType.Voice, DiscordChannelType.Stage)]
         DiscordChannel channel,
+        
         [Description("time which has to pass between alerts")]
         TimeSpan? minTimeBetween,
+        
         [Description("If the alert should be repeated or one shot. (Defaults to false (one shot))")]
         bool repeat = false
     )
@@ -61,15 +65,15 @@ public sealed class VoiceAlerts
                 true);
             return;
         }
-        
-        IEnumerable<VoiceAlert> currentAlerts = await _voiceAlertService.GetVoiceAlerts(ctx.User.Id);
+
+        IEnumerable<VoiceAlert> currentAlerts = await _voiceAlertService.GetVoiceAlertsAsync(ctx.User.Id);
         if (currentAlerts.Any(x => x.ChannelId == channel.Id))
         {
             await ctx.CreateResponse_Error($"<#{channel.Id}> is already in your VoiceAlerts", true);
             return;
         }
         
-        await _voiceAlertService.AddVoiceAlertAsync(ctx.User.Id, channel.Id, ctx.Guild.Id, repeat,
+        await _voiceAlertService.AddVoiceAlertAsync(ctx.User.Id, channel.Id, ctx.Guild!.Id, repeat,
             minTimeBetween.Value);
         
         await ctx.CreateResponse_Success($"Added <#{channel.Id}> to your VoiceAlerts", true);
@@ -90,23 +94,23 @@ public sealed class VoiceAlerts
             await ctx.CreateResponse_Error($"**{channel}** is not a valid id", true);
             return;
         }
-        
-        IEnumerable<VoiceAlert> currentAlerts = await _voiceAlertService.GetVoiceAlerts(ctx.User.Id);
+
+        IEnumerable<VoiceAlert> currentAlerts = await _voiceAlertService.GetVoiceAlertsAsync(ctx.User.Id);
         if (!currentAlerts.Any(x => x.ChannelId == id))
         {
             await ctx.CreateResponse_Error($"<#{id}> is not in your VoiceAlerts", true);
             return;
         }
-        
-        await _voiceAlertService.RemoveVoiceAlert(ctx.User.Id, id, ctx.Guild.Id);
-        
+
+        await _voiceAlertService.RemoveVoiceAlertAsync(ctx.User.Id, id, ctx.Guild.Id);
+
         await ctx.CreateResponse_Success($"Removed <#{channel}> from your VoiceAlerts", true);
     }
     
     [Command("list"), Description("list all voicealerts")]
     public async Task ListAlerts(CommandContext ctx)
     {
-        IEnumerable<VoiceAlert> alerts = await _voiceAlertService.GetVoiceAlerts(ctx.User.Id);
+        IEnumerable<VoiceAlert> alerts = await _voiceAlertService.GetVoiceAlertsAsync(ctx.User.Id);
         StringBuilder builder = new();
         foreach (VoiceAlert alert in alerts)
         {

@@ -17,7 +17,6 @@ using DSharpPlus.Commands.Processors.SlashCommands.ArgumentModifiers;
 using DSharpPlus.Entities;
 using MADS.Entities;
 using MADS.Services;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.Commands.AutoCompletion;
 
@@ -25,14 +24,14 @@ public class VoiceAlertAutoCompletion : IAutoCompleteProvider
 {
     private readonly VoiceAlertService _voiceAlertService;
     
-    public VoiceAlertAutoCompletion(IServiceProvider services)
+    public VoiceAlertAutoCompletion(VoiceAlertService service)
     {
-        _voiceAlertService = services.GetRequiredService<VoiceAlertService>();
+        _voiceAlertService = service;
     }
     
     public async ValueTask<IReadOnlyDictionary<string, object>> AutoCompleteAsync(AutoCompleteContext context)
     {
-        IEnumerable<VoiceAlert> choices = await _voiceAlertService.GetVoiceAlerts(context.User.Id);
+        IEnumerable<VoiceAlert> choices = await _voiceAlertService.GetVoiceAlertsAsync(context.User.Id);
         
         List<DiscordChannel> result = new();
         foreach (VoiceAlert choice in choices)

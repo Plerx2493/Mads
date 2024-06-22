@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using DeepL;
+using DeepL.Model;
 using MADS.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,10 +22,14 @@ namespace MADS.Services;
 public class TranslateInformationService
 {
     private readonly IDbContextFactory<MadsContext> _dbContextFactory;
+    private readonly Translator _translator;
+    
+    private TargetLanguage[]? _targetLanguages;
 
-    public TranslateInformationService(IDbContextFactory<MadsContext> factory)
+    public TranslateInformationService(IDbContextFactory<MadsContext> factory, Translator translator)
     {
         _dbContextFactory = factory;
+        _translator = translator;
     }
     
     public async void SetPreferredLanguage(ulong userId, string language)
@@ -50,5 +56,16 @@ public class TranslateInformationService
     {
         string[] strArray = code.Split(['-'], 2);
         return strArray.Length != 1 ? strArray[0].ToLowerInvariant() + "-" + strArray[1].ToUpperInvariant() : strArray[0].ToLowerInvariant();
+    }
+    
+    internal async ValueTask<TargetLanguage[]> GetTargetLanguagesAsync()
+    {
+        if (_targetLanguages is not null)
+        {
+            return _targetLanguages;
+        }
+        
+        _targetLanguages = await _translator.GetTargetLanguagesAsync();
+        return _targetLanguages;
     }
 }

@@ -75,7 +75,7 @@ public class VoiceAlertService : IHostedService
             try
             {
                 VoiceStateUpdatedEventArgs e = await _eventChannel.Reader.ReadAsync(_cts.Token);
-                await HandleEvent(e);
+                await HandleEventAsync(e);
             }
             catch (Exception e)
             {
@@ -83,8 +83,8 @@ public class VoiceAlertService : IHostedService
             }
         }
     }
-    
-    private async Task HandleEvent(VoiceStateUpdatedEventArgs e)
+
+    private async Task HandleEventAsync(VoiceStateUpdatedEventArgs e)
     {
         if (e.After.Channel is null)
         {
@@ -188,7 +188,7 @@ public class VoiceAlertService : IHostedService
         await context.SaveChangesAsync();
     }
     
-    public async Task RemoveVoiceAlert(ulong userId, ulong channelId, ulong guildId)
+    public async Task RemoveVoiceAlertAsync(ulong userId, ulong channelId, ulong guildId)
     {
         await using MadsContext context = await _contextFactory.CreateDbContextAsync();
         UserDbEntity? user = await context.Users
@@ -210,7 +210,7 @@ public class VoiceAlertService : IHostedService
         await context.SaveChangesAsync();
     }
     
-    public async Task RemoveVoiceAlert(ulong alertId)
+    public async Task RemoveVoiceAlertAsync(ulong alertId)
     {
         await using MadsContext context = await _contextFactory.CreateDbContextAsync();
         VoiceAlert? alert = await context.VoiceAlerts.FirstOrDefaultAsync(x => x.AlertId == alertId);
@@ -223,7 +223,7 @@ public class VoiceAlertService : IHostedService
         await context.SaveChangesAsync();
     }
     
-    public async Task<IEnumerable<VoiceAlert>> GetVoiceAlerts(ulong userId)
+    public async Task<IEnumerable<VoiceAlert>> GetVoiceAlertsAsync(ulong userId)
     {
         await using MadsContext context = await _contextFactory.CreateDbContextAsync();
         UserDbEntity? user = await context.Users

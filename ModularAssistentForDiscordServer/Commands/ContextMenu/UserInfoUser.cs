@@ -32,9 +32,13 @@ public class UserInfoUser
         
         try
         {
-            if (!ctx.Channel.IsPrivate)
+            if (user is DiscordMember dMember)
             {
-                member = await ctx.Guild.GetMemberAsync(user.Id);
+                member = dMember;
+            }
+            else if (!ctx.Channel.IsPrivate)
+            {
+                member = await ctx.Guild!.GetMemberAsync(user.Id);
             }
         }
         catch (DiscordException e)

@@ -28,7 +28,7 @@ public class UserDbEntity
     public string Username { get; set; }
     
     [Column("prefered_language")]
-    public string PreferedLanguage { get; set; }
+    public string? PreferedLanguage { get; set; }
 
     public List<IncidentDbEntity> Incidents { get; set; }
 

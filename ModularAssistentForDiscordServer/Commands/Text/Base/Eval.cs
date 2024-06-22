@@ -16,16 +16,16 @@ using System.ComponentModel;
 using DSharpPlus;
 using DSharpPlus.Commands;
 using DSharpPlus.Commands.ArgumentModifiers;
+using DSharpPlus.Commands.ContextChecks;
 using DSharpPlus.Commands.Processors.TextCommands;
 using DSharpPlus.Entities;
-using MADS.CommandsChecks;
 using MADS.Services;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 
 namespace MADS.Commands.Text.Base;
 
-[RequireOwner]
+[RequireApplicationOwner]
 public class Eval
 {
     private DiscordCommandService _service;
@@ -52,10 +52,20 @@ public class Eval
             TestVariables globalVariables = new(ctx.Client, ctx, _service);
             
             ScriptOptions? scriptOptions = ScriptOptions.Default;
-            scriptOptions = scriptOptions.WithImports("System", "System.Collections.Generic", "System.Linq",
-                "System.Text", "System.Threading.Tasks", "DSharpPlus", "DSharpPlus.Entities", "DSharpPlus.CommandsNext",
-                "DSharpPlus.Interactivity", "DSharpPlus.SlashCommands",
-                "MADS", "Humanizer");
+            scriptOptions = scriptOptions.WithImports(
+                "System",
+                "System.Collections.Generic",
+                "System.Linq",
+                "System.Text",
+                "System.Threading.Tasks",
+                "DSharpPlus",
+                "DSharpPlus.Entities",
+                "DSharpPlus.Commands",
+                "DSharpPlus.Interactivity",
+                "MADS",
+                "Humanizer"
+                );
+            
             scriptOptions = scriptOptions.WithReferences(AppDomain.CurrentDomain.GetAssemblies()
                 .Where(assembly =>
                     !assembly.IsDynamic
@@ -63,11 +73,11 @@ public class Eval
                         assembly.Location)));
             
             Script<object>? script = CSharpScript.Create(csCode, scriptOptions, typeof(TestVariables));
-            script.Compile();
+
             ScriptState<object>? result = await script.RunAsync(globalVariables);
             if (result?.ReturnValue != null && !string.IsNullOrWhiteSpace(result.ReturnValue.ToString()))
             {
-                await message.ModifyAsync(new DiscordEmbedBuilder
+                await message!.ModifyAsync(new DiscordEmbedBuilder
                 {
                     Title = "✅ Evaluation Result",
                     Description = result.ReturnValue.ToString()!,
@@ -76,7 +86,7 @@ public class Eval
             }
             else
             {
-                await message.ModifyAsync(new DiscordEmbedBuilder
+                await message!.ModifyAsync(new DiscordEmbedBuilder
                 {
                     Title = "✅ Evaluation Successful",
                     Description = "No result was returned.",
@@ -86,7 +96,7 @@ public class Eval
         }
         catch (Exception ex)
         {
-            await message.ModifyAsync(new DiscordEmbedBuilder
+            await message!.ModifyAsync(new DiscordEmbedBuilder
             {
                 Title = "⚠️ Evaluation Failure",
                 Description = string.Concat("**", ex.GetType().ToString(), "**: ", ex.Message),

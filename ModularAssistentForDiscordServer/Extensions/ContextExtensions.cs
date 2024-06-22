@@ -25,6 +25,7 @@ public static class ContextExtensions
         if (ctx is SlashCommandContext slashContext)
         {
             await slashContext.DeferResponseAsync(ephemeral);
+            return;
         }
         
         await ctx.DeferResponseAsync();

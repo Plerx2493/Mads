@@ -16,7 +16,6 @@ using DSharpPlus.Commands.Processors.SlashCommands;
 using DSharpPlus.Commands.Processors.SlashCommands.ArgumentModifiers;
 using MADS.Entities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace MADS.Commands.AutoCompletion;
 
@@ -24,9 +23,9 @@ public class ReminderAutoCompletion : IAutoCompleteProvider
 {
     private readonly IDbContextFactory<MadsContext> _factory;
     
-    public ReminderAutoCompletion(IServiceProvider services)
+    public ReminderAutoCompletion(IDbContextFactory<MadsContext> dbContextFactory)
     {
-        _factory = services.GetRequiredService<IDbContextFactory<MadsContext>>();
+        _factory = dbContextFactory;
     }
     
     public async ValueTask<IReadOnlyDictionary<string, object>> AutoCompleteAsync(AutoCompleteContext context)

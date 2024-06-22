@@ -52,20 +52,14 @@ public class TranslateMessage
         DiscordMessage message = await ctx.Channel.GetMessageAsync(messageId);
         string? messageContent = message.Content;
 
-        if (messageContent.IsNullOrWhiteSpace() || messageContent is null)
+        if (messageContent.IsNullOrWhiteSpace())
         {
             await ctx.CreateResponse_Error("⚠️ Message is empty!");
             return;
         }
         
-        if (preferredLanguage is null)
-        {
-            await ctx.CreateResponse_Error("⚠️ No language set!");
-            return;
-        }
-        
         TextResult translatedMessage = 
-            await _translator.TranslateTextAsync(messageContent, null, preferredLanguage);
+            await _translator.TranslateTextAsync(messageContent, null, preferredLanguage!);
         
         DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
             .WithAuthor(message.Author?.Username, 

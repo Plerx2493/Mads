@@ -30,9 +30,9 @@ public partial class StealEmojiMessage
         _httpClient = httpClient;
     }
     
-    [SlashCommandTypes(DiscordApplicationCommandType.MessageContextMenu),Command("Steal emoji(s)"),
+    [SlashCommandTypes(DiscordApplicationCommandType.MessageContextMenu), Command("Steal emoji(s)"),
      RequirePermissions(DiscordPermissions.ManageEmojis)]
-    public async Task YoinkAsync(SlashCommandContext ctx, DiscordMessage targetMessage)
+    public async Task YoinkAsync(CommandContext ctx, DiscordMessage targetMessage)
     {
         await ctx.DeferAsync(true);
         
@@ -90,7 +90,7 @@ public partial class StealEmojiMessage
         await ctx.EditResponseAsync(discordWebhook);
     }
 
-    private async Task<DiscordEmoji> CopyEmoji(SlashCommandContext ctx, string name, ulong id, bool animated)
+    private async Task<DiscordEmoji> CopyEmoji(CommandContext ctx, string name, ulong id, bool animated)
     {
         Stream downloadedEmoji =
             await _httpClient.GetStreamAsync($"https://cdn.discordapp.com/emojis/{id}.{(animated ? "gif" : "png")}");
