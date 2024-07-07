@@ -1,0 +1,4 @@
+[submodule "Libs/DSharpPlus"]
+	path = Libs/DSharpPlus
+	url = https://github.com/DSharpPlus/DSharpPlus.git
+	branch = aki/sharding

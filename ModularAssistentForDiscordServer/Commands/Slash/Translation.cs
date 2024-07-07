@@ -29,21 +29,21 @@ public class Translation
 {
     private readonly TranslateInformationService _translationUserInfo;
     private readonly Translator _translator;
-    
+
     public Translation(TranslateInformationService translationUserInfo, Translator translator)
     {
         _translationUserInfo = translationUserInfo;
         _translator = translator;
     }
-    
+
     [Command("info"), Description("Get your preferred language")]
     public async Task InfoAsync(CommandContext ctx)
     {
         string? lang = await _translationUserInfo.GetPreferredLanguageAsync(ctx.User.Id);
-        
-        await ctx.CreateResponse_Success($"Language set to `{lang ?? "null"}`");
+
+        await ctx.RespondSuccessAsync($"Language set to `{lang ?? "null"}`");
     }
-    
+
     [Command("setLanguage"), Description("Set your preferred language")]
     public async Task SetLanguageAsync
     (
@@ -54,15 +54,15 @@ public class Translation
     {
         if (string.IsNullOrWhiteSpace(language))
         {
-            await ctx.CreateResponse_Error("⚠️ Language can't be empty!");
+            await ctx.RespondErrorAsync("⚠️ Language can't be empty!");
             return;
         }
 
         string code = TranslateInformationService.StandardizeLang(language);
-        
+
         _translationUserInfo.SetPreferredLanguage(ctx.User.Id, code);
-        
-        await ctx.CreateResponse_Success($"✅ Language set to {code}");
+
+        await ctx.RespondSuccessAsync($"✅ Language set to {code}");
     }
 
     [Command("translate"), Description("Translate a text")]
@@ -78,22 +78,22 @@ public class Translation
     )
     {
         await ctx.DeferAsync();
-        
+
         if (string.IsNullOrWhiteSpace(text))
         {
             await ctx.EditResponseAsync(new DiscordWebhookBuilder()
                 .WithContent("⚠️ Text can't be empty!"));
             return;
         }
-        
+
         TextResult translatedText = await _translator.TranslateTextAsync(text, null, language);
-        
+
         DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
             .WithDescription(translatedText.Text)
             .WithColor(new DiscordColor(0, 255, 194))
             .WithFooter($"Translated from {translatedText.DetectedSourceLanguageCode} to {language}")
             .WithTimestamp(DateTime.Now);
-        
+
         DiscordInteractionResponseBuilder responseBuilder = new();
         responseBuilder.AddEmbed(embed).AsEphemeral(!publicResult);
 

@@ -13,12 +13,14 @@
 // limitations under the License.
 
 using System.ComponentModel;
+using System.Configuration;
 using System.Diagnostics;
 using DSharpPlus;
 using DSharpPlus.Commands;
 using DSharpPlus.Entities;
 using Humanizer;
 using MADS.Entities;
+using MADS.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace MADS.Commands.Slash;
@@ -37,6 +39,7 @@ public sealed class BotStats
     [Command("botstats"), Description("Get statistics about the bot")]
     public async Task GetBotStatsAsync(CommandContext ctx)
     {
+        await ctx.DeferAsync(true);
         await using MadsContext db = await _contextFactory.CreateDbContextAsync();
         Stopwatch swDb = new();
         Stopwatch swRest = new();
@@ -46,7 +49,7 @@ public sealed class BotStats
         _ = await db.Guilds.FirstOrDefaultAsync();
         swDb.Stop();
 
-        _ = await _discordRestClient.GetChannelAsync(ctx.Guild.Channels.Values.First().Id);
+        _ = await _discordRestClient.GetChannelAsync(ctx.Channel.Id);
         swRest.Start();
         _ = await _discordRestClient.GetChannelAsync(ctx.Channel.Id);
         swRest.Stop();
@@ -55,7 +58,7 @@ public sealed class BotStats
 
         int members = db.Users.Count();
         int guilds = db.Guilds.Count();
-        int ping = ctx.Client.Ping;
+        //int ping = ctx.Client.Ping;
         GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
         string heapMemory = $"{process.PrivateMemorySize64 / 1024 / 1024} MB";
 
@@ -66,7 +69,7 @@ public sealed class BotStats
             .AddField("Membercount:", members.ToString("N0"), true)
             .AddField("Guildcount:", guilds.ToString("N0"), true)
             .AddField("Threads:", $"{ThreadPool.ThreadCount}", true)
-            .AddField("Websocket Latency:", ping.ToString("N0") + " ms", true)
+            //.AddField("Websocket Latency:", ping.ToString("N0") + " ms", true)
             .AddField("DB Latency:", swDb.ElapsedMilliseconds.ToString("N0") + " ms", true)
             .AddField("Rest Latency:", swRest.ElapsedMilliseconds.ToString("N0") + " ms", true)
             .AddField("Memory:", heapMemory, true)

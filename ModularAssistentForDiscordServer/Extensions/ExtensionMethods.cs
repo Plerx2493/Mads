@@ -29,11 +29,10 @@ public static class ExtensionMethods
     {
         DiscordConfiguration discordRestConfig = new()
         {
-            Token = config.Token,
-            LoggerFactory = new LoggerFactory().AddSerilog()
+            
         };
 
-        serviceCollection.AddSingleton(new DiscordRestClient(discordRestConfig));
+        serviceCollection.AddSingleton(new DiscordRestClient(discordRestConfig, config.Token, TokenType.Bot));
         return serviceCollection;
     }
 

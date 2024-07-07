@@ -28,7 +28,7 @@ namespace MADS.Commands.Slash;
 
 public sealed partial class MoveEmoji
 {
-    [Command("MoveEmoji"), Description("Move emoji to your guild"), RequirePermissions(DiscordPermissions.ManageEmojis)]
+    [Command("MoveEmoji"), Description("Move emoji to your guild"), RequirePermissions(DiscordPermissions.ManageEmojis), RequireGuild]
     public async Task MoveEmojiAsync
         (CommandContext ctx, [Description("Emoji which should be moved")] string emoji)
     {
@@ -38,7 +38,7 @@ public sealed partial class MoveEmoji
         
         if (!matches.Any())
         {
-            await ctx.EditResponse_Error("There are no emojis in your input");
+            await ctx.RespondErrorAsync("There are no emojis in your input");
             return;
         }
         
@@ -48,7 +48,7 @@ public sealed partial class MoveEmoji
         
         if (!ulong.TryParse(split, out ulong emojiId))
         {
-            await ctx.EditResponse_Error("⚠️ Failed to fetch your new emoji.");
+            await ctx.RespondErrorAsync("⚠️ Failed to fetch your new emoji.");
             return;
         }
         
@@ -71,7 +71,7 @@ public sealed partial class MoveEmoji
         
         if (!guilds.Any())
         {
-            await ctx.EditResponse_Error("There are no guilds where you are able to add emojis");
+            await ctx.RespondErrorAsync("There are no guilds where you are able to add emojis");
             return;
         }
         
@@ -86,7 +86,7 @@ public sealed partial class MoveEmoji
         //Get the initial response an wait for a component interaction
         DiscordMessage? response = await ctx.GetResponseAsync();
         InteractivityResult<ComponentInteractionCreatedEventArgs> selectResponse = await response!.WaitForSelectAsync(
-            ctx.Member, "moveEmojiChooseGuild-" + ctx.User.Id,
+            ctx.Member!, "moveEmojiChooseGuild-" + ctx.User.Id,
             TimeSpan.FromSeconds(60));
         
         //Notify the user when the interaction times out and abort
@@ -114,7 +114,7 @@ public sealed partial class MoveEmoji
             await CopyEmoji(ctx.Client, emojiName, emojiId, animated, guildId);
         }
         
-        await ctx.EditResponse_Success("Emoji moved");
+        await ctx.RespondSuccessAsync("Emoji moved");
     }
     
     private static async Task CopyEmoji(DiscordClient client, string name, ulong id, bool animated, ulong targetGuild)

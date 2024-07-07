@@ -38,7 +38,7 @@ public class DiscordCommandService : IHostedService
     public readonly DiscordClient DiscordClient;
     public DateTime StartTime;
     
-    private static ILogger _logger = Log.ForContext<DiscordCommandService>();
+    private static readonly ILogger _logger = Log.ForContext<DiscordCommandService>();
     
     public DiscordCommandService
     (
@@ -68,7 +68,6 @@ public class DiscordCommandService : IHostedService
         Commands = DiscordClient.UseCommands(commandsConfiguration);
         Commands.AddCommands(commandTypes);
         Commands.AddCheck<EnsureDBEntitiesCheck>();
-        Commands.AddCheck<RequireOwnerCheck>();
         Commands.CommandErrored += EventListener.OnCommandsErrored;
         
         //Interactivity

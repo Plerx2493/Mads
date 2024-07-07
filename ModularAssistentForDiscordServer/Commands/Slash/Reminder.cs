@@ -53,7 +53,7 @@ public sealed class Reminder
 
         if (timeSpan is null)
         {
-            await ctx.EditResponse_Error("Invalid timespan (5s, 3m, 7h, 2d)");
+            await ctx.RespondErrorAsync("Invalid timespan (5s, 3m, 7h, 2d)");
             return;
         }
         
@@ -71,7 +71,7 @@ public sealed class Reminder
 
         ReminderDbEntity reminder = await _reminderService.AddReminder(newReminder);
 
-        await ctx.EditResponse_Success($"Reminder created with id `{reminder.Id}`. I will remind you in {Formatter.Timestamp(timeSpan.Value)}");
+        await ctx.RespondSuccessAsync($"Reminder created with id `{reminder.Id}`. I will remind you in {Formatter.Timestamp(timeSpan.Value)}");
     }
 
     [Command("list"), Description("list your Reminder")]
@@ -110,7 +110,7 @@ public sealed class Reminder
 
         if (reminder is null)
         {
-            await ctx.EditResponse_Error("Reminder does not exists");
+            await ctx.RespondErrorAsync("Reminder does not exists");
             return;
         }
 
@@ -118,7 +118,7 @@ public sealed class Reminder
 
         if (!success)
         {
-            await ctx.EditResponse_Error("Something went wrong. Are you sure you own this reminder?");
+            await ctx.RespondErrorAsync("Something went wrong. Are you sure you own this reminder?");
             return;
         }
 

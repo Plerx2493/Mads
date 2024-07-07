@@ -42,8 +42,7 @@ public class UserManagerService
             user = new UserDbEntity
             {
                 Id = discordUser.Id,
-                Username = discordUser.Username,
-                PreferedLanguage = "en"
+                Username = discordUser.Username
             };
             
             await context.Users.AddAsync(user);

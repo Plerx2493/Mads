@@ -27,61 +27,35 @@ public static class ContextExtensions
             await slashContext.DeferResponseAsync(ephemeral);
             return;
         }
-        
+
         await ctx.DeferResponseAsync();
     }
-    
-    public static async ValueTask CreateResponse_Error(this CommandContext ctx, string message, bool isEphemeral = false)
+
+    public static async ValueTask RespondErrorAsync(this CommandContext ctx, string message, bool isEphemeral = false)
     {
         DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
             .WithTitle("Error")
             .WithDescription(message)
             .WithColor(DiscordColor.Red);
-        
+
         DiscordInteractionResponseBuilder response = new DiscordInteractionResponseBuilder()
             .AddEmbed(embed)
             .AsEphemeral(isEphemeral);
-        
+
         await ctx.RespondAsync(response);
     }
-    
-    public static async ValueTask CreateResponse_Success(this CommandContext ctx, string message, bool isEphemeral = false)
+
+    public static async ValueTask RespondSuccessAsync(this CommandContext ctx, string message, bool isEphemeral = false)
     {
         DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
             .WithTitle("Success")
             .WithDescription(message)
             .WithColor(DiscordColor.Green);
-        
+
         DiscordInteractionResponseBuilder response = new DiscordInteractionResponseBuilder()
             .AddEmbed(embed)
             .AsEphemeral(isEphemeral);
-        
+
         await ctx.RespondAsync(response);
-    }
-    
-    public static async ValueTask EditResponse_Error(this CommandContext ctx, string message)
-    {
-        DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
-            .WithTitle("Error")
-            .WithDescription(message)
-            .WithColor(DiscordColor.Red);
-        
-        DiscordWebhookBuilder response = new DiscordWebhookBuilder()
-            .AddEmbed(embed);
-        
-        await ctx.EditResponseAsync(response);
-    }
-    
-    public static async ValueTask EditResponse_Success(this CommandContext ctx, string message)
-    {
-        DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
-            .WithTitle("Success")
-            .WithDescription(message)
-            .WithColor(DiscordColor.Green);
-        
-        DiscordWebhookBuilder response = new DiscordWebhookBuilder()
-            .AddEmbed(embed);
-        
-        await ctx.EditResponseAsync(response);
     }
 }
