@@ -15,6 +15,8 @@
 using System.Diagnostics;
 using DSharpPlus;
 using DSharpPlus.Commands;
+using DSharpPlus.Commands.Processors.TextCommands;
+using DSharpPlus.Commands.Processors.TextCommands.Parsing;
 using DSharpPlus.Entities;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Enums;
@@ -43,7 +45,8 @@ public class DiscordCommandService : IHostedService
     public DiscordCommandService
     (
         DiscordClient discordClient,
-        IDbContextFactory<MadsContext> dbContextFactory
+        IDbContextFactory<MadsContext> dbContextFactory,
+        MadsConfig config
     )
     {
         DiscordClient = discordClient;
@@ -66,6 +69,10 @@ public class DiscordCommandService : IHostedService
 #endif
         };
         Commands = DiscordClient.UseCommands(commandsConfiguration);
+        Commands.AddProcessorsAsync(new TextCommandProcessor(new TextCommandConfiguration()
+        {
+            PrefixResolver = new DefaultPrefixResolver(true, config.Prefix).ResolvePrefixAsync
+        }));
         Commands.AddCommands(commandTypes);
         Commands.AddCheck<EnsureDBEntitiesCheck>();
         Commands.AddCheck<RequireOwnerCheck>();
