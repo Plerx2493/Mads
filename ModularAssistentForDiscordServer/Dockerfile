@@ -1,7 +1,5 @@
 # BUILD
 FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
-WORKDIR /Libs
-COPY ../Libs ./
 WORKDIR /src
 COPY ./ModularAssistentForDiscordServer ./
 RUN dotnet restore
