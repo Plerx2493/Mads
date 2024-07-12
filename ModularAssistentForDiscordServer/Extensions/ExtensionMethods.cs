@@ -14,6 +14,7 @@
 
 using DSharpPlus;
 using DSharpPlus.Entities;
+using DSharpPlus.Net;
 using MADS.Entities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -23,16 +24,13 @@ namespace MADS.Extensions;
 
 public static class ExtensionMethods
 {
-
     public static IServiceCollection AddDiscordRestClient(this IServiceCollection serviceCollection,
-        MadsConfig config)
+    MadsConfig config)
     {
-        DiscordConfiguration discordRestConfig = new()
-        {
-            
-        };
+        RestClientOptions discordRestConfig = new();
 
-        serviceCollection.AddSingleton(new DiscordRestClient(discordRestConfig, config.Token, TokenType.Bot));
+        serviceCollection.AddSingleton(services => new DiscordRestClient(discordRestConfig, config.Token, TokenType.Bot,
+            services.GetRequiredService<ILogger<RestClient>>()));
         return serviceCollection;
     }
 
@@ -51,7 +49,7 @@ public static class ExtensionMethods
     }
 
     public static async Task<DiscordMessageBuilder> GetMessageAsync(this ReminderDbEntity reminder,
-        DiscordClient client)
+    DiscordClient client)
     {
         DiscordMessageBuilder message = new();
         if (reminder.MentionedMessage != 0)

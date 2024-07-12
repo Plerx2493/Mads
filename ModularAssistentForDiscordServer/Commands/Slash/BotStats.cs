@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System.ComponentModel;
-using System.Configuration;
 using System.Diagnostics;
 using DSharpPlus;
 using DSharpPlus.Commands;
@@ -51,14 +50,14 @@ public sealed class BotStats
 
         _ = await _discordRestClient.GetChannelAsync(ctx.Channel.Id);
         swRest.Start();
-        _ = await _discordRestClient.GetChannelAsync(ctx.Channel.Id);
+        _ = await _discordRestClient.GetUserAsync(ctx.User.Id);
         swRest.Stop();
 
         using Process process = Process.GetCurrentProcess();
 
         int members = db.Users.Count();
         int guilds = db.Guilds.Count();
-        //int ping = ctx.Client.Ping;
+        TimeSpan ping = ctx.Client.GetConnectionLatency(0);
         GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
         string heapMemory = $"{process.PrivateMemorySize64 / 1024 / 1024} MB";
 
@@ -69,7 +68,7 @@ public sealed class BotStats
             .AddField("Membercount:", members.ToString("N0"), true)
             .AddField("Guildcount:", guilds.ToString("N0"), true)
             .AddField("Threads:", $"{ThreadPool.ThreadCount}", true)
-            //.AddField("Websocket Latency:", ping.ToString("N0") + " ms", true)
+            .AddField("Websocket Latency (Shard 0):", ping.TotalMilliseconds.ToString("N0") + " ms", true)
             .AddField("DB Latency:", swDb.ElapsedMilliseconds.ToString("N0") + " ms", true)
             .AddField("Rest Latency:", swRest.ElapsedMilliseconds.ToString("N0") + " ms", true)
             .AddField("Memory:", heapMemory, true)

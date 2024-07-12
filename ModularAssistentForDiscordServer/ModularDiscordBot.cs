@@ -16,6 +16,7 @@ using DeepL;
 using DSharpPlus;
 using DSharpPlus.Clients;
 using DSharpPlus.Extensions;
+using DSharpPlus.Net;
 using MADS.Entities;
 using MADS.EventListeners;
 using MADS.Extensions;
@@ -63,6 +64,10 @@ public class ModularDiscordBot
                             x.HandleComponentInteractionCreated(EventListener.OnRoleSelection);
                             x.HandleZombied(EventListener.OnZombied);
                             x.HandleMessageCreated(EventListener.DmHandler);
+                        })
+                        .Configure<RestClientOptions>(x =>
+                        {
+                            x.Timeout = TimeSpan.FromSeconds(30);
                         })
                         .AddSingleton<DiscordCommandService>()
                         .AddHostedService(s => s.GetRequiredService<DiscordCommandService>())
