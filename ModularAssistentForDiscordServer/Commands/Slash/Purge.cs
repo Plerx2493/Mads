@@ -32,15 +32,15 @@ public sealed class Purge
     {
         if (amount > 100)
         {
-            await ctx.CreateResponse_Error("You cannot purge more than 100 messages at once", true);
+            await ctx.RespondErrorAsync("You cannot purge more than 100 messages at once", true);
             return;
         }
 
         await ctx.DeferAsync();
         DiscordMessage? response = await ctx.GetResponseAsync()!;
-        
+
         List<DiscordMessage> messages = [];
-        await foreach (DiscordMessage msg in ctx.Channel.GetMessagesAsync((int) amount))
+        await foreach (DiscordMessage msg in ctx.Channel.GetMessagesAsync((int)amount))
         {
             messages.Add(msg);
         }

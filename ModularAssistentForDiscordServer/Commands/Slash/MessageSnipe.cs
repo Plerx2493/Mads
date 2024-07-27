@@ -15,6 +15,7 @@
 using System.ComponentModel;
 using DSharpPlus;
 using DSharpPlus.Commands;
+using DSharpPlus.Commands.ContextChecks;
 using DSharpPlus.Entities;
 using MADS.CustomComponents;
 using MADS.Extensions;
@@ -31,13 +32,13 @@ public sealed class MessageSnipe
         _messageSnipeService = messageSnipeService;
     }
     
-    [Command("snipe"), Description("Snipes the last deleted message.")]
+    [Command("snipe"), Description("Snipes the last deleted message."), RequireGuild]
     public async Task SnipeAsync(CommandContext ctx)
     {
         await DoSnipeAsync(ctx, false);
     }
 
-    [Command("snipeedit"), Description("Snipes the last edited message.")]
+    [Command("snipeedit"), Description("Snipes the last edited message."), RequireGuild]
     public async Task SnipeEditAsync(CommandContext ctx)
     {
         await DoSnipeAsync(ctx, true);
@@ -53,7 +54,7 @@ public sealed class MessageSnipe
 
         if (!result || message is null)
         {
-            await ctx.EditResponse_Error(
+            await ctx.RespondAsync(
                 "⚠️ No message to snipe! Either nothing was deleted, or the message has expired (12 hours)!");
             return;
         }
@@ -64,14 +65,14 @@ public sealed class MessageSnipe
             content = string.Concat(content.AsSpan(0, 497), "...");
         }
 
-        DiscordMember? member = message.Author is not null ? await ctx.Guild.GetMemberAsync(message.Author.Id) : null;
+        DiscordMember? member = message.Author is not null ? await ctx.Guild!.GetMemberAsync(message.Author.Id) : null;
 
         DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
             .WithAuthor(
                 $"{member?.DisplayName ?? message.Author?.GlobalName}" + (edit ? " (Edited)" : ""),
                 iconUrl: message.Author?.GetAvatarUrl(ImageFormat.Png))
             .WithFooter(
-                $"{(edit ? "Edit" : "Deletion")} sniped by {ctx.Member.DisplayName}",
+                $"{(edit ? "Edit" : "Deletion")} sniped by {ctx.Member!.DisplayName}",
                 ctx.User.AvatarUrl);
 
         if (!string.IsNullOrEmpty(content))
@@ -124,6 +125,6 @@ public sealed class MessageSnipe
         _messageSnipeService.DeleteMessage(ctx.Channel.Id);
         _messageSnipeService.DeleteEditedMessage(ctx.Channel.Id);
         
-        await ctx.EditResponse_Success("✅ Snipe cache cleared!");
+        await ctx.RespondSuccessAsync("✅ Snipe cache cleared!");
     }
 }

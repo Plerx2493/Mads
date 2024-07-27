@@ -12,25 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Diagnostics;
 using DSharpPlus.Commands;
 using DSharpPlus.Commands.ContextChecks;
 using DSharpPlus.Entities;
 using MADS.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace MADS.CommandsChecks;
 
 public class EnsureDBEntitiesCheck : IContextCheck<UnconditionalCheckAttribute>
 {
     private IDbContextFactory<MadsContext> _contextFactory;
+    private readonly ILogger<EnsureDBEntitiesCheck> _logger;
     
-    public EnsureDBEntitiesCheck(IDbContextFactory<MadsContext> dbContextFactory)
+    public EnsureDBEntitiesCheck(IDbContextFactory<MadsContext> dbContextFactory, ILogger<EnsureDBEntitiesCheck> logger)
     {
         _contextFactory = dbContextFactory;
+        _logger = logger;
     }
     
     public async ValueTask<string?> ExecuteCheckAsync(UnconditionalCheckAttribute _, CommandContext context)
     {
+        Stopwatch sw = Stopwatch.StartNew();
+
         DiscordUser user = context.User;
         
         await using MadsContext dbContext = await _contextFactory.CreateDbContextAsync();
@@ -60,6 +66,11 @@ public class EnsureDBEntitiesCheck : IContextCheck<UnconditionalCheckAttribute>
             .RunAsync();
         
         await dbContext.SaveChangesAsync();
+
+        sw.Stop();
+
+        _logger.LogTrace($"EnsureDBEntitiesCheck took {sw.ElapsedMilliseconds} ms");
+
         return null;
     }
 }

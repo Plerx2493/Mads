@@ -14,6 +14,7 @@
 
 using DeepL;
 using DSharpPlus;
+using DSharpPlus.Clients;
 using DSharpPlus.Extensions;
 using DSharpPlus.Net;
 using MADS.Entities;
@@ -38,11 +39,18 @@ public class ModularDiscordBot
     {
         await Host.CreateDefaultBuilder()
             .UseSerilog()
-            .ConfigureServices((_, services) =>
+            .ConfigureServices((ctx, services) =>
                 {
                     MadsConfig config = DataProvider.GetConfig();
                     services
-                        .AddLogging(logging => logging.ClearProviders().AddSerilog())
+                        .AddLogging(logging =>
+                        {
+                            logging
+                                .SetMinimumLevel(LogLevel.Trace)
+                                .AddFilter("Microsoft.EntityFrameworkCore", LogLevel.Warning)
+                                .AddFilter("Quartz", LogLevel.Warning)
+                                .AddConsole();
+                        })
                         .AddSingleton(config)
                         .AddDiscordClient(config.Token, DiscordIntents.All ^ DiscordIntents.GuildPresences)
                         .AddDiscordRestClient(config)
@@ -56,6 +64,10 @@ public class ModularDiscordBot
                             x.HandleComponentInteractionCreated(EventListener.OnRoleSelection);
                             x.HandleZombied(EventListener.OnZombied);
                             x.HandleMessageCreated(EventListener.DmHandler);
+                        })
+                        .Configure<RestClientOptions>(x =>
+                        {
+                            x.Timeout = TimeSpan.FromSeconds(30);
                         })
                         .AddSingleton<DiscordCommandService>()
                         .AddHostedService(s => s.GetRequiredService<DiscordCommandService>())

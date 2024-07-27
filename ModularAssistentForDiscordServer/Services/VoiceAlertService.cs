@@ -40,11 +40,13 @@ public class VoiceAlertService : IHostedService
         _discordClient = discordCommandService.DiscordClient;
         _contextFactory = contextFactory;
         _eventChannel = Channel.CreateUnbounded<VoiceStateUpdatedEventArgs>();
+#pragma warning disable DSP0001 // Type or member is obsolete
+        _discordClient.VoiceStateUpdated += AddEvent;
+#pragma warning restore DSP0001 // Type or member is obsolete
     }
     
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _discordClient.VoiceStateUpdated += AddEvent;
         _stopped = false;
         _handleQueueTask = Task.Factory.StartNew(HandleQueueAsync, _cts.Token, TaskCreationOptions.LongRunning,
             TaskScheduler.Default);
@@ -54,7 +56,6 @@ public class VoiceAlertService : IHostedService
     
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        _discordClient.VoiceStateUpdated -= AddEvent;
         _stopped = true;
         _cts.Cancel();
         _handleQueueTask?.Dispose();

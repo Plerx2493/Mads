@@ -23,17 +23,10 @@ namespace MADS.Commands.Text.Base;
 
 public class ExitGuild
 {
-    [Command("exit"), Description("Exit the bot"), RequirePermissions(DiscordPermissions.ManageGuild), RequireGuild]
-    public async Task ExitGuildCommand(TextCommandContext ctx)
-    {
-        await ctx.RespondAsync("Leaving server...");
-        await ctx.Guild.LeaveAsync();
-    }
-
-    [Command("leave"), Description("Leave given server"), RequireGuild, RequireOwner]
+    [Command("leave"), Description("Leave given server"), RequireGuild, RequireApplicationOwner]
     public async Task LeaveGuildOwner(TextCommandContext ctx)
     {
         await ctx.Message.DeleteAsync();
-        await ctx.Guild.LeaveAsync();
+        await ctx.Guild!.LeaveAsync();
     }
 }

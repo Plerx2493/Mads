@@ -41,15 +41,17 @@ public class StarboardService : IHostedService
         _client = command.DiscordClient;
         _messageChannel = Channel.CreateUnbounded<DiscordReactionUpdateEvent>();
         _dbFactory = dbFactory;
-    }
-    
-    public Task StartAsync(CancellationToken cancellationToken)
-    {
+        
+#pragma warning disable DSP0001
         _client.MessageReactionAdded += HandleReactionAdded;
         _client.MessageReactionRemoved += HandleReactionRemoved;
         _client.MessageReactionsCleared += HandleReactionsCleared;
         _client.MessageReactionRemovedEmoji += HandleReactionEmojiRemoved;
-        
+#pragma warning restore DSP0001
+    }
+    
+    public Task StartAsync(CancellationToken cancellationToken)
+    {
         _handleQueueTask = Task.Factory.StartNew(HandleQueueAsync, _cts.Token, TaskCreationOptions.LongRunning,
             TaskScheduler.Default);
         
@@ -59,11 +61,6 @@ public class StarboardService : IHostedService
     
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        _client.MessageReactionAdded -= HandleReactionAdded;
-        _client.MessageReactionRemoved -= HandleReactionRemoved;
-        _client.MessageReactionsCleared -= HandleReactionsCleared;
-        _client.MessageReactionRemovedEmoji -= HandleReactionEmojiRemoved;
-        
         _stopped = true;
         _logger.Information("Starboard stopped");
         _cts.Cancel();

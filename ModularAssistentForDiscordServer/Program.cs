@@ -31,20 +31,21 @@ internal static class MainProgram
     
     public static async Task Main()
     {
-        await Task.Delay(10000); //Delay to give the databases time to start
+        await Task.Delay(20_000); //Delay to give the databases time to start
         
         Log.Logger = new LoggerConfiguration()
-            .WriteTo.Console()
-            .MinimumLevel.Verbose()
-            .MinimumLevel.Override("Quartz", LogEventLevel.Warning)
-            .CreateLogger();
+           .WriteTo.Console()
+           .MinimumLevel.Verbose() 
+           .MinimumLevel.Override("Quartz", LogEventLevel.Warning)
+           .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
+           .CreateLogger();
         
         //retrieves the config.json
         MadsConfig config = DataProvider.GetConfig();
         
         //Create a discordWebhookClient and add the debug webhook from the config.json
         WebhookClient = new DiscordWebhookClient();
-        Uri webhookUrl = new Uri(config.DiscordWebhook);
+        Uri webhookUrl = new(config.DiscordWebhook);
         await WebhookClient.AddWebhookAsync(webhookUrl);
         
         //Create a new instance of the bot

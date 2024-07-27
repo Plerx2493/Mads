@@ -30,37 +30,37 @@ namespace MADS.Commands.Slash;
 public sealed class VoiceAlerts
 {
     private readonly VoiceAlertService _voiceAlertService;
-    
+
     public VoiceAlerts(VoiceAlertService voiceAlertService)
     {
         _voiceAlertService = voiceAlertService;
     }
-    
+
     [Command("add"), Description("add a voicealert"), RequireGuild]
     public async Task AddAlert
     (
         CommandContext ctx,
-        
+
         [Description("channel which will be monitored"),
          ChannelTypes(DiscordChannelType.Voice, DiscordChannelType.Stage)]
         DiscordChannel channel,
-        
+
         [Description("time which has to pass between alerts")]
         TimeSpan? minTimeBetween,
-        
+
         [Description("If the alert should be repeated or one shot. (Defaults to false (one shot))")]
         bool repeat = false
     )
     {
         if (channel.Type is not (DiscordChannelType.Voice or DiscordChannelType.Stage))
         {
-            await ctx.CreateResponse_Error($"<#{channel.Id}> is not a voice channel", true);
+            await ctx.RespondErrorAsync($"{channel.Mention} is not a voice channel", true);
             return;
         }
-        
+
         if (minTimeBetween is null)
         {
-            await ctx.CreateResponse_Error(
+            await ctx.RespondErrorAsync(
                 "Invalid timespan (5s, 3m, 7h, 2d) - Use 0s if you want to get a alert everytime (Warning: This could lead to Spam)",
                 true);
             return;
@@ -69,16 +69,16 @@ public sealed class VoiceAlerts
         IEnumerable<VoiceAlert> currentAlerts = await _voiceAlertService.GetVoiceAlertsAsync(ctx.User.Id);
         if (currentAlerts.Any(x => x.ChannelId == channel.Id))
         {
-            await ctx.CreateResponse_Error($"<#{channel.Id}> is already in your VoiceAlerts", true);
+            await ctx.RespondErrorAsync($"<#{channel.Id}> is already in your VoiceAlerts", true);
             return;
         }
-        
+
         await _voiceAlertService.AddVoiceAlertAsync(ctx.User.Id, channel.Id, ctx.Guild!.Id, repeat,
             minTimeBetween.Value);
-        
-        await ctx.CreateResponse_Success($"Added <#{channel.Id}> to your VoiceAlerts", true);
+
+        await ctx.RespondSuccessAsync($"Added <#{channel.Id}> to your VoiceAlerts", true);
     }
-    
+
     [Command("delete"), Description("delete a voicealerts")]
     public async Task RemoveAlert
     (
@@ -91,22 +91,22 @@ public sealed class VoiceAlerts
         bool isId = ulong.TryParse(channel, out ulong id);
         if (!isId)
         {
-            await ctx.CreateResponse_Error($"**{channel}** is not a valid id", true);
+            await ctx.RespondErrorAsync($"**{channel}** is not a valid id", true);
             return;
         }
 
         IEnumerable<VoiceAlert> currentAlerts = await _voiceAlertService.GetVoiceAlertsAsync(ctx.User.Id);
         if (!currentAlerts.Any(x => x.ChannelId == id))
         {
-            await ctx.CreateResponse_Error($"<#{id}> is not in your VoiceAlerts", true);
+            await ctx.RespondErrorAsync($"<#{id}> is not in your VoiceAlerts", true);
             return;
         }
 
-        await _voiceAlertService.RemoveVoiceAlertAsync(ctx.User.Id, id, ctx.Guild.Id);
+        await _voiceAlertService.RemoveVoiceAlertAsync(ctx.User.Id, id, ctx.Guild!.Id);
 
-        await ctx.CreateResponse_Success($"Removed <#{channel}> from your VoiceAlerts", true);
+        await ctx.RespondSuccessAsync($"Removed <#{channel}> from your VoiceAlerts", true);
     }
-    
+
     [Command("list"), Description("list all voicealerts")]
     public async Task ListAlerts(CommandContext ctx)
     {
@@ -116,15 +116,15 @@ public sealed class VoiceAlerts
         {
             builder.AppendLine($"<#{alert.ChannelId}> {(alert.IsRepeatable ? "repeated" : "")}");
         }
-        
+
         if (builder.Length == 0)
         {
             builder.AppendLine("You have no VoiceAlerts");
         }
-        
+
         DiscordInteractionResponseBuilder responseBuilder = new();
         responseBuilder.WithContent(builder.ToString()).AsEphemeral();
-        
+
         await ctx.RespondAsync(responseBuilder);
     }
 }

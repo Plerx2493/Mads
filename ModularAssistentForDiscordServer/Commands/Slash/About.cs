@@ -53,7 +53,7 @@ public sealed class About
             .AddField("D#+ Version:", ctx.Client.VersionString)
             .AddField("Guilds", ctx.Client.Guilds.Count.ToString(), true)
             .AddField("Uptime", date.Humanize(), true)
-            .AddField("Ping", $"{ctx.Client.Ping} ms", true)
+            .AddField("Ping", $"{ctx.Client.GetConnectionLatency(ctx.Guild?.Id ?? 0).TotalMilliseconds} ms", true)
             .AddField("Add me", addMe);
         
         discordMessageBuilder.AddEmbed(discordEmbedBuilder.Build());

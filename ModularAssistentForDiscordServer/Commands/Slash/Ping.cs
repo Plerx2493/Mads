@@ -32,8 +32,9 @@ public sealed class Ping
             .WithTitle("Status")
             .WithTimestamp(DateTime.Now)
             .WithColor(new DiscordColor(0, 255, 194))
-            .AddField("Uptime", $"{DateTimeOffset.UtcNow.Subtract(process.StartTime).Humanize(3, minUnit: TimeUnit.Millisecond, maxUnit: TimeUnit.Day)}")
-            .AddField("Websocket ping", $"{ctx.Client.Ping} ms");
+            .AddField("Uptime",
+                $"{DateTimeOffset.UtcNow.Subtract(process.StartTime).Humanize(3, minUnit: TimeUnit.Millisecond, maxUnit: TimeUnit.Day)}");
+            //.AddField("Websocket ping", $"{ctx.Client.Ping} ms");
         
         DiscordInteractionResponseBuilder responseBuilder = new();
         responseBuilder.AddEmbed(discordEmbedBuilder).AsEphemeral();

@@ -34,16 +34,16 @@ public class TranslateMessage
         _translateInformationService = translateInformationService;
         _translator = translator;
     }
-    
+
     [SlashCommandTypes(DiscordApplicationCommandType.MessageContextMenu), Command("Translate message")]
-    public async Task TranslateAsync(SlashCommandContext ctx,  DiscordMessage targetMessage)
+    public async Task TranslateAsync(SlashCommandContext ctx, DiscordMessage targetMessage)
     {
         await ctx.DeferAsync(true);
 
         string? preferredLanguage = await _translateInformationService.GetPreferredLanguageAsync(ctx.User.Id);
         bool isPreferredLanguageSet = !preferredLanguage.IsNullOrWhiteSpace();
-       
-        if(!isPreferredLanguageSet)
+
+        if (!isPreferredLanguageSet)
         {
             preferredLanguage = "en-US";
         }
@@ -54,15 +54,15 @@ public class TranslateMessage
 
         if (messageContent.IsNullOrWhiteSpace())
         {
-            await ctx.CreateResponse_Error("⚠️ Message is empty!");
+            await ctx.RespondErrorAsync("⚠️ Message is empty!");
             return;
         }
-        
-        TextResult translatedMessage = 
+
+        TextResult translatedMessage =
             await _translator.TranslateTextAsync(messageContent, null, preferredLanguage!);
-        
+
         DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
-            .WithAuthor(message.Author?.Username, 
+            .WithAuthor(message.Author?.Username,
                 message.Author?.AvatarUrl)
             .WithDescription(translatedMessage.Text)
             .WithColor(new DiscordColor(0, 255, 194))
@@ -83,8 +83,8 @@ public class TranslateMessage
             .AddComponents(new DiscordButtonComponent(DiscordButtonStyle.Primary, "setLanguage", "Set your language to en-US")
                 .AsActionButton(ActionDiscordButtonEnum.SetTranslationLanguage, "en-US"))
             .AsEphemeral();
-        
-        
+
+
         await ctx.FollowupAsync(followUpMessage);
     }
 }

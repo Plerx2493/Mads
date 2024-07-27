@@ -41,22 +41,21 @@ public class MessageSnipeService : IHostedService
         _options.SetAbsoluteExpiration(TimeSpan.FromHours(12))
             .SetSize(1)
             .RegisterPostEvictionCallback(PostEvictionCallback);
+    
+#pragma warning disable DSP0001 // Type or member is obsolete
+        Discord.MessageDeleted += MessageSniperDeleted;
+        Discord.MessageUpdated += MessageSniperEdited;
+#pragma warning restore DSP0001 // Type or member is obsolete
     }
     
     public Task StartAsync(CancellationToken cancellationToken)
     {
         _logger.Warning("Sniper active!");
-        Discord.MessageDeleted += MessageSniperDeleted;
-        Discord.MessageUpdated += MessageSniperEdited;
-        
         return Task.CompletedTask;
     }
     
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        Discord.MessageDeleted -= MessageSniperDeleted;
-        Discord.MessageUpdated -= MessageSniperEdited;
-        
         return Task.CompletedTask;
     }
     

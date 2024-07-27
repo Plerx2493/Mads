@@ -22,7 +22,7 @@ internal static partial class EventListener
 {
     internal static async Task OnZombied(DiscordClient sender, ZombiedEventArgs e)
     {
-        await sender.ReconnectAsync(true);
+        await sender.ReconnectAsync();
     }
     
     internal static Task OnGuildAvailable(DiscordClient sender, GuildCreatedEventArgs e)
