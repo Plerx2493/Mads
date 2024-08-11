@@ -113,6 +113,7 @@ public class ModularDiscordBot
                         .AddSingleton<TranslateInformationService>()
                         .AddSingleton<LoggingService>()
                         .AddSingleton<UserManagerService>()
+                        .AddSingleton<AntiPhishingService>()
                         .AddHttpClient();
                     
                     Services = services.BuildServiceProvider();
