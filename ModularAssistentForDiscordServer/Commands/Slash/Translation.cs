@@ -72,7 +72,7 @@ public class Translation
         [Description("The text you want to translate")]
         string text,
         [Description("The language you want to get (default: en)"), SlashAutoCompleteProvider(typeof(TargetLanguageAutoCompletion))]
-        string language = "en",
+        string? language = null,
         [Description("Weather the result should be public or not (default: false)")]
         bool publicResult = false
     )
@@ -84,6 +84,13 @@ public class Translation
             await ctx.EditResponseAsync(new DiscordWebhookBuilder()
                 .WithContent("⚠️ Text can't be empty!"));
             return;
+        }
+        
+        if (language is null)
+        {
+            string? lang = await _translationUserInfo.GetPreferredLanguageAsync(ctx.User.Id);
+
+            language = lang ?? "en-US";
         }
 
         TextResult translatedText = await _translator.TranslateTextAsync(text, null, language);
