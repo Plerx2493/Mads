@@ -24,7 +24,7 @@ using Serilog;
 
 namespace MADS.Services;
 
-public class VoiceAlertService : IHostedService
+public class VoiceAlertService : IHostedService, IEventHandler<VoiceStateUpdatedEventArgs>
 {
     private readonly IDbContextFactory<MadsContext> _contextFactory;
     private readonly DiscordClient _discordClient;
@@ -40,9 +40,6 @@ public class VoiceAlertService : IHostedService
         _discordClient = discordCommandService.DiscordClient;
         _contextFactory = contextFactory;
         _eventChannel = Channel.CreateUnbounded<VoiceStateUpdatedEventArgs>();
-#pragma warning disable DSP0001 // Type or member is obsolete
-        _discordClient.VoiceStateUpdated += AddEvent;
-#pragma warning restore DSP0001 // Type or member is obsolete
     }
     
     public Task StartAsync(CancellationToken cancellationToken)
@@ -232,4 +229,7 @@ public class VoiceAlertService : IHostedService
             .FirstOrDefaultAsync(x => x.Id == userId);
         return user?.VoiceAlerts ?? Enumerable.Empty<VoiceAlert>();
     }
+
+    public Task HandleEventAsync(DiscordClient sender, VoiceStateUpdatedEventArgs eventArgs) =>
+        AddEvent(sender, eventArgs);
 }

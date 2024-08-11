@@ -27,23 +27,12 @@ using Serilog;
 
 namespace MADS.Services;
 
-public class LoggingService
+public class LoggingService : IEventHandler<ComponentInteractionCreatedEventArgs>, IEventHandler<ModalSubmittedEventArgs>
 {
-    private readonly DiscordCommandService? _modularDiscordBot;
     private DiscordWebhookClient _discordWebhookClient = new();
     
     public LoggingService(DiscordCommandService modularDiscordBot)
     {
-        _modularDiscordBot = modularDiscordBot;
-
-#pragma warning disable DSP0001 // Type or member is obsolete
-        //Button response with modal
-        _modularDiscordBot.DiscordClient.ComponentInteractionCreated += HandleFeedbackButton;
-
-        //Modal processing
-        _modularDiscordBot.DiscordClient.ModalSubmitted += HandleFeedbackModal;
-#pragma warning restore DSP0001 // Type or member is obsolete 
-        
         SetupWebhookLogging();
     }
 
@@ -120,4 +109,8 @@ public class LoggingService
         
         await _discordWebhookClient.BroadcastMessageAsync(messageBuilder);
     }
+
+    public Task HandleEventAsync(DiscordClient sender, ComponentInteractionCreatedEventArgs eventArgs) => HandleFeedbackButton(sender, eventArgs);
+
+    public Task HandleEventAsync(DiscordClient sender, ModalSubmittedEventArgs eventArgs) => HandleFeedbackModal(sender, eventArgs);
 }

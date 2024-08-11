@@ -24,7 +24,7 @@ using ILogger = Serilog.ILogger;
 
 namespace MADS.Services;
 
-public class MessageSnipeService : IHostedService
+public class MessageSnipeService : IEventHandler<MessageUpdatedEventArgs>, IEventHandler<MessageDeletedEventArgs>
 {
     private readonly IMemoryCache _memoryCache;
     private readonly MemoryCacheEntryOptions _options;
@@ -41,22 +41,6 @@ public class MessageSnipeService : IHostedService
         _options.SetAbsoluteExpiration(TimeSpan.FromHours(12))
             .SetSize(1)
             .RegisterPostEvictionCallback(PostEvictionCallback);
-    
-#pragma warning disable DSP0001 // Type or member is obsolete
-        Discord.MessageDeleted += MessageSniperDeleted;
-        Discord.MessageUpdated += MessageSniperEdited;
-#pragma warning restore DSP0001 // Type or member is obsolete
-    }
-    
-    public Task StartAsync(CancellationToken cancellationToken)
-    {
-        _logger.Warning("Sniper active!");
-        return Task.CompletedTask;
-    }
-    
-    public Task StopAsync(CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
     }
     
     private Task MessageSniperDeleted
@@ -163,4 +147,8 @@ public class MessageSnipeService : IHostedService
         _memoryCache.Remove(id);
         return true;
     }
+
+    public Task HandleEventAsync(DiscordClient sender, MessageUpdatedEventArgs eventArgs) => MessageSniperEdited(sender, eventArgs);
+
+    public Task HandleEventAsync(DiscordClient sender, MessageDeletedEventArgs eventArgs) => MessageSniperDeleted(sender, eventArgs);
 }

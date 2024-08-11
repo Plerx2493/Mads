@@ -25,7 +25,12 @@ using ILogger = Serilog.ILogger;
 
 namespace MADS.Services;
 
-public class StarboardService : IHostedService
+public class StarboardService : 
+    IHostedService,
+    IEventHandler<MessageReactionAddedEventArgs>,
+    IEventHandler<MessageReactionRemovedEventArgs>,
+    IEventHandler<MessageReactionsClearedEventArgs>,
+    IEventHandler<MessageReactionRemovedEmojiEventArgs>
 {
     private readonly DiscordClient _client;
     private readonly IDbContextFactory<MadsContext> _dbFactory;
@@ -41,13 +46,6 @@ public class StarboardService : IHostedService
         _client = command.DiscordClient;
         _messageChannel = Channel.CreateUnbounded<DiscordReactionUpdateEvent>();
         _dbFactory = dbFactory;
-        
-#pragma warning disable DSP0001
-        _client.MessageReactionAdded += HandleReactionAdded;
-        _client.MessageReactionRemoved += HandleReactionRemoved;
-        _client.MessageReactionsCleared += HandleReactionsCleared;
-        _client.MessageReactionRemovedEmoji += HandleReactionEmojiRemoved;
-#pragma warning restore DSP0001
     }
     
     public Task StartAsync(CancellationToken cancellationToken)
@@ -469,4 +467,16 @@ public class StarboardService : IHostedService
         
         return messageBuilder;
     }
+
+    public Task HandleEventAsync(DiscordClient sender, MessageReactionAddedEventArgs eventArgs) =>
+        HandleReactionAdded(sender, eventArgs);
+
+    public Task HandleEventAsync(DiscordClient sender, MessageReactionRemovedEventArgs eventArgs) =>
+        HandleReactionRemoved(sender, eventArgs);
+
+    public Task HandleEventAsync(DiscordClient sender, MessageReactionsClearedEventArgs eventArgs) =>
+        HandleReactionsCleared(sender, eventArgs);
+
+    public Task HandleEventAsync(DiscordClient sender, MessageReactionRemovedEmojiEventArgs eventArgs) =>
+        HandleReactionEmojiRemoved(sender, eventArgs);
 }
