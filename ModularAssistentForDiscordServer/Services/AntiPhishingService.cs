@@ -110,10 +110,10 @@ public partial class AntiPhishingService : IEventHandler<MessageCreatedEventArgs
         }
 
         Logger.LogDebug("Links will be checked");
-
+        
         var payload = new
         {
-            message
+            Message = message.Content
         };
 
         HttpResponseMessage res = await _antiFishClient.PostAsJsonAsync("", payload);
