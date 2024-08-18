@@ -24,7 +24,7 @@ using Microsoft.Extensions.Logging;
 
 namespace MADS.Services;
 
-public partial class AntiPhishingService
+public partial class AntiPhishingService : IEventHandler<MessageCreatedEventArgs>, IEventHandler<MessageUpdatedEventArgs>
 {
     private readonly DiscordClient _discordClient;
     private readonly HttpClient _antiFishClient;
@@ -65,10 +65,6 @@ public partial class AntiPhishingService
 
         _phishggClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent",
             "MadsDiscordBot (https://github.com/Plerx2493/Mads, v1)");
-        
-        
-        discordClient.MessageCreated += HandleMessage;
-        discordClient.MessageUpdated += HandleMessageUpdate;
     }
     
     private Task HandleMessageUpdate(DiscordClient sender, MessageUpdatedEventArgs args)
@@ -194,4 +190,8 @@ public partial class AntiPhishingService
         
         return responses;
     }
+
+    public Task HandleEventAsync(DiscordClient sender, MessageCreatedEventArgs eventArgs) => HandleMessage(sender, eventArgs);
+
+    public Task HandleEventAsync(DiscordClient sender, MessageUpdatedEventArgs eventArgs) => HandleMessageUpdate(sender, eventArgs);
 }

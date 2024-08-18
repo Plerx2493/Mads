@@ -15,8 +15,18 @@
 using DeepL;
 using DSharpPlus;
 using DSharpPlus.Clients;
+using DSharpPlus.Commands;
+using DSharpPlus.Commands.Processors.TextCommands;
+using DSharpPlus.Commands.Processors.TextCommands.Parsing;
 using DSharpPlus.Extensions;
+using DSharpPlus.Interactivity;
+using DSharpPlus.Interactivity.Enums;
+using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.Net;
+using MADS.Commands.ContextMenu;
+using MADS.Commands.Slash;
+using MADS.Commands.Text.Base;
+using MADS.CommandsChecks;
 using MADS.Entities;
 using MADS.EventListeners;
 using MADS.Extensions;
@@ -53,6 +63,34 @@ public class ModularDiscordBot
                         })
                         .AddSingleton(config)
                         .AddDiscordClient(config.Token, DiscordIntents.All ^ DiscordIntents.GuildPresences)
+                        .AddCommandsExtension(extension =>
+                        {
+                            List<Type> commandTypes =
+                            [
+                                typeof(StealEmojiMessage), typeof(TranslateMessage), typeof(UserInfoUser), typeof(About), typeof(BotStats),
+                                typeof(Jumppad), typeof(MessageSnipe), typeof(MoveEmoji), typeof(Ping), typeof(Purge), typeof(Quotes),
+                                typeof(Reminder), typeof(RoleSelection), typeof(StarboardConfig), typeof(Translation), typeof(VoiceAlerts),
+                                typeof(Eval), typeof(ExitGuild)
+                            ];
+                            
+                            extension.AddProcessors(new TextCommandProcessor(new TextCommandConfiguration()
+                            {
+                                PrefixResolver = new DefaultPrefixResolver(true, config.Prefix).ResolvePrefixAsync
+                            }));
+                            extension.AddCommands(commandTypes);
+                            extension.AddCheck<EnsureDBEntitiesCheck>();
+                            extension.CommandErrored += EventListener.OnCommandsErrored;
+                        })
+                        .AddInteractivityExtension(new InteractivityConfiguration
+                        {
+                            PollBehaviour = PollBehaviour.KeepEmojis,
+                            Timeout = TimeSpan.FromMinutes(10),
+                            ButtonBehavior = ButtonPaginationBehavior.DeleteButtons,
+                            PaginationBehaviour = PaginationBehaviour.Ignore,
+                            ResponseBehavior = InteractionResponseBehavior.Ignore,
+                            ResponseMessage = "invalid interaction",
+                            PaginationDeletion = PaginationDeletion.DeleteEmojis
+                        })
                         .AddDiscordRestClient(config)
                         .ConfigureEventHandlers(x =>
                         {
@@ -64,6 +102,12 @@ public class ModularDiscordBot
                             x.HandleComponentInteractionCreated(EventListener.OnRoleSelection);
                             x.HandleZombied(EventListener.OnZombied);
                             x.HandleMessageCreated(EventListener.DmHandler);
+
+                            x.AddEventHandlers<LoggingService>(ServiceLifetime.Singleton);
+                            x.AddEventHandlers<MessageSnipeService>(ServiceLifetime.Singleton);
+                            x.AddEventHandlers<StarboardService>(ServiceLifetime.Singleton);
+                            x.AddEventHandlers<VoiceAlertService>(ServiceLifetime.Singleton);
+                            x.AddEventHandlers<AntiPhishingService>();
                         })
                         .Configure<RestClientOptions>(x =>
                         {
@@ -100,20 +144,14 @@ public class ModularDiscordBot
                             options.StartDelay = TimeSpan.FromSeconds(10);
                             options.AwaitApplicationStarted = true;
                         })
-                        .AddSingleton<MessageSnipeService>()
-                        .AddHostedService(s => s.GetRequiredService<MessageSnipeService>())
                         .AddSingleton<QuotesService>()
-                        .AddSingleton<StarboardService>()
                         .AddHostedService(s => s.GetRequiredService<StarboardService>())
                         .AddSingleton<ReminderService>()
                         .AddHostedService(s => s.GetRequiredService<ReminderService>())
-                        .AddSingleton<VoiceAlertService>()
                         .AddHostedService(s => s.GetRequiredService<VoiceAlertService>())
                         .AddSingleton(new Translator(_config.DeeplApiKey ?? ""))
                         .AddSingleton<TranslateInformationService>()
-                        .AddSingleton<LoggingService>()
                         .AddSingleton<UserManagerService>()
-                        .AddSingleton<AntiPhishingService>()
                         .AddHttpClient();
                     
                     Services = services.BuildServiceProvider();

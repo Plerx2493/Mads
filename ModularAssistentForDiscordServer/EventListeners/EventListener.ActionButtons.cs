@@ -113,7 +113,7 @@ internal static partial class EventListener
                     style: DiscordTextInputStyle.Paragraph));
             await args.Interaction.CreateResponseAsync(DiscordInteractionResponseType.Modal, modal);
             
-            InteractivityExtension interactive = sender.GetInteractivity();
+            InteractivityExtension interactive = sender.ServiceProvider.GetRequiredService<InteractivityExtension>();
             InteractivityResult<ModalSubmittedEventArgs> result =
                 await interactive.WaitForModalAsync($"setLanguage-{args.User.Id}", TimeSpan.FromMinutes(5));
             
@@ -157,9 +157,9 @@ internal static partial class EventListener
             .AddComponents(new DiscordTextInputComponent("Please enter your answer:", "answer-text", required: true,
                 style: DiscordTextInputStyle.Paragraph));
         await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.Modal, modal);
-        
-        
-        InteractivityExtension interactive = client.GetInteractivity();
+
+
+        InteractivityExtension interactive = client.ServiceProvider.GetRequiredService<InteractivityExtension>();
         InteractivityResult<ModalSubmittedEventArgs> result =
             await interactive.WaitForModalAsync($"AnswerDM-{substring[1]}");
         

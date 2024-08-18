@@ -39,9 +39,9 @@ public class DiscordCommandService : IHostedService
     public readonly CommandsExtension Commands;
     public readonly DiscordClient DiscordClient;
     public DateTime StartTime;
-    
+
     private static readonly ILogger _logger = Log.ForContext<DiscordCommandService>();
-    
+
     public DiscordCommandService
     (
         DiscordClient discordClient,
@@ -52,49 +52,12 @@ public class DiscordCommandService : IHostedService
         DiscordClient = discordClient;
         StartTime = DateTime.Now;
         DbContextFactory = dbContextFactory;
-        
-        List<Type> commandTypes =
-        [
-            typeof(StealEmojiMessage), typeof(TranslateMessage), typeof(UserInfoUser), typeof(About), typeof(BotStats),
-            typeof(Jumppad), typeof(MessageSnipe), typeof(MoveEmoji), typeof(Ping), typeof(Purge), typeof(Quotes),
-            typeof(Reminder), typeof(RoleSelection), typeof(StarboardConfig), typeof(Translation), typeof(VoiceAlerts),
-            typeof(Eval), typeof(ExitGuild)
-        ];
-        
-        
-        CommandsConfiguration commandsConfiguration = new()
-        {
-#if !RELEASE
-            DebugGuildId = 938120155974750288
-#endif
-        };
-        Commands = DiscordClient.UseCommands(commandsConfiguration);
-        Commands.AddProcessorsAsync(new TextCommandProcessor(new TextCommandConfiguration()
-        {
-            PrefixResolver = new DefaultPrefixResolver(true, config.Prefix).ResolvePrefixAsync
-        }));
-        Commands.AddCommands(commandTypes);
-        Commands.AddCheck<EnsureDBEntitiesCheck>();
-        Commands.CommandErrored += EventListener.OnCommandsErrored;
-        
-        //Interactivity
-        InteractivityConfiguration interactivityConfig = new()
-        {
-            PollBehaviour = PollBehaviour.KeepEmojis,
-            Timeout = TimeSpan.FromMinutes(10),
-            ButtonBehavior = ButtonPaginationBehavior.DeleteButtons,
-            PaginationBehaviour = PaginationBehaviour.Ignore,
-            ResponseBehavior = InteractionResponseBehavior.Ignore,
-            ResponseMessage = "invalid interaction",
-            PaginationDeletion = PaginationDeletion.DeleteEmojis
-        };
-        DiscordClient.UseInteractivity(interactivityConfig);
     }
-    
+
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         _logger.Warning("DiscordClientService started");
-        
+
         //Update database to latest migration
         await using MadsContext context = await DbContextFactory.CreateDbContextAsync(cancellationToken);
         IEnumerable<string> pendingMigrations = await context.Database.GetPendingMigrationsAsync(cancellationToken);
@@ -106,13 +69,13 @@ public class DiscordCommandService : IHostedService
             sw.Stop();
             _logger.Warning("Applied pending migrations in {Time} ms", sw.ElapsedMilliseconds);
         }
-        
+
         DiscordActivity act = new("Messing with code", DiscordActivityType.Custom);
-        
+
         //connect client
         await DiscordClient.ConnectAsync(act, DiscordUserStatus.Online);
     }
-    
+
     public Task StopAsync(CancellationToken cancellationToken)
     {
         return DiscordClient.DisconnectAsync();

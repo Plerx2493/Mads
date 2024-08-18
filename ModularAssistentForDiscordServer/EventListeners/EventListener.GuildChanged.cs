@@ -24,10 +24,12 @@ internal static partial class EventListener
 {
     public static async Task OnGuildCreated(DiscordClient sender, GuildCreatedEventArgs args)
     {
+        DiscordMember owner = await args.Guild.GetGuildOwnerAsync();
+        
         DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
             .WithTitle($"New guild added: {args.Guild.Name}")
             .AddField("Id:", args.Guild.Id.ToString())
-            .AddField("Owner:", args.Guild.Owner.Username + "#" + args.Guild.Owner.Discriminator)
+            .AddField("Owner:", owner.GlobalName ?? owner.Username)
             .AddField("Membercount:", args.Guild.MemberCount.ToString())
             .AddField("Added:", Formatter.Timestamp(DateTimeOffset.Now))
             .AddField("Created:", Formatter.Timestamp(args.Guild.CreationTimestamp))
@@ -40,10 +42,12 @@ internal static partial class EventListener
     
     public static async Task OnGuildDeleted(DiscordClient sender, GuildDeletedEventArgs args)
     {
+        DiscordUser owner = await sender.GetUserAsync(args.Guild.OwnerId);
+        
         DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
             .WithTitle($"Guild removed: {args.Guild.Name}")
             .AddField("Id:", args.Guild.Id.ToString())
-            .AddField("Owner:", args.Guild.Owner.Username + "#" + args.Guild.Owner.Discriminator)
+            .AddField("Owner:", owner.GlobalName)
             .AddField("Membercount:", args.Guild.MemberCount.ToString())
             .AddField("Removed:", Formatter.Timestamp(DateTimeOffset.Now))
             .AddField("Created:", Formatter.Timestamp(args.Guild.CreationTimestamp))
